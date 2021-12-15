@@ -124,7 +124,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 + 最小评级
 
 ## 开发中的功能
-
+- [ ] https://github.com/Bakabase/InsideWorld/issues/1
 - [ ] 自定义标签：管理自定义标签、根据自定义标签搜索媒体
 - [ ] 自定义视频播放器
 - [ ] 多语言
