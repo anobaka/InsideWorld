@@ -180,4 +180,4 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 ![InsideWorld群聊二维码](https://user-images.githubusercontent.com/2888789/146117768-7d92af78-37ca-426e-a820-97b896b591eb.png)
 
 ### 微信群（不定期更新）
-![image](https://user-images.githubusercontent.com/2888789/146210603-a905a8fe-d76b-4490-80c5-dcaa37ef2450.png)
+![image](https://user-images.githubusercontent.com/2888789/146211611-cdb5eeff-ff83-4879-bfd7-260f272af377.png)
