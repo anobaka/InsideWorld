@@ -29,12 +29,13 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 ### 下载视频播放器
 目前仅支持[PotPlayer](http://potplayer.daum.net/)，不支持绿色免安装版
 
+### 内置特殊字符集
+详见[InsideWorldParser](#分析器)
+![image](https://user-images.githubusercontent.com/2888789/146132647-d99ec4ac-6fb9-4d11-b911-130734490d6a.png)
+
 ### 本地预览加速配置
 ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) `为确保磁盘留有足够的可用空间并且加速日常预览，强烈建议在正式使用前配置该项`
 ![image](https://user-images.githubusercontent.com/2888789/146113550-c2de1050-960c-4927-8c1c-2da6245235fc.png)
-
-### 内置特殊字符集
-![image](https://user-images.githubusercontent.com/2888789/146132647-d99ec4ac-6fb9-4d11-b911-130734490d6a.png)
 
 ### 核心概念
 
@@ -51,7 +52,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 + **分析器**：分析每个媒体名称，提取出关键信息，如：作者/出版方、语言、标题、集数等
 + **可播放文件查找器**：寻找每个媒体的可播放文件，如mp4就是视频媒体的其中一种可播放文件，jpg对应图片媒体，其他同理
 
-目前内置以下几种解析器供大家选择：
+目前内置以下几种解析器供大家选择，后续会持续增加并开放插件接口：
 | 解析器 | 对应分析器 | 对应可播放文件查找器 |
 | ------------- | ------------- | ------------- |
 | InsideWorldVideoResolver | InsideWorldParser | VideoStartFileSelector |
@@ -63,10 +64,10 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 #### 分析器
 
 目前内置以下几种分析器
-| 分析器 | 可解析内容 | 对应名称样例 |
-| ------------- | ------------- | ------------- |
-| InsideWorldParser | 发售日、出版方、标题、期数、原作、语言 | [200212][Anobaka(baka1, baka2)]我是标题(我是原作名)[CN] |
-| InsideWorldAvParser | 番号 | xxxxxxxxADS-925xxxxxxxxxx |
+| 分析器 | 可解析内容 | 对应名称样例 | 解析结果 |
+| ------------- | ------------- | ------------- | ------------- |
+| InsideWorldParser | 发售日<br/>出版方<br/>标题<br/>期数<br/>原作<br/>语言 | [200212][Anobaka(baka1, baka2)]我是标题(我是原作名)[CN] | 发售日：2020-02-12<br/>出版方：Anobaka<br/>包含2个作者：baka1，baka2<br/>标题：我是标题<br/>原作：我是原作名<br/>语言：中文 |
+| InsideWorldAvParser | 番号 | xxxxxxxxADS-925xxxxxxxxxx | 番号：ADS-925 |
 | InsideWorldBilibiliParser | 暂不开放 | 暂不开放 |
 
 #### 可播放文件查找器
