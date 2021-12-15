@@ -10,7 +10,13 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 
 ![image](https://user-images.githubusercontent.com/2888789/146188623-428e6c12-f2d9-457c-a337-ad8bf24f7405.png)
 ![image](https://user-images.githubusercontent.com/2888789/146188658-6627e8aa-fd10-4898-9cc1-9d8bfb143573.png)
-![image](https://user-images.githubusercontent.com/2888789/146117275-1a94944d-f00b-46a6-9087-578a7bbf9469.png)
+![image](https://user-images.githubusercontent.com/2888789/146198717-513a7d19-c494-4797-a51f-45414e17c2d7.png)
+
+## 版本日志
+| 版本 | 发布时间 |
+| ------------- | ------------- |
+| [v1.0.1](https://github.com/Bakabase/InsideWorld/releases/tag/v1.0.1)  | 2021-12-15 | 
+| [v1.0.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.0.0) | 2021-12-15 |
 
 ## 环境要求
 + 最低适配屏幕分辨率为1280x720
@@ -121,7 +127,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 ### 使用媒体库
 
 点击媒体库可以直接播放（如果是视频媒体，则需要安装PotPlayer）
-![image](https://user-images.githubusercontent.com/2888789/146117275-1a94944d-f00b-46a6-9087-578a7bbf9469.png)
+![image](https://user-images.githubusercontent.com/2888789/146198717-513a7d19-c494-4797-a51f-45414e17c2d7.png)
 
 ### 搜索与排序
 
@@ -144,9 +150,14 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 + 文件修改时间
 + 最小评级
 
-### 添加标签
+### 添加标签（v1.0.1+）
+
 ![image](https://user-images.githubusercontent.com/2888789/146188844-58ce9ea4-725e-499b-a87b-abaa022a0487.png)
 ![image](https://user-images.githubusercontent.com/2888789/146188891-f6802a15-3732-4388-ae9b-82e2dfe84542.png)
+
+### 更改语言（v1.0.1+）
+
+![image](https://user-images.githubusercontent.com/2888789/146198873-4eb53585-574e-4745-af24-17f4bd54a0ae.png)
 
 ## 开发中的功能
 - [ ] https://github.com/Bakabase/InsideWorld/issues/1
