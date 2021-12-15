@@ -8,8 +8,8 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 
 ## 使用效果
 
-![image](https://user-images.githubusercontent.com/2888789/146117804-aef8ed93-f6c8-4a2e-be27-16d7d2837fd3.png)
-![image](https://user-images.githubusercontent.com/2888789/146117815-82fcc988-bc27-4117-bb27-829d97c5f33b.png)
+![image](https://user-images.githubusercontent.com/2888789/146188623-428e6c12-f2d9-457c-a337-ad8bf24f7405.png)
+![image](https://user-images.githubusercontent.com/2888789/146188658-6627e8aa-fd10-4898-9cc1-9d8bfb143573.png)
 ![image](https://user-images.githubusercontent.com/2888789/146117275-1a94944d-f00b-46a6-9087-578a7bbf9469.png)
 
 ## 环境要求
@@ -144,11 +144,15 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 + 文件修改时间
 + 最小评级
 
+### 添加标签
+![image](https://user-images.githubusercontent.com/2888789/146188844-58ce9ea4-725e-499b-a87b-abaa022a0487.png)
+![image](https://user-images.githubusercontent.com/2888789/146188891-f6802a15-3732-4388-ae9b-82e2dfe84542.png)
+
 ## 开发中的功能
 - [ ] https://github.com/Bakabase/InsideWorld/issues/1
-- [ ] 自定义标签：管理自定义标签、根据自定义标签搜索媒体
+- [x] 自定义标签：管理自定义标签、根据自定义标签搜索媒体
 - [ ] 自定义视频播放器
-- [ ] 多语言
+- [x] 多语言
 - [ ] 自动更新
 - [ ] 自动资源名称优化
 - [ ] Mac支持
