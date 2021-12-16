@@ -15,6 +15,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 ## 版本日志
 | 版本 | 发布时间 |
 | ------------- | ------------- |
+| [v1.0.2](https://github.com/Bakabase/InsideWorld/milestone/2) | TBD |
 | [v1.0.1](https://github.com/Bakabase/InsideWorld/releases/tag/v1.0.1)  | 2021-12-15 | 
 | [v1.0.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.0.0) | 2021-12-15 |
 
