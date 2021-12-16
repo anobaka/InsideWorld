@@ -10,12 +10,12 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 
 ![image](https://user-images.githubusercontent.com/2888789/146188623-428e6c12-f2d9-457c-a337-ad8bf24f7405.png)
 ![image](https://user-images.githubusercontent.com/2888789/146188658-6627e8aa-fd10-4898-9cc1-9d8bfb143573.png)
-![image](https://user-images.githubusercontent.com/2888789/146198717-513a7d19-c494-4797-a51f-45414e17c2d7.png)
+![资源列表](https://user-images.githubusercontent.com/2888789/146381926-4293f163-2347-4180-8299-c5dd03c261c7.jpg)
 
 ## 版本日志
 | 版本 | 发布时间 |
 | ------------- | ------------- |
-| [v1.0.3](https://github.com/Bakabase/InsideWorld/milestone/3) | TBD |
+| [v1.0.3](https://github.com/Bakabase/InsideWorld/releases/tag/v1.0.3) | 2021-12-16 |
 | [v1.0.2](https://github.com/Bakabase/InsideWorld/releases/tag/v1.0.2) | 2021-12-16 |
 | [v1.0.1](https://github.com/Bakabase/InsideWorld/releases/tag/v1.0.1) | 2021-12-15 | 
 | [v1.0.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.0.0) | 2021-12-15 |
@@ -133,7 +133,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 ### 使用媒体库
 
 点击媒体库可以直接播放（如果是视频媒体，则需要安装PotPlayer）
-![image](https://user-images.githubusercontent.com/2888789/146198717-513a7d19-c494-4797-a51f-45414e17c2d7.png)
+![资源列表](https://user-images.githubusercontent.com/2888789/146381965-dba1d165-3efe-4579-b4b1-1da831a28df1.jpg)
 
 ### 搜索与排序
 
@@ -156,10 +156,15 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 + 文件修改时间
 + 最小评级
 
-### 添加标签（v1.0.1+）
+### 添加标签（v1.0.3+）
 
-![image](https://user-images.githubusercontent.com/2888789/146188844-58ce9ea4-725e-499b-a87b-abaa022a0487.png)
-![image](https://user-images.githubusercontent.com/2888789/146188891-f6802a15-3732-4388-ae9b-82e2dfe84542.png)
+![image](https://user-images.githubusercontent.com/2888789/146380493-a34990fd-7195-4bf8-adee-de9a28fb4f52.png)
+![image](https://user-images.githubusercontent.com/2888789/146380545-6e1d3d64-dd52-4e00-a792-84f8eb98f149.png)
+
+### 设置标签（v1.0.3+）
+
+![image](https://user-images.githubusercontent.com/2888789/146381776-167760a6-27fd-4003-b73c-b8724841fd7b.png)
+![image](https://user-images.githubusercontent.com/2888789/146381855-c9b51301-2025-4ba2-ba4d-7605d74285e1.png)
 
 ### 更改语言（v1.0.1+）
 
