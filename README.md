@@ -164,6 +164,10 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 
 ![image](https://user-images.githubusercontent.com/2888789/146198873-4eb53585-574e-4745-af24-17f4bd54a0ae.png)
 
+## 常见问题
+
+[常见问题列表](https://github.com/Bakabase/InsideWorld/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aclosed+label%3Aquestion)
+
 ## 开发中的功能
 - [ ] https://github.com/Bakabase/InsideWorld/issues/1
 - [x] 自定义标签：管理自定义标签、根据自定义标签搜索媒体
