@@ -76,6 +76,10 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 | InsideWorldAvParser | 番号 | xxxxxxxxADS-925xxxxxxxxxx | 番号：ADS-925 |
 | InsideWorldBilibiliParser | 暂不开放 | 暂不开放 |
 
+##### InsideWorldParser
+需配合[内置特殊字符集](#内置特殊字符集)食用
+![WeChat Image_20211216104006](https://user-images.githubusercontent.com/2888789/146298106-469577f9-5115-4120-9d27-f1510a3f0cbb.png)
+
 #### 可播放文件查找器
 
 目前内置以下几种可播放文件查找器
