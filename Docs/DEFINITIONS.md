@@ -59,7 +59,7 @@
 | Language | 标记语言 | `CN` -> `中文` |
 | Wrapper | 信息块包裹符号 | `()`，`[]`，`{}` |
 | StandardizeName | 标准化字符转换 | `【`->`[` |
-| Volume | 期数 | `上卷` -> `1`，`1st` -> 1，`2nd` -> 2 |
+| Volume | 期数 | `上卷` -> `1`，`1st` -> `1`，`2nd` -> `2` |
 
 ### 可播放文件选择器(Playable File Selector)
 
