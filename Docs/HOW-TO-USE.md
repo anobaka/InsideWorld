@@ -27,7 +27,7 @@
 
 ### 创建媒体分类
 
-![image](https://user-images.githubusercontent.com/2888789/146116506-96291b5d-90b2-43f9-bc6b-db3627de9c94.png)
+![category-custom-component](https://user-images.githubusercontent.com/2888789/146939494-64edd77f-55d5-4559-9afd-b3f7cca8a70d.png)
 
 ## 媒体库
 
@@ -42,7 +42,7 @@
 ### 使用媒体库
 
 点击媒体库可以直接播放（如果是视频媒体，则需要安装PotPlayer）
-![资源列表](https://user-images.githubusercontent.com/2888789/146381965-dba1d165-3efe-4579-b4b1-1da831a28df1.jpg)
+![resource](https://user-images.githubusercontent.com/2888789/146939604-e605090a-a706-4f7b-a094-b666962538c5.png)
 
 ## 标签
 
@@ -51,10 +51,9 @@
 ![image](https://user-images.githubusercontent.com/2888789/146380493-a34990fd-7195-4bf8-adee-de9a28fb4f52.png)
 ![image](https://user-images.githubusercontent.com/2888789/146380545-6e1d3d64-dd52-4e00-a792-84f8eb98f149.png)
 
-### 设置标签（v1.0.3+）
+### 设置标签（v1.1.0+）
 
-![image](https://user-images.githubusercontent.com/2888789/146381776-167760a6-27fd-4003-b73c-b8724841fd7b.png)
-![image](https://user-images.githubusercontent.com/2888789/146381855-c9b51301-2025-4ba2-ba4d-7605d74285e1.png)
+![resource-batch-tag](https://user-images.githubusercontent.com/2888789/146939623-0789bf76-7d6e-4039-bc6a-7f148b17b2e8.png)
 
 ## 系统设置
 
