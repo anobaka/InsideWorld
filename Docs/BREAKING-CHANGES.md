@@ -1,6 +1,6 @@
 # 破坏性变更
 
-## 1.1.0
+## v1.1.0
 
 ### 分类
 由于数据结构有较大变化，所有分类的~~解析器~~已被移除，需要设置对应的[组件](https://github.com/Bakabase/InsideWorld/blob/main/Docs/DEFINITIONS.md#%E7%BB%84%E4%BB%B6)确保分类的状态为**可用**时才可继续使用
