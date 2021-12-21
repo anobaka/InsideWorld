@@ -26,6 +26,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 + 系统盘至少有1GB剩余空间
 + Windows 10
 + [PotPlayer](http://potplayer.daum.net/)
+
 ### 推荐配置
 + 有至少10GB SSD
 
@@ -48,59 +49,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 
 ### 核心概念
 
-**强烈建议**了解InsideWorld的核心概念后再开始正式使用
-
-#### 媒体分类
-
-你可以自由创建媒体分类，名称没有限制，如：Anime、Comic、Movie、Audio等
-每种媒体分类需要配置一个**解析器**`Resolver`
-
-#### 解析器
-
-每个解析器都是某一种媒体分类的处理器，该处理器目前包含以下几个组件：
-+ **分析器**：分析每个媒体名称，提取出关键信息，如：作者/出版方、语言、标题、集数等
-+ **可播放文件查找器**：寻找每个媒体的可播放文件，如mp4就是视频媒体的其中一种可播放文件，jpg对应图片媒体，其他同理
-
-目前内置以下几种解析器供大家选择，后续会持续增加并开放插件接口：
-| 解析器 | 对应分析器 | 对应可播放文件查找器 |
-| ------------- | ------------- | ------------- |
-| InsideWorldVideoResolver | InsideWorldParser | VideoStartFileSelector |
-| InsideWorldImageResolver | InsideWorldParser | ImageStartFileSelector |
-| InsideWorldAudioResolver | InsideWorldParser | AudioStartFileSelector |
-| InsideWorldAvResolver | InsideWorldAvParser | VideoStartFileSelector |
-| InsideWorldBiliBiliVideoResolver | InsideWorldBilibiliParser | VideoStartFileSelector |
-
-#### 分析器
-
-目前内置以下几种分析器
-| 分析器 | 可解析内容 | 对应名称样例 | 解析结果 |
-| ------------- | ------------- | ------------- | ------------- |
-| InsideWorldParser | 发售日<br/>出版方<br/>标题<br/>期数<br/>原作<br/>语言 | [200212][Anobaka(baka1, baka2)]我是标题(我是原作名)[CN] | 发售日：2020-02-12<br/>出版方：Anobaka<br/>包含2个作者：baka1，baka2<br/>标题：我是标题<br/>原作：我是原作名<br/>语言：中文 |
-| InsideWorldAvParser | 番号 | xxxxxxxxADS-925xxxxxxxxxx | 番号：ADS-925 |
-| InsideWorldBilibiliParser | 暂不开放 | 暂不开放 |
-
-##### InsideWorldParser
-需配合[内置特殊字符集](#内置特殊字符集)食用
-![WeChat Image_20211216104006](https://user-images.githubusercontent.com/2888789/146298106-469577f9-5115-4120-9d27-f1510a3f0cbb.png)
-
-#### 可播放文件查找器
-
-目前内置以下几种可播放文件查找器
-| 查找器 | 查找内容 |
-| ------------- | ------------- |
-| ImageStartFileSelector | 第一个后缀在[.png,.jpeg,.jpg,.bmp,.gif]内的图片文件 | 
-| VideoStartFileSelector | 全部后缀在[.mp4,.avi,.mkv,.rmvb,.wmv]内的视频文件 |
-| AudioStartFileSelector | 全部后缀在[.mp3,.flac]内的音频文件 | 暂不开放 |
-
-#### 媒体库
-
-媒体分类建立完成后，你需要将本地的资源与媒体分类关联起来，这样你的媒体资源才会和分类绑定
-
-#### 资源
-
-**强制约定**：媒体库目录下的每一个一级文件夹是一个资源
-
-每个资源都会和对应的媒体库以及分类关联
+**强烈建议**了解InsideWorld的[核心概念](#https://github.com/Bakabase/InsideWorld/blob/main/Docs/DEFINITIONS.md)后再开始正式使用
 
 ## 正式使用
 ### 创建媒体分类
