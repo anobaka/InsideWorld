@@ -78,6 +78,24 @@
 
 可以自定义`播放器`，填写**可执行文件地址**即可创建。 
 
+
+### ~~解析器(v1.0.x)~~
+
+**该概念已在v1.1.0版本移除**
+每个解析器都是某一种媒体分类的处理器，该处理器目前包含以下几个组件：
++ **分析器**：分析每个媒体名称，提取出关键信息，如：作者/出版方、语言、标题、集数等
++ **可播放文件查找器**：寻找每个媒体的可播放文件，如mp4就是视频媒体的其中一种可播放文件，jpg对应图片媒体，其他同理
+
+目前内置以下几种解析器供大家选择，后续会持续增加并开放插件接口：
+| 解析器 | 对应分析器 | 对应可播放文件查找器 |
+| ------------- | ------------- | ------------- |
+| InsideWorldVideoResolver | InsideWorldParser | VideoStartFileSelector |
+| InsideWorldImageResolver | InsideWorldParser | ImageStartFileSelector |
+| InsideWorldAudioResolver | InsideWorldParser | AudioStartFileSelector |
+| InsideWorldAvResolver | InsideWorldAvParser | VideoStartFileSelector |
+| InsideWorldBiliBiliVideoResolver | InsideWorldBilibiliParser | VideoStartFileSelector |
+
+
 ## 标签(v1.0.3+)
 
 可以自定义多个标签，每个资源都可以与多个标签绑定
