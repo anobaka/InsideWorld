@@ -51,6 +51,16 @@
 | InsideWorldAv资源名分析器(InsideWorldAvParser) | 是 | 番号 | xxxxxxxxADS-925xxxxxxxxxx | 番号：ADS-925 | |
 | InsideWorldBiliBili资源名分析器(InsideWorldBilibiliParser) | 是 |暂不开放 | 暂不开放 | |
 
+#### 内置特殊字符集
+
+| 类型 | 说明 | 匹配样例 |
+| - | - | - |
+| Useless | 标记无用字符 | `DL版` |
+| Language | 标记语言 | `CN` -> `中文` |
+| Wrapper | 信息块包裹符号 | `()`，`[]`，`{}` |
+| StandardizeName | 标准化字符转换 | `【`->`[` |
+| Volume | 期数 | `上卷` -> `1`，`1st` -> 1，`2nd` -> 2 |
+
 ### 可播放文件选择器(Playable File Selector)
 
 目前内置以下几种可播放文件选择器
