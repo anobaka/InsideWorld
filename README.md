@@ -47,9 +47,9 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) `为确保磁盘留有足够的可用空间并且加速日常预览，强烈建议在正式使用前配置该项`
 ![image](https://user-images.githubusercontent.com/2888789/146113550-c2de1050-960c-4927-8c1c-2da6245235fc.png)
 
-### 核心概念
+## 核心概念
 
-**强烈建议**了解InsideWorld的[核心概念](#https://github.com/Bakabase/InsideWorld/blob/main/Docs/DEFINITIONS.md)后再开始正式使用
+**强烈建议**了解InsideWorld的[核心概念](https://github.com/Bakabase/InsideWorld/blob/main/Docs/DEFINITIONS.md)后再开始正式使用
 
 ## 正式使用
 ### 创建媒体分类
