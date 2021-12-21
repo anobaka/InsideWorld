@@ -47,7 +47,7 @@
 
 | 分析器 | 系统内置 | 可解析内容 | 对应名称样例 | 解析结果 | 说明 | 
 | ------------- | ------------- | ------------- | ------------- | ------------- |  ------------- | 
-| InsideWorld通用资源名分析器(InsideWorldParser) | 是 | 发售日<br/>出版方<br/>标题<br/>期数<br/>原作<br/>语言 | [200212][Anobaka(baka1, baka2)]我是标题(我是原作名)[CN] | 发售日：2020-02-12<br/>出版方：Anobaka<br/>包含2个作者：baka1，baka2<br/>标题：我是标题<br/>原作：我是原作名<br/>语言：中文 | 需配合[内置特殊字符集](#内置特殊字符集)食用。[测试效果](#https://user-images.githubusercontent.com/2888789/146298106-469577f9-5115-4120-9d27-f1510a3f0cbb.png) |
+| InsideWorld通用资源名分析器(InsideWorldParser) | 是 | 发售日<br/>出版方<br/>标题<br/>期数<br/>原作<br/>语言 | [200212][Anobaka(baka1, baka2)]我是标题(我是原作名)[CN] | 发售日：2020-02-12<br/>出版方：Anobaka<br/>包含2个作者：baka1，baka2<br/>标题：我是标题<br/>原作：我是原作名<br/>语言：中文 | 需配合[内置特殊字符集](#内置特殊字符集)食用。[测试效果](https://user-images.githubusercontent.com/2888789/146298106-469577f9-5115-4120-9d27-f1510a3f0cbb.png) |
 | InsideWorldAv资源名分析器(InsideWorldAvParser) | 是 | 番号 | xxxxxxxxADS-925xxxxxxxxxx | 番号：ADS-925 | |
 | InsideWorldBiliBili资源名分析器(InsideWorldBilibiliParser) | 是 |暂不开放 | 暂不开放 | |
 
@@ -68,7 +68,7 @@
 ### 播放器(Player)
 
 | 播放器 | 系统内置 | 查找内容 |
-| ------------- | ------------- |
+| ------------- | ------------- | ------------- |
 | 图片文件查找器(ImagePlayableFileSelector) | 是 | **第一个**后缀在[.png,.jpeg,.jpg,.bmp,.gif]内的图片文件 | 
 | 视频文件查找器(VideoPlayableFileSelector) | 是 | **全部**后缀在[.mp4,.avi,.mkv,.rmvb,.wmv]内的视频文件 |
 | 音频文件查找器(AudioPlayableFileSelector) | 是 | **全部**后缀在[.mp3,.flac]内的音频文件 | 
@@ -82,6 +82,7 @@
 ### ~~解析器(v1.0.x)~~
 
 **该概念已在v1.1.0版本移除**
+
 每个解析器都是某一种媒体分类的处理器，该处理器目前包含以下几个组件：
 + **分析器**：分析每个媒体名称，提取出关键信息，如：作者/出版方、语言、标题、集数等
 + **可播放文件查找器**：寻找每个媒体的可播放文件，如mp4就是视频媒体的其中一种可播放文件，jpg对应图片媒体，其他同理
