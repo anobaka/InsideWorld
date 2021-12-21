@@ -47,7 +47,7 @@
 
 | 分析器 | 系统内置 | 可解析内容 | 对应名称样例 | 解析结果 | 说明 | 
 | ------------- | ------------- | ------------- | ------------- | ------------- |  ------------- | 
-| InsideWorld通用资源名分析器(InsideWorldParser) | 是 | 发售日<br/>出版方<br/>标题<br/>期数<br/>原作<br/>语言 | [200212][Anobaka(baka1, baka2)]我是标题(我是原作名)[CN] | 发售日：2020-02-12<br/>出版方：Anobaka<br/>包含2个作者：baka1，baka2<br/>标题：我是标题<br/>原作：我是原作名<br/>语言：中文 | 需配合[内置特殊字符集](#内置特殊字符集)食用。[测试效果](#https://user-images.githubusercontent.com/2888789/146298106-469577f9-5115-4120-9d27-f1510a3f0cbb.png) |
+| InsideWorld通用资源名分析器(InsideWorldParser) | 是 | 发售日<br/>出版方<br/>标题<br/>期数<br/>原作<br/>语言 | [200212][Anobaka(baka1, baka2)]我是标题(我是原作名)[CN] | 发售日：2020-02-12<br/>出版方：Anobaka<br/>包含2个作者：baka1，baka2<br/>标题：我是标题<br/>原作：我是原作名<br/>语言：中文 | 需配合[内置特殊字符集](#内置特殊字符集)食用。[测试效果](https://user-images.githubusercontent.com/2888789/146298106-469577f9-5115-4120-9d27-f1510a3f0cbb.png) |
 | InsideWorldAv资源名分析器(InsideWorldAvParser) | 是 | 番号 | xxxxxxxxADS-925xxxxxxxxxx | 番号：ADS-925 | |
 | InsideWorldBiliBili资源名分析器(InsideWorldBilibiliParser) | 是 |暂不开放 | 暂不开放 | |
 
