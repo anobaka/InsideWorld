@@ -8,6 +8,14 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 
 本软件可能富含bug，如需帮助请移步至[如何参与](#如何参与)
 
+## 紧急提醒
+
+如果设置分类时出现了以下错误，请先安装PotPlayer官方安装版
+![image](https://user-images.githubusercontent.com/2888789/147113404-0957b1b9-83c9-4bdc-a852-286ea61c1cab.png)
+
+该问题将在[v1.1.1](https://github.com/Bakabase/InsideWorld/milestone/5)版本修复，修复后无需安装PotPlayer
+
+
 ## 软件截图
 
 ![category](https://user-images.githubusercontent.com/2888789/146939237-295511e1-653b-4896-ba91-1c16fb9069e3.png)
