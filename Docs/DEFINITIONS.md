@@ -73,7 +73,7 @@
 
 #### 自定义可播放文件选择器
 
-可以自定义`可播放文件选择器`，填写**目标后缀名列表**以及**最大选择数量**即可创建。
+可以自定义`可播放文件选择器`，填写**目标后缀名列表**以及**最大选择数量**即可创建。[示例](https://github.com/Bakabase/InsideWorld/blob/main/Docs/HOW-TO-USE.md#%E5%88%9B%E5%BB%BA%E8%87%AA%E5%AE%9A%E4%B9%89%E5%8F%AF%E6%92%AD%E6%94%BE%E6%96%87%E4%BB%B6%E9%80%89%E6%8B%A9%E5%99%A8)
 
 ### 播放器(Player)
 
@@ -86,7 +86,7 @@
 
 #### 自定义播放器
 
-可以自定义`播放器`，填写**可执行文件地址**即可创建。 
+可以自定义`播放器`，填写**可执行文件地址**即可创建。 [示例](https://github.com/Bakabase/InsideWorld/blob/main/Docs/HOW-TO-USE.md#%E5%88%9B%E5%BB%BA%E8%87%AA%E5%AE%9A%E4%B9%89%E6%92%AD%E6%94%BE%E5%99%A8)
 
 
 ### ~~解析器(v1.0.x)~~
