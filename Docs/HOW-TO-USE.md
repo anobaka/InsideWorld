@@ -23,6 +23,18 @@
 
 ![image](https://user-images.githubusercontent.com/2888789/146132647-d99ec4ac-6fb9-4d11-b911-130734490d6a.png)
 
+## 创建自定义组件
+
+![component](https://user-images.githubusercontent.com/2888789/147113998-5ba1b988-5cf3-4a95-a579-bbb34db19ab1.png)
+
+### 创建自定义可播放文件选择器
+
+![component-playable-file-selector](https://user-images.githubusercontent.com/2888789/147114041-0756c05a-f52f-4dcc-8824-4d8eb3130f14.png)
+
+### 创建自定义播放器
+
+![component-player](https://user-images.githubusercontent.com/2888789/147114049-8faa4791-0ee1-4602-b67e-96abaf0e18fb.png)
+
 ## 分类
 
 ### 创建媒体分类
