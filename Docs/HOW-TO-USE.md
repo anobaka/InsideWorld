@@ -69,13 +69,19 @@
 
 ## 下载哔哩哔哩视频（v1.2.0+）
 
+批量下载收藏夹内所有视频的**最高清**版本，同时会保存弹幕和封面图
+
 **该功能本质上是将人工逐项下载的操作自动化完成，短时间内频繁使用该功能会导致账号或ip被ban**
 
 ### 准备环境
 
 + 下载[FFmpeg](https://www.ffmpeg.org/)，用于视频音频合并，并确保ffmpeg.exe所在目录已被加入到系统环境变量中。打开命令行工具，执行ffmpeg，出现类似以下内容则说明配置成功
 ![image](https://user-images.githubusercontent.com/2888789/147718899-32797afa-b3c8-4f80-9b16-3da0e6721433.png)
+
 + 打开InsideWorld，配置哔哩哔哩Cookie与视频下载目录
+
+**目前该Cookie仅用来获取收藏夹信息以及账号对应的最高清晰度的下载权限，没有其他用途，请放心使用**
+
 ![image](https://user-images.githubusercontent.com/2888789/147718998-50078f19-4cca-4d58-a267-f42e2538b52c.png)
 
 ### 获取收藏夹信息
