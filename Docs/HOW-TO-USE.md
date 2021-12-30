@@ -67,6 +67,27 @@
 
 ![resource-batch-tag](https://user-images.githubusercontent.com/2888789/146939623-0789bf76-7d6e-4039-bc6a-7f148b17b2e8.png)
 
+## 下载哔哩哔哩视频（v1.2.0+）
+
+### 准备环境
+
++ 下载[FFmpeg](https://www.ffmpeg.org/)，用于视频音频合并，并确保ffmpeg.exe所在目录已被加入到系统环境变量中。打开命令行工具，执行ffmpeg，出现类似以下内容则说明配置成功
+![image](https://user-images.githubusercontent.com/2888789/147718899-32797afa-b3c8-4f80-9b16-3da0e6721433.png)
++ 打开InsideWorld，配置哔哩哔哩Cookie与视频下载目录
+![image](https://user-images.githubusercontent.com/2888789/147718998-50078f19-4cca-4d58-a267-f42e2538b52c.png)
+
+### 获取收藏夹信息
+
+![image](https://user-images.githubusercontent.com/2888789/147719209-79b8aff6-57ef-4d55-b1c3-d08860bab367.png)
+
+### 下载视频
+
++ 选择收藏夹
++ 点击下载视频
++ 下载进度会出现在收藏夹下方
+![image](https://user-images.githubusercontent.com/2888789/147719321-1a8d6f05-7409-4c4e-a572-5d0682dc3cc6.png)
+![image](https://user-images.githubusercontent.com/2888789/147719353-e50c04eb-268c-4093-abb3-f90730c04dc2.png)
+
 ## 系统设置
 
 ### 更改语言（v1.0.1+）
