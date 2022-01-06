@@ -10,10 +10,11 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 
 ## 软件截图
 
-![category](https://user-images.githubusercontent.com/2888789/146939237-295511e1-653b-4896-ba91-1c16fb9069e3.png)
-![media-libraries](https://user-images.githubusercontent.com/2888789/146939252-40dfc41e-08fd-4568-90d2-9eac2a9b21de.png)
-![component](https://user-images.githubusercontent.com/2888789/146939259-d5e003fe-08a0-44d3-b8ff-b2fd11649602.png)
-![resource](https://user-images.githubusercontent.com/2888789/146939268-63ad4fca-f9d5-49c7-9797-9f8acf9bac0a.png)
+![image](https://user-images.githubusercontent.com/2888789/148412991-51d874df-b631-4c74-942a-a3d40aa0f5a2.png)
+![image](https://user-images.githubusercontent.com/2888789/148412997-da6b1d03-b351-4a34-9aaa-958a78bdbe43.png)
+![image](https://user-images.githubusercontent.com/2888789/148413010-539a887c-5417-469e-9e22-16f6f6b7051f.png)
+![image](https://user-images.githubusercontent.com/2888789/148413023-dab35c1a-d511-4455-a08d-101407f6a705.png)
+![image](https://user-images.githubusercontent.com/2888789/148413443-b4464c12-567d-42ce-ae7e-92868e01bb5a.png)
 ![resource-batch-tag](https://user-images.githubusercontent.com/2888789/146939360-04e46e12-2547-46fe-aefc-b9198b4185b0.png)
 ![image](https://user-images.githubusercontent.com/2888789/147719422-8c7d3d4e-372d-42be-a52c-d03b77b12c5b.png)
 
@@ -21,7 +22,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 
 | 版本 | 发布时间 |
 | ------------- | ------------- |
-| [v1.3.0](https://github.com/Bakabase/InsideWorld/milestone/10) | 2022-01-06 ETA |
+| [v1.3.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.3.0) | 2022-01-07 |
 | [v1.2.1](https://github.com/Bakabase/InsideWorld/releases/tag/v1.2.1) | 2021-12-30 |
 | [v1.2.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.2.0) | 2021-12-30 |
 | [v1.1.2](https://github.com/Bakabase/InsideWorld/releases/tag/v1.1.2) | 2021-12-24 |
