@@ -14,7 +14,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 ![image](https://user-images.githubusercontent.com/2888789/148412997-da6b1d03-b351-4a34-9aaa-958a78bdbe43.png)
 ![image](https://user-images.githubusercontent.com/2888789/148413010-539a887c-5417-469e-9e22-16f6f6b7051f.png)
 ![image](https://user-images.githubusercontent.com/2888789/148413023-dab35c1a-d511-4455-a08d-101407f6a705.png)
-![image](https://user-images.githubusercontent.com/2888789/148413443-b4464c12-567d-42ce-ae7e-92868e01bb5a.png)
+![WeChat Screenshot_20220110205021](https://user-images.githubusercontent.com/2888789/148768737-aa61e137-d88b-4383-9b0e-1ddfca40983f.png)
 ![resource-batch-tag](https://user-images.githubusercontent.com/2888789/146939360-04e46e12-2547-46fe-aefc-b9198b4185b0.png)
 ![image](https://user-images.githubusercontent.com/2888789/147719422-8c7d3d4e-372d-42be-a52c-d03b77b12c5b.png)
 
@@ -23,7 +23,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 | 版本 | 发布时间 |
 | ------------- | ------------- |
 | [v1.3.2](https://github.com/Bakabase/InsideWorld/milestone/12) | 2022-01 ETA |
-| [v1.3.1](https://github.com/Bakabase/InsideWorld/milestone/11) | 2022-01-10 |
+| [v1.3.1](https://github.com/Bakabase/InsideWorld/releases/tag/v1.3.1) | 2022-01-10 |
 | [v1.3.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.3.0) | 2022-01-07 |
 | [历史版本](https://github.com/Bakabase/InsideWorld/milestones?state=closed) | |
 
