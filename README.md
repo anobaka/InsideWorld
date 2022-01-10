@@ -22,17 +22,10 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 
 | 版本 | 发布时间 |
 | ------------- | ------------- |
-| [v1.3.1](https://github.com/Bakabase/InsideWorld/milestone/11) | 2022-01 ETA |
+| [v1.3.2](https://github.com/Bakabase/InsideWorld/milestone/12) | 2022-01 ETA |
+| [v1.3.1](https://github.com/Bakabase/InsideWorld/milestone/11) | 2022-01-10 |
 | [v1.3.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.3.0) | 2022-01-07 |
-| [v1.2.1](https://github.com/Bakabase/InsideWorld/releases/tag/v1.2.1) | 2021-12-30 |
-| [v1.2.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.2.0) | 2021-12-30 |
-| [v1.1.2](https://github.com/Bakabase/InsideWorld/releases/tag/v1.1.2) | 2021-12-24 |
-| [v1.1.1](https://github.com/Bakabase/InsideWorld/releases/tag/v1.1.1) | 2021-12-23 |
-| [v1.1.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.1.0) | 2021-12-21 |
-| [v1.0.3](https://github.com/Bakabase/InsideWorld/releases/tag/v1.0.3) | 2021-12-16 |
-| [v1.0.2](https://github.com/Bakabase/InsideWorld/releases/tag/v1.0.2) | 2021-12-16 |
-| [v1.0.1](https://github.com/Bakabase/InsideWorld/releases/tag/v1.0.1) | 2021-12-15 | 
-| [v1.0.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.0.0) | 2021-12-15 |
+| [历史版本](https://github.com/Bakabase/InsideWorld/milestones?state=closed) | |
 
 ## 开发中
 
@@ -51,7 +44,9 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 
 ## 核心概念
 
-**强烈建议**了解InsideWorld的[核心概念](https://github.com/Bakabase/InsideWorld/blob/main/Docs/DEFINITIONS.md)后再开始正式使用
+**强烈建议**了解InsideWorld的核心概念后再开始正式使用
+
+[核心概念](https://github.com/Bakabase/InsideWorld/blob/main/Docs/DEFINITIONS.md)
 
 ## 如何使用
 
