@@ -34,6 +34,11 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 | [v1.0.1](https://github.com/Bakabase/InsideWorld/releases/tag/v1.0.1) | 2021-12-15 | 
 | [v1.0.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.0.0) | 2021-12-15 |
 
+## 开发中
+
++ [功能](https://github.com/Bakabase/InsideWorld/milestones)
++ [计划](https://github.com/Bakabase/InsideWorld/projects/1)
+
 ## 环境要求
 
 + 最低适配屏幕分辨率为1280x720，建议分辨率1920x1080
@@ -55,10 +60,6 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 ## 常见问题
 
 [常见问题列表](https://github.com/Bakabase/InsideWorld/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aclosed+label%3Adocumentation)
-
-## 开发中的功能
-
-[开发中的功能](https://github.com/Bakabase/InsideWorld/milestones)
 
 ## 特别感谢
 
