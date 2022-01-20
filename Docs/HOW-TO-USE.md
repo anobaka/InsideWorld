@@ -56,6 +56,12 @@
 点击媒体库可以直接播放（如果是视频媒体，则需要安装PotPlayer）
 ![resource](https://user-images.githubusercontent.com/2888789/146939604-e605090a-a706-4f7b-a094-b666962538c5.png)
 
+## 快速预览文件夹（v1.4.0+）
+
+快速预览**不会**保存任何数据
+
+![image](https://user-images.githubusercontent.com/2888789/150292583-344b22bf-c9c7-4b8c-b5ac-224e14fd827d.png)
+
 ## 标签
 
 ### 添加标签（v1.0.3+）
@@ -96,8 +102,17 @@
 ![image](https://user-images.githubusercontent.com/2888789/147719321-1a8d6f05-7409-4c4e-a572-5d0682dc3cc6.png)
 ![image](https://user-images.githubusercontent.com/2888789/147719353-e50c04eb-268c-4093-abb3-f90730c04dc2.png)
 
+## 一键解压（v1.4.0+）
+
+一键解压目录下所有压缩包
+![image](https://user-images.githubusercontent.com/2888789/150292887-9f90f5e8-3a04-4124-80ad-f5c5313e4762.png)
+
 ## 系统设置
 
 ### 更改语言（v1.0.1+）
 
 ![image](https://user-images.githubusercontent.com/2888789/146198873-4eb53585-574e-4745-af24-17f4bd54a0ae.png)
+
+### 更新（v1.4.0+）
+
+![image](https://user-images.githubusercontent.com/2888789/150292282-5a17dd0c-1436-4887-9fdd-8f38cd6af623.png)
