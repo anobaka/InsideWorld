@@ -60,7 +60,7 @@
 
 快速预览**不会**保存任何数据
 
-![image](https://user-images.githubusercontent.com/2888789/150292583-344b22bf-c9c7-4b8c-b5ac-224e14fd827d.png)
+![WeChat Image_20220120154105](https://user-images.githubusercontent.com/2888789/150294673-4dbaf6a0-b142-4e00-82bb-bc12ac2ee5fe.png)
 
 ## 标签
 
