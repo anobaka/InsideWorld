@@ -10,6 +10,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 
 ## 软件截图
 ![WeChat Screenshot_20220110205021](https://user-images.githubusercontent.com/2888789/148768737-aa61e137-d88b-4383-9b0e-1ddfca40983f.png)
+![image](https://user-images.githubusercontent.com/2888789/150293843-86dc6a77-0d72-40ac-9d9b-72f9db0ef725.png)
 ![image](https://user-images.githubusercontent.com/2888789/150292583-344b22bf-c9c7-4b8c-b5ac-224e14fd827d.png)
 ![image](https://user-images.githubusercontent.com/2888789/148412991-51d874df-b631-4c74-942a-a3d40aa0f5a2.png)
 ![image](https://user-images.githubusercontent.com/2888789/148412997-da6b1d03-b351-4a34-9aaa-958a78bdbe43.png)
