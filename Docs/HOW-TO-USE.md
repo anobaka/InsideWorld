@@ -51,6 +51,10 @@
 
 ![image](https://user-images.githubusercontent.com/2888789/146116964-1e4ec4ce-9415-4a57-96b3-76e9a92bc8ca.png)
 
+#### 开启媒体库定时自动同步
+
+![image](https://user-images.githubusercontent.com/2888789/150361410-68e02536-03b2-4f4c-b860-de60751c28fc.png)
+
 ### 使用媒体库
 
 点击媒体库可以直接播放（如果是视频媒体，则需要安装PotPlayer）
@@ -105,7 +109,7 @@
 ## 一键解压（v1.4.0+）
 
 一键解压目录下所有压缩包
-![image](https://user-images.githubusercontent.com/2888789/150292887-9f90f5e8-3a04-4124-80ad-f5c5313e4762.png)
+![image](https://user-images.githubusercontent.com/2888789/150361198-dc2ad75f-8a97-4ee3-ab5d-ce163d859656.png)
 
 ## 系统设置
 
