@@ -115,4 +115,4 @@
 
 ### 更新（v1.4.0+）
 
-![image](https://user-images.githubusercontent.com/2888789/150292282-5a17dd0c-1436-4887-9fdd-8f38cd6af623.png)
+![image](https://user-images.githubusercontent.com/2888789/150296183-024d65b4-260f-4547-8f7e-ea1163976bad.png)
