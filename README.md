@@ -9,14 +9,15 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 本软件可能富含bug，如需帮助请移步至[如何参与](#如何参与)
 
 ## 软件截图
-
+![WeChat Screenshot_20220110205021](https://user-images.githubusercontent.com/2888789/148768737-aa61e137-d88b-4383-9b0e-1ddfca40983f.png)
+![image](https://user-images.githubusercontent.com/2888789/150292583-344b22bf-c9c7-4b8c-b5ac-224e14fd827d.png)
 ![image](https://user-images.githubusercontent.com/2888789/148412991-51d874df-b631-4c74-942a-a3d40aa0f5a2.png)
 ![image](https://user-images.githubusercontent.com/2888789/148412997-da6b1d03-b351-4a34-9aaa-958a78bdbe43.png)
 ![image](https://user-images.githubusercontent.com/2888789/148413010-539a887c-5417-469e-9e22-16f6f6b7051f.png)
 ![image](https://user-images.githubusercontent.com/2888789/148413023-dab35c1a-d511-4455-a08d-101407f6a705.png)
-![WeChat Screenshot_20220110205021](https://user-images.githubusercontent.com/2888789/148768737-aa61e137-d88b-4383-9b0e-1ddfca40983f.png)
 ![resource-batch-tag](https://user-images.githubusercontent.com/2888789/146939360-04e46e12-2547-46fe-aefc-b9198b4185b0.png)
 ![image](https://user-images.githubusercontent.com/2888789/147719422-8c7d3d4e-372d-42be-a52c-d03b77b12c5b.png)
+![image](https://user-images.githubusercontent.com/2888789/150292887-9f90f5e8-3a04-4124-80ad-f5c5313e4762.png)
 
 ## 版本日志
 
