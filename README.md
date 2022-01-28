@@ -16,6 +16,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 ![image](https://user-images.githubusercontent.com/2888789/148413010-539a887c-5417-469e-9e22-16f6f6b7051f.png)
 ![image](https://user-images.githubusercontent.com/2888789/148413023-dab35c1a-d511-4455-a08d-101407f6a705.png)
 ![resource-batch-tag](https://user-images.githubusercontent.com/2888789/146939360-04e46e12-2547-46fe-aefc-b9198b4185b0.png)
+![image](https://user-images.githubusercontent.com/2888789/151498406-58f08dad-a01d-4af6-8f74-e1418516d031.png)
 ![image](https://user-images.githubusercontent.com/2888789/147719422-8c7d3d4e-372d-42be-a52c-d03b77b12c5b.png)
 ![image](https://user-images.githubusercontent.com/2888789/150361104-0da7909d-8a6f-4af1-abe8-b2d1b598938a.png)
 
