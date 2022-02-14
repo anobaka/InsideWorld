@@ -7,14 +7,6 @@
 
 ![image](https://user-images.githubusercontent.com/2888789/146113293-d6b5dab3-8fec-40da-a751-598d25119c57.png)
 
-### 配置本地预览加速路径
-
-![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) `为确保磁盘留有足够的可用空间并且加速日常预览，强烈建议在正式使用前配置该项`
-
-该路径主要用于存储日常产生的临时文件，如：缩略图等，如果不配置该项，则默认存储在下图中的`App Data Path/data`内
-
-![image](https://user-images.githubusercontent.com/2888789/146113550-c2de1050-960c-4927-8c1c-2da6245235fc.png)
-
 ### 初始化内置特殊字符集
 
 ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) `为确保能从资源名称中提取出更多的信息，强烈建议正式使用前配置该项`
@@ -22,6 +14,14 @@
 详见[分析器](#https://github.com/Bakabase/InsideWorld/blob/main/Docs/DEFINITIONS.md#%E5%88%86%E6%9E%90%E5%99%A8parser)
 
 ![image](https://user-images.githubusercontent.com/2888789/146132647-d99ec4ac-6fb9-4d11-b911-130734490d6a.png)
+
+### ~~配置本地加速路径（从v1.5.0版本后暂时没有应用场景，可忽略本项）~~
+
+`为确保磁盘留有足够的可用空间并且加速日常预览，强烈建议在正式使用前配置该项`
+
+该路径主要用于存储日常产生的临时文件，如：缩略图等，如果不配置该项，则默认存储在下图中的`App Data Path/data`内
+
+![image](https://user-images.githubusercontent.com/2888789/146113550-c2de1050-960c-4927-8c1c-2da6245235fc.png)
 
 ## 创建自定义组件
 
