@@ -18,12 +18,14 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 ![image](https://user-images.githubusercontent.com/2888789/151498406-58f08dad-a01d-4af6-8f74-e1418516d031.png)
 ![image](https://user-images.githubusercontent.com/2888789/147719422-8c7d3d4e-372d-42be-a52c-d03b77b12c5b.png)
 ![image](https://user-images.githubusercontent.com/2888789/150361104-0da7909d-8a6f-4af1-abe8-b2d1b598938a.png)
+![jav-downloader](https://user-images.githubusercontent.com/2888789/154402544-af0d3062-1b1c-48e1-a85b-9041fbefc213.png)
+![jav-downloader-result](https://user-images.githubusercontent.com/2888789/154402551-be02769f-6aba-47a0-b253-a7b625cc6070.png)
 
 ## 版本日志
 
 | 版本 | 发布时间 |
 | ------------- | ------------- |
-| [v1.5.1](https://github.com/Bakabase/InsideWorld/milestone/15) | 2022-Q1 |
+| [v1.5.1-rc](https://github.com/Bakabase/InsideWorld/milestone/15) | 2022-02-17 |
 | [v1.5.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.0) | 2022-02-17 |
 | [v1.4.1](https://github.com/Bakabase/InsideWorld/releases/tag/v1.4.1) | 2022-01-28 |
 | [v1.4.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.4.0) | 2022-01-20 |
