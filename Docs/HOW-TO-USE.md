@@ -47,6 +47,9 @@
 
 ![image](https://user-images.githubusercontent.com/2888789/146116644-a6f3171c-f5ee-4e97-bc35-64e29ed48a6e.png)
 
+#### 如何使用网络驱动器
+[#50](https://github.com/Bakabase/InsideWorld/issues/50)
+
 ### 同步媒体库
 
 ![image](https://user-images.githubusercontent.com/2888789/146116964-1e4ec4ce-9415-4a57-96b3-76e9a92bc8ca.png)
@@ -60,11 +63,13 @@
 点击媒体库可以直接播放（如果是视频媒体，则需要安装PotPlayer）
 ![resource](https://user-images.githubusercontent.com/2888789/146939604-e605090a-a706-4f7b-a094-b666962538c5.png)
 
-## 快速预览文件夹（v1.4.0+）
+## ~~快速预览文件夹（v1.4.0+）~~
 
-快速预览**不会**保存任何数据
+该功能于v1.5.0起已移除
 
-![WeChat Image_20220120154105](https://user-images.githubusercontent.com/2888789/150294673-4dbaf6a0-b142-4e00-82bb-bc12ac2ee5fe.png)
+~~快速预览**不会**保存任何数据~~
+
+~~![WeChat Image_20220120154105](https://user-images.githubusercontent.com/2888789/150294673-4dbaf6a0-b142-4e00-82bb-bc12ac2ee5fe.png)~~
 
 ## 标签
 
