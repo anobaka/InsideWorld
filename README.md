@@ -9,12 +9,12 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 本软件可能富含bug，如需帮助请移步至[如何参与](#如何参与)
 
 ## 软件截图
-![WeChat Screenshot_20220110205021](https://user-images.githubusercontent.com/2888789/148768737-aa61e137-d88b-4383-9b0e-1ddfca40983f.png)
-![image](https://user-images.githubusercontent.com/2888789/148412991-51d874df-b631-4c74-942a-a3d40aa0f5a2.png)
-![image](https://user-images.githubusercontent.com/2888789/148412997-da6b1d03-b351-4a34-9aaa-958a78bdbe43.png)
-![image](https://user-images.githubusercontent.com/2888789/148413010-539a887c-5417-469e-9e22-16f6f6b7051f.png)
-![image](https://user-images.githubusercontent.com/2888789/148413023-dab35c1a-d511-4455-a08d-101407f6a705.png)
-![resource-batch-tag](https://user-images.githubusercontent.com/2888789/146939360-04e46e12-2547-46fe-aefc-b9198b4185b0.png)
+![resource](https://user-images.githubusercontent.com/2888789/156361947-79f65ae0-e966-4678-a1dc-6d97ed00c785.jpg)
+![category](https://user-images.githubusercontent.com/2888789/156361962-016c707a-fca3-4d30-8897-7b06a0b4b9f9.png)
+![media-library](https://user-images.githubusercontent.com/2888789/156361967-20340643-4d1a-4588-9216-6432c2699e51.png)
+![component](https://user-images.githubusercontent.com/2888789/156361974-ef794102-91ff-4a2c-981c-2ff778f76bc9.png)
+![tag](https://user-images.githubusercontent.com/2888789/156361982-76f614ce-2b35-4f36-87ac-95d7b7f75cde.png)
+![tool](https://user-images.githubusercontent.com/2888789/156361991-7b3e98ea-3402-4952-8c5e-b71ac307e729.png)
 ![image](https://user-images.githubusercontent.com/2888789/151498406-58f08dad-a01d-4af6-8f74-e1418516d031.png)
 ![image](https://user-images.githubusercontent.com/2888789/147719422-8c7d3d4e-372d-42be-a52c-d03b77b12c5b.png)
 ![image](https://user-images.githubusercontent.com/2888789/150361104-0da7909d-8a6f-4af1-abe8-b2d1b598938a.png)
@@ -26,7 +26,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 | 版本 | 发布时间 |
 | ------------- | ------------- |
 | [v1.5.1](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.1) | 2022-03-W2 |
-| [v1.5.1-rc2](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.1) | 2022-03-01 |
+| [v1.5.1-rc2](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.1) | 2022-03-02 |
 | [v1.5.1-rc](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.1-rc) | 2022-02-17 |
 | [v1.5.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.0) | 2022-02-17 |
 | [v1.4.1](https://github.com/Bakabase/InsideWorld/releases/tag/v1.4.1) | 2022-01-28 |
@@ -77,7 +77,3 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 ### QQ群
 
 ![InsideWorld群聊二维码](https://user-images.githubusercontent.com/2888789/146117768-7d92af78-37ca-426e-a820-97b896b591eb.png)
-
-### 微信群（不定期更新）
-
-![WeChat Screenshot_20211221181240](https://user-images.githubusercontent.com/2888789/146912454-1f97932c-5ec5-41f5-8402-3cce4d5e0201.png)
