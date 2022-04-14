@@ -9,11 +9,13 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 本软件可能富含bug，如需帮助请移步至[如何参与](#如何参与)
 
 ## 软件截图
-![resource](https://user-images.githubusercontent.com/2888789/156361947-79f65ae0-e966-4678-a1dc-6d97ed00c785.jpg)
-![category](https://user-images.githubusercontent.com/2888789/156361962-016c707a-fca3-4d30-8897-7b06a0b4b9f9.png)
-![media-library](https://user-images.githubusercontent.com/2888789/156361967-20340643-4d1a-4588-9216-6432c2699e51.png)
+![resource](https://user-images.githubusercontent.com/2888789/163333002-ba86c089-9134-4fa3-8e0e-853d24f4e8e3.png)
+![resource-filters](https://user-images.githubusercontent.com/2888789/163333027-12b28a03-f29d-4999-bfde-7e7fedbbe73b.png)
+![category](https://user-images.githubusercontent.com/2888789/163333014-37fb0b1d-4deb-4979-b79e-ed159a285ffc.png)
+![media-libraries](https://user-images.githubusercontent.com/2888789/163333035-1a2d9567-bb3e-40f0-8562-026010b41007.png)
 ![component](https://user-images.githubusercontent.com/2888789/156361974-ef794102-91ff-4a2c-981c-2ff778f76bc9.png)
-![tag](https://user-images.githubusercontent.com/2888789/156361982-76f614ce-2b35-4f36-87ac-95d7b7f75cde.png)
+![tag](https://user-images.githubusercontent.com/2888789/163333071-a24f151f-92da-4a04-812e-9ce7b1451198.png)
+![tag-group](https://user-images.githubusercontent.com/2888789/163333079-47fa9edf-3d20-4458-a226-1d7cd54fb99e.png)
 ![tool](https://user-images.githubusercontent.com/2888789/156361991-7b3e98ea-3402-4952-8c5e-b71ac307e729.png)
 ![image](https://user-images.githubusercontent.com/2888789/151498406-58f08dad-a01d-4af6-8f74-e1418516d031.png)
 ![image](https://user-images.githubusercontent.com/2888789/147719422-8c7d3d4e-372d-42be-a52c-d03b77b12c5b.png)
@@ -25,7 +27,8 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 
 | 版本 | 发布时间 |
 | ------------- | ------------- |
-| [v1.5.2](https://github.com/Bakabase/InsideWorld/milestone/17) | 2022-03 ETA |
+| [v1.5.2](https://github.com/Bakabase/InsideWorld/milestone/17) | 2022-04 ETA |
+| [v1.5.2-rc](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.2-rc) | 2022-04-14 |
 | [v1.5.1](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.1) | 2022-03-11 |
 | [v1.5.1-rc2](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.1-rc2) | 2022-03-02 |
 | [v1.5.1-rc](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.1-rc) | 2022-02-17 |
