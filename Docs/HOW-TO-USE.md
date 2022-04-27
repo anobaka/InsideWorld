@@ -48,7 +48,7 @@
   + 在软件点击播放
   + 打开任务管理器，选择【详细进程】，并确保有【命令行】这一列，如果未找到该列，则在【名称】列右键，点击【选择列】，然后勾选【命令行】
   
-  ![image](https://user-images.githubusercontent.com/2888789/165484808-7f7b11c2-1588-434a-8bfb-55faf7ead837.png)
+      ![image](https://user-images.githubusercontent.com/2888789/165484808-7f7b11c2-1588-434a-8bfb-55faf7ead837.png)
   + 找到自定义播放器的进程名，左键点击，然后ctrl+c复制，然后将结果粘贴给开发者
 
 ## 分类
