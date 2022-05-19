@@ -3,9 +3,12 @@
 ## 安装与初始化
 
 ### 下载与安装
-从[Releases](https://github.com/Bakabase/InsideWorld/releases)下载最新版本安装包进行安装，安装时请选择以下选项
 
-![image](https://user-images.githubusercontent.com/2888789/146113293-d6b5dab3-8fec-40da-a751-598d25119c57.png)
+v1.6.0开始暂不提供安装包，对应的将会提供绿色压缩包
+
+~~从[Releases](https://github.com/Bakabase/InsideWorld/releases)下载最新版本安装包进行安装，安装时请选择以下选项~~
+
+~~![image](https://user-images.githubusercontent.com/2888789/146113293-d6b5dab3-8fec-40da-a751-598d25119c57.png)~~
 
 ### 初始化内置特殊字符集
 
@@ -17,9 +20,9 @@
 
 ### ~~配置本地加速路径（从v1.5.0版本后暂时没有应用场景，可忽略本项）~~
 
-`为确保磁盘留有足够的可用空间并且加速日常预览，强烈建议在正式使用前配置该项`
+~~`为确保磁盘留有足够的可用空间并且加速日常预览，强烈建议在正式使用前配置该项`~~
 
-该路径主要用于存储日常产生的临时文件，如：缩略图等，如果不配置该项，则默认存储在下图中的`App Data Path/data`内
+~~该路径主要用于存储日常产生的临时文件，如：缩略图等，如果不配置该项，则默认存储在下图中的`App Data Path/data`内~~
 
 ![image](https://user-images.githubusercontent.com/2888789/146113550-c2de1050-960c-4927-8c1c-2da6245235fc.png)
 
@@ -33,11 +36,11 @@
 
 ### 创建自定义播放器
 
-![component-player](https://user-images.githubusercontent.com/2888789/147114049-8faa4791-0ee1-4602-b67e-96abaf0e18fb.png)
+![image](https://user-images.githubusercontent.com/2888789/169221738-7c5d89ce-41d2-4422-945d-27c57883f6e0.png)
 
 #### 为什么自定义播放器无法启动/启动后未正常打开可播放文件
 
-1. 自定义播放器本身需要是可执行文件，并且可接受第一个参数作为播放文件，调用播放器时实际使用的命令类似：
+1. 自定义播放器本身需要是可执行文件，并且可接受第一个参数作为播放文件，调用播放器时实际使用的命令类似（v1.6.0开始你可以指定命令模板）：
 
   ```
   "C:\Potplayer.exe" "C:\龙珠\1.mp4"
@@ -57,37 +60,35 @@
 
 ### 创建媒体分类
 
-![category-custom-component](https://user-images.githubusercontent.com/2888789/146939494-64edd77f-55d5-4559-9afd-b3f7cca8a70d.png)
+![category-custom-component](https://user-images.githubusercontent.com/2888789/169222136-8b6bb7a1-109d-406d-bd37-3fcfdd989202.png)
+
+### 分类配置
+
+其他配置说明可直接点击程序内的？帮助
+
+![image](https://user-images.githubusercontent.com/2888789/169222445-116cfc14-4238-4931-8d34-4ec8f3aaa12e.png)
 
 ## 媒体库
 
 ### 创建媒体库
 
-![image](https://user-images.githubusercontent.com/2888789/146116644-a6f3171c-f5ee-4e97-bc35-64e29ed48a6e.png)
+![media-library-creation](https://user-images.githubusercontent.com/2888789/169222736-8582a535-422a-4cfd-aab9-c5410b7b3c4b.png)
+
+### 填写和验证资源查找规则
+
+![media-library-path-congfiguration-validator](https://user-images.githubusercontent.com/2888789/169222752-3257154b-d602-4fe7-bbf3-d03f2727087b.png)
 
 #### 如何使用网络驱动器
 [#50](https://github.com/Bakabase/InsideWorld/issues/50)
 
 ### 同步媒体库
 
-![image](https://user-images.githubusercontent.com/2888789/146116964-1e4ec4ce-9415-4a57-96b3-76e9a92bc8ca.png)
-
-#### 开启媒体库定时自动同步
-
-![image](https://user-images.githubusercontent.com/2888789/150361410-68e02536-03b2-4f4c-b860-de60751c28fc.png)
+![media-library-synchronization](https://user-images.githubusercontent.com/2888789/169222880-3cde423e-5266-4aac-af0e-419130996eb6.png)
 
 ### 使用媒体库
 
 点击媒体库可以直接播放（如果是视频媒体，则需要安装PotPlayer）
 ![resource](https://user-images.githubusercontent.com/2888789/146939604-e605090a-a706-4f7b-a094-b666962538c5.png)
-
-## ~~快速预览文件夹（v1.4.0+）~~
-
-该功能于v1.5.0起已移除
-
-~~快速预览**不会**保存任何数据~~
-
-~~![WeChat Image_20220120154105](https://user-images.githubusercontent.com/2888789/150294673-4dbaf6a0-b142-4e00-82bb-bc12ac2ee5fe.png)~~
 
 ## 标签
 
@@ -130,6 +131,8 @@
 ![image](https://user-images.githubusercontent.com/2888789/147719353-e50c04eb-268c-4093-abb3-f90730c04dc2.png)
 
 ## 一键解压（v1.4.0+）
+
+**慎用，不稳定**
 
 一键解压目录下所有压缩包
 ![image](https://user-images.githubusercontent.com/2888789/150361198-dc2ad75f-8a97-4ee3-ab5d-ce163d859656.png)
