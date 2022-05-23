@@ -1,4 +1,4 @@
-# 如何使用
+d# 如何使用
 
 ## 安装与初始化
 
@@ -67,6 +67,10 @@ v1.6.0开始暂不提供安装包，对应的将会提供绿色压缩包
 其他配置说明可直接点击程序内的？帮助
 
 ![image](https://user-images.githubusercontent.com/2888789/169222445-116cfc14-4238-4931-8d34-4ec8f3aaa12e.png)
+
+### 增强器
+
+![image](https://user-images.githubusercontent.com/2888789/169787374-ceda54e6-46fb-4b55-b958-34aa5e76e39b.png)
 
 ## 媒体库
 
