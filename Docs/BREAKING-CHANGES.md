@@ -2,6 +2,7 @@
 
 ## v1.6.0
 
++ 此版本开始需要最新的Edge环境，可以通过windows update始终保持edge最新版本，或下载运行环境[WebView2](https://go.microsoft.com/fwlink/p/?LinkId=2124703)
 + 此版本暂不提供一键安装程序，仅提供自动更新机制以及绿色压缩包，启动文件保持不变，依然是**Bakabase.InsideWorld.exe**
 + 原分析器被弃用
   + **InsideWorld通用资源名分析器**已变更为**InsideWorld增强器**，请在分类-增强器中重新选择
