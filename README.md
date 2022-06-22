@@ -30,18 +30,9 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 | ------------- | ------------- |
 | [v1.6.1-rc](https://github.com/anobaka/InsideWorld/milestone/19) | 2022-06-W4 |
 | [v1.6.0](https://github.com/anobaka/InsideWorld/releases/tag/v1.6.0-rc2) | 2022-06-W4 |
-| [v1.6.0-rc2](https://github.com/anobaka/InsideWorld/releases/tag/v1.6.0-rc2) | 2022-05-26 |
-| [v1.6.0-rc](https://github.com/anobaka/InsideWorld/releases/tag/v1.6.0-rc) | 2022-05-23 |
 | [v1.5.2](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.2) | 2022-04-21 |
-| [v1.5.2-rc](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.2-rc) | 2022-04-14 |
 | [v1.5.1](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.1) | 2022-03-11 |
-| [v1.5.1-rc2](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.1-rc2) | 2022-03-02 |
-| [v1.5.1-rc](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.1-rc) | 2022-02-17 |
 | [v1.5.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.0) | 2022-02-17 |
-| [v1.4.1](https://github.com/Bakabase/InsideWorld/releases/tag/v1.4.1) | 2022-01-28 |
-| [v1.4.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.4.0) | 2022-01-20 |
-| [v1.3.1](https://github.com/Bakabase/InsideWorld/releases/tag/v1.3.1) | 2022-01-10 |
-| [v1.3.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.3.0) | 2022-01-07 |
 | [历史版本](https://github.com/Bakabase/InsideWorld/milestones?state=closed) | |
 
 ## 开发中
