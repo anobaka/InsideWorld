@@ -1,0 +1,14 @@
+items:
+- title: 使用说明
+  url: /doc
+
+- title: 下载
+  url: https://github.com/anobaka/InsideWorld/releases
+  target: _blank
+
+- title: 更新说明
+  url: /BREAKING-CHANGES.md
+
+- title: Github
+  url: https://github.com/anobaka/InsideWorld
+  target: _blank

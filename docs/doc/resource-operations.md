@@ -1,0 +1,1 @@
+![resource-operations](/img/resource-operations-1.png)

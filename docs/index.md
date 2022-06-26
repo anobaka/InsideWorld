@@ -1,4 +1,11 @@
-# Inside World
+---
+layout: default
+title: Inside World
+permalink: /
+# github token: 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
+---
+
+<!-- # Inside World -->
 
 Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、预览与播放。
 
@@ -9,7 +16,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 本软件可能富含bug，如需帮助请移步至[如何参与](#如何参与)
 
 ## 软件截图
-![resource](https://user-images.githubusercontent.com/2888789/169789693-89d2619a-61c0-4d47-b34e-f24e03c79c7d.png)
+<!-- ![resource](https://user-images.githubusercontent.com/2888789/169789693-89d2619a-61c0-4d47-b34e-f24e03c79c7d.png) -->
 ![resource-filter1](https://user-images.githubusercontent.com/2888789/169790106-2d91fb65-6156-4ede-a501-5b539afc17e3.png)
 ![resource-filter2](https://user-images.githubusercontent.com/2888789/169790112-0ec39c4b-894e-4b65-8b2d-4296a6c17965.png)
 ![resource-quick-search-slot](https://user-images.githubusercontent.com/2888789/169790626-e8783333-d550-4a2c-863b-c49e4c1f8c9b.png)
