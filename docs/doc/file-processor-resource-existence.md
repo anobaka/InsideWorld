@@ -1,0 +1,1 @@
+![file-processor-resource-existence](/img/file-processor-resource-existence.png)

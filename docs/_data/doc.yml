@@ -25,7 +25,7 @@
     path: "resource-detail"
 - title: "管理标签"
   path: "tag"
-- title: "文件处理器"
+- title: "文件处理器(v1.6.1+)"
   path: "file-processor"
   children: 
   - title: "基础功能"
@@ -44,7 +44,7 @@
     path: "file-processor-standardize"
   - title: "批量移动"
     path: "file-processor-move"
-  - title: "批量修改文件名"
+  - title: "批量修改文件名（开发中）"
     path: "file-processor-rename"
 - title: "工具"
   path: "tool"
