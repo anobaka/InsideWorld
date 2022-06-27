@@ -4,8 +4,6 @@ title: Inside World
 permalink: /
 ---
 
-<!-- # Inside World -->
-
 Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、预览与播放。
 
 目前支持动画、漫画、音声、本子、电影、图集等媒体的管理，老司机食用效果更加哦~
@@ -14,7 +12,15 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 
 本软件可能富含bug，如需帮助请移步至[如何参与](#如何参与)
 
-## 软件截图
+<ul>
+{% for item in site.data.homemenu %}
+    <li>
+        <a href="#{{item.title}}">{{item.title}}</a>
+    </li>
+{% endfor %}
+</ul>
+
+## 功能预览
 ![resource](/img/resource-1.png)
 ![resource](/img/resource-filter.png)
 ![resource](/img/resource-detail-1.png)
