@@ -30,6 +30,8 @@
   children: 
   - title: "基础功能"
     path: "file-processor-basic"
+  - title: "快速预览"
+    path: "file-processor-preview"
   - title: "查询资源是否已收集"
     path: "file-processor-resource-existence"
   - title: "一键解压"
