@@ -14,6 +14,8 @@
       path: "category-enhancer"
     - title: "媒体库"
       path: "category-library"
+    - title: "删除增强记录(v1.6.1+)"
+      path: "category-remove-enhancement-records"
 - title: "管理资源"
   path: "resource"
   children: 
@@ -23,6 +25,8 @@
     path: "resource-operations"
   - title: "批量移动(v1.6.1+)"
     path: "resource-move"
+  - title: "增强记录"
+    path: "resource-enhancement-record"
   - title: "资源详情"
     path: "resource-detail"
 - title: "管理标签"
