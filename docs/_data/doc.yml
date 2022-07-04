@@ -19,8 +19,10 @@
   children: 
   - title: "自定义筛选、排序和展示效果"
     path: "resource-filter"
-  - title: "资源操作"
+  - title: "基础操作"
     path: "resource-operations"
+  - title: "批量移动(v1.6.1+)"
+    path: "resource-move"
   - title: "资源详情"
     path: "resource-detail"
 - title: "管理标签"
