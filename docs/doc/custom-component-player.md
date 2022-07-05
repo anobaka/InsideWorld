@@ -1,5 +1,6 @@
-![custom-component-player](/img/custom-component-player-1.png)
+**注：子播放器功能仅在v1.6.1后可用**
 
+![custom-component-player](/img/custom-component-player-1.png)
 
 **为什么自定义播放器无法启动/启动后未正常打开可播放文件**
 
