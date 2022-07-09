@@ -1,5 +1,9 @@
 # 破坏性变更
 
+## v1.6.1
+
++ 原在分类设置中的【从压缩包获取封面】已转移至【系统设置】，需要手动重新开启；
+
 ## v1.6.0
 
 + 此版本开始需要最新的Edge环境，现已集成该环境，无需单独下载安装。~~可以通过windows update始终保持edge最新版本，或下载运行环境[WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download-section)，Evergreen Bootstrapper和Evergreen Standalone Installer均可~~
