@@ -31,7 +31,7 @@
     path: "resource-detail"
 - title: "管理标签"
   path: "tag"
-- title: "文件处理器(v1.6.1+)"
+- title: "文件处理器(v1.6.1+，如果你疲于文件下载完成后的解压、移动、预览操作，请看这里)"
   path: "file-processor"
   children: 
   - title: "基础功能"
