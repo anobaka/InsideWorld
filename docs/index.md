@@ -39,7 +39,8 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 
 | 版本 | 发布时间 |
 | ------------- | ------------- |
-| [v1.6.1-rc](https://github.com/anobaka/InsideWorld/milestone/25) | 2022-07-W4 ETA |
+| [v1.6.2-beta](https://github.com/anobaka/InsideWorld/milestone/22) | 2022-08-W2 ETA |
+| [v1.6.1-rc](https://github.com/anobaka/InsideWorld/releases/tag/v1.6.1-rc) | 2022-07-26 |
 | [v1.6.1-beta3](https://github.com/anobaka/InsideWorld/releases/tag/v1.6.1-beta3) | 2022-07-16 |
 | [v1.6.1-beta2](https://github.com/anobaka/InsideWorld/releases/tag/v1.6.1-beta2) | 2022-07-09 |
 | [v1.6.1-beta](https://github.com/anobaka/InsideWorld/releases/tag/v1.6.1-beta) | 2022-07-09 |
