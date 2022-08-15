@@ -20,3 +20,5 @@
 + 下载进度会出现在收藏夹下方
 ![tool-bilibili](/img/tool-bilibili-4.png)
 ![tool-bilibili](/img/tool-bilibili-5.png)
+
+**自动下载视频并将已下载视频转移至其他收藏夹(v1.6.2+)**
