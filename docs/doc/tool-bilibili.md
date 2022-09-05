@@ -7,7 +7,7 @@
 
 + 下载[FFmpeg](https://www.ffmpeg.org/)，用于视频音频合并，并确保ffmpeg.exe所在目录已被加入到系统环境变量中。打开命令行工具，执行ffmpeg，出现类似以下内容则说明配置成功
 ![tool-bilibili](/img/tool-bilibili-2.png)
-+ 启动本程序，配置哔哩哔哩Cookie与视频下载目录
++ 启动本程序，配置哔哩哔哩Cookie与视频下载目录。[如何获取cookie](#common-cookie)
 
 **获取收藏夹信息**
 

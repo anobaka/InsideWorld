@@ -1,4 +1,4 @@
-通过资源名称在exhentai搜索资源，并将第一个搜索结果的信息补全至该资源
+通过资源名称在exhentai搜索资源，并将第一个搜索结果的信息补全至该资源。[如何获取cookie](#common-cookie)
 
 ![category-enhancer-exhentai](/img/category-enhancer-exhentai-1.png)
 
