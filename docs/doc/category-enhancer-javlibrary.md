@@ -1,0 +1,1 @@
+从资源名称中提取番号(xxx-yyyy或xxxyyyy等)，然后通过JavLibrary补全资源信息，目前仅支持中文
