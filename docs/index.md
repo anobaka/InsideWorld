@@ -49,7 +49,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 | [v1.5.2](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.2) | 2022-04-21 |
 | [v1.5.1](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.1) | 2022-03-11 |
 | [v1.5.0](https://github.com/Bakabase/InsideWorld/releases/tag/v1.5.0) | 2022-02-17 |
-| [历史版本](https://github.com/Bakabase/InsideWorld/milestones?state=closed) | |
+| [历史版本](https://github.com/anobaka/InsideWorld/releases) | |
 
 ## 开发中
 
