@@ -4,3 +4,6 @@
 + 可以加入一个资源
 + 可以加入一个资源的一个文件
 + 可以为音视频增加播放时间段
+
+![resource-playlist](/img/resource-playlist-1.png)
+![resource-playlist](/img/resource-playlist-2.png)
