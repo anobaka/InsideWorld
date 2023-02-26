@@ -63,7 +63,7 @@
     - title: "标签组"
       path: "tag-group"
     - title: "批量删除(v1.7.0+)"
-      path: "tag-batch-remove"
+      path: "tag-bulk-delete"
 - title: "管理收藏夹"
   path: "favorites"
 - title: "文件处理器(v1.6.1+，如果你疲于文件下载完成后的解压、移动、预览操作，请看这里)"
