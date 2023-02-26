@@ -23,17 +23,18 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 ## 功能预览
 ![resource](/img/resource-1.png)
 ![resource](/img/resource-filter.png)
-![resource](/img/resource-detail-1.png)
+![resource](/img/resource-detail-lists-1.png)
 ![resource](/img/resource-detail-2.png)
-![file-processor](/img/file-processor-basic.png)
 ![category](/img/category.png)
+![category](/img/category-setup-wizard-2.png)
+![file-processor](/img/file-processor-basic.png)
 ![component](/img/category-component-2.png)
 ![component](/img/category-component-3.png)
 ![tag](/img/tag-1.png)
 ![tag](/img/tag-2.png)
 ![tool](/img/tool-frequent.png)
-![tool](/img/tool-bilibili-1.png)
-![tool](/img/tool-javlibrary.png)
+![downloader](/img/downloader-1.png)
+![downloader](/img/downloader-2.png)
 
 ## 版本日志
 
