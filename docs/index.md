@@ -21,6 +21,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 </ul>
 
 ## 功能预览
+![dashboard](/img/dashboard.png)
 ![resource](/img/resource-1.png)
 ![resource](/img/resource-filter.png)
 ![resource](/img/resource-detail-lists-1.png)
