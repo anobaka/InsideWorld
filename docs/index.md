@@ -41,7 +41,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 
 | 版本 | 发布时间 |
 | ------------- | ------------- |
-| [v1.7.0-beta3](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.0-beta3) | 2023-03-03 |
+| [v1.7.0-beta4](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.0-beta4) | 2023-03-06 |
 | [v1.6.3](https://github.com/anobaka/InsideWorld/releases/tag/v1.6.3) | 2023-02-27 |
 | [v1.6.2](https://github.com/anobaka/InsideWorld/releases/tag/v1.6.2) | 2022-11-08 |
 | [v1.6.1](https://github.com/anobaka/InsideWorld/releases/tag/v1.6.1) | 2022-08-11 |
@@ -58,7 +58,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 
 ## 环境要求
 
-+ 屏幕分辨率1920x1080
++ 缩放后的屏幕分辨率>=1366x768
 + 系统盘至少有10GB剩余空间
 + Windows 10
 
