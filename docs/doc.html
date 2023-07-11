@@ -2,6 +2,10 @@
 layout: default
 ---
 
-{% include menu.html nav=site.data.doc %}
+<div class="left">
+    {% include menu.html nav=site.data.doc %}
+</div>
 
-{% include doc.html data=site.data.doc level=2 %}
+<div class="right">
+    {% include doc.html data=site.data.doc level=2 %}
+</div>

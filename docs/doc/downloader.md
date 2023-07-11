@@ -1,5 +1,7 @@
 在1.7.0版本以后，可以使用下载器进行一些资源搜刮
 
+从1.7.1版本开始，增加[Pixiv下载器](https://github.com/anobaka/InsideWorld/issues/307)
+
 ![downloader-1](/img/downloader-1.png)
 
 **下载任务重要说明**

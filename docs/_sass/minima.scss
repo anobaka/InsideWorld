@@ -53,3 +53,40 @@ $on-laptop:        1200px !default;
 p, ol, ul {
   font-size: 14px;
 }
+
+
+.page-content {
+  .wrapper {
+    .left {
+      box-shadow: rgba(0, 0, 0, 0.05) 0px 0px 0px 1px, rgb(209, 213, 219) 0px 0px 0px 1px inset;
+      padding: 10px 0;
+      border-radius: 4px;
+      overflow: auto;
+      max-height: 80vh;
+      position: fixed;
+      width: 240px;
+
+      &::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      &::-webkit-scrollbar-track {
+        border-radius: 10px;
+        background: rgba(0,0,0,0.1);
+      }
+      &::-webkit-scrollbar-thumb{
+        border-radius: 10px;
+        background: rgba(0,0,0,0.2);
+      }
+      &::-webkit-scrollbar-thumb:hover{
+        background: rgba(0,0,0,0.4);
+      }
+      &::-webkit-scrollbar-thumb:active{
+        background: rgba(0,0,0,.9);
+      }
+    }
+    .right {
+      margin-left: 250px;
+    }
+  }
+}
