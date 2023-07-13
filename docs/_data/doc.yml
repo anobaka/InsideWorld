@@ -145,6 +145,8 @@
   children:
   - title: "获取cookie"
     path: "common-cookie"
+  - title: "数据迁移"
+    path: "common-migration"
 - title: "最佳实践"
   children:
   - title: "组件配置"
