@@ -1,4 +1,2 @@
-![file-processor-delete-same-name-entries](/img/file-processor-delete-same-name-entries-1.png)
-
-**删除预览**
-![file-processor-delete-same-name-entries](/img/file-processor-delete-same-name-entries-2.png)
+可以一键删除工作目录下全部同名文件
+![file-processor-delete-same-name-entries](/img/file-processor-8-delete-same-name-entries.gif)
