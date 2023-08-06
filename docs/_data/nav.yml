@@ -2,6 +2,9 @@ items:
 - title: 使用说明
   url: /doc
 
+- title: Dev
+  url: /dev
+
 - title: 下载
   url: https://github.com/anobaka/InsideWorld/releases
   target: _blank
