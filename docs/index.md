@@ -4,7 +4,7 @@ title: Inside World
 permalink: /
 ---
 
-Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、预览与播放。
+Inside World 是一款离线媒体管理库，用于本地媒体快速处理、搜索、预览与播放。
 
 目前支持动画、漫画、音声、本子、电影、图集等媒体的管理，老司机食用效果更加哦~
 
@@ -59,7 +59,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速搜寻、�
 | 版本 | 发布时间 |
 | ------------- | ------------- |
 | [v1.7.2-beta](https://github.com/anobaka/InsideWorld/milestone/38) | 2023 ETA |
-| [v1.7.1-beta4](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta4) | 2023-07-28 |
+| [v1.7.1-beta5](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta5) | 2023-08-08 |
 | [v1.7.0](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.0) | 2023-04-04 |
 | [v1.6.3](https://github.com/anobaka/InsideWorld/releases/tag/v1.6.3) | 2023-02-27 |
 | [v1.6.2](https://github.com/anobaka/InsideWorld/releases/tag/v1.6.2) | 2022-11-08 |
