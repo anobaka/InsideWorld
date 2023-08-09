@@ -1,1 +1,0 @@
-![tool-frequent](/img/tool-frequent.png)

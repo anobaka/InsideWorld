@@ -1,0 +1,27 @@
+- 欢迎
+  - [首页](/readme)
+  - [功能预览](/preview)
+
+- 如何使用
+  - [安装和运行](/guide/installation)
+  - [分类](/guide/category)
+  - [资源](/guide/resource)
+  - [别名](/guide/alias)
+  - [标签](/guide/tag)
+  - [收藏夹](/guide/favorite)
+  - [文件处理器](/guide/file-processor)
+  - [下载器](/guide/downloader)
+  - [内置播放器](/guide/internal-player)
+  - [工具](/guide/tools)
+  - [自定义组件](/guide/custom-component)
+  - [特殊字符配置](/guide/text)
+  - [系统配置](/guide/configuration)
+  - [日志](/guide/log)
+  - [后台任务](/guide/background-task)
+  - [Insider小助手](/guide/assistant)
+  - [界面](/guide/gui)
+  - [通用](/guide/common)
+  - [最佳实践](/guide/best-practices)
+
+- [开发文档](/dev.md)
+- [版本记录](/changelog.md)

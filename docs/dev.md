@@ -1,6 +1,4 @@
-# Dev
-
-<span style="color:red;">**This doc is in progress, it's better not to try it if this line shows up**</span>
+!> This doc is in progress, it's better not to try it if this line shows up.
 
 There are still works to do to optimize the dev procedure.
 

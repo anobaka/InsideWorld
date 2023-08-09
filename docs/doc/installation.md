@@ -1,1 +1,0 @@
-在<a href="https://github.com/anobaka/InsideWorld/releases" target="_blank">Github Releases</a>下载最新版本压缩包并解压，然后通过`Bakabase.InsideWorld.exe`运行

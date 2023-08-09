@@ -1,1 +1,0 @@
-![file-processor-rename](/img/file-processor-rename.png)
