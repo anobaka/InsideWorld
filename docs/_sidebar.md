@@ -1,5 +1,5 @@
 - 欢迎
-  - [首页](/readme)
+  - [首页](/README)
   - [功能预览](/preview)
 
 - 如何使用
@@ -24,4 +24,4 @@
   - [最佳实践](/guide/best-practices)
 
 - [开发文档](/dev.md)
-- [版本记录](/changelog.md)
+- [版本记录](/CHANGELOG.md)
