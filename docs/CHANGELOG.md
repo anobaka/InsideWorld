@@ -2,7 +2,7 @@
 
 ### Bug Fixes
 
-* 添加资源时按文件类型筛选不生效 #423 ([#423](https://github.com/anobaka/InsideWorld/issues/423))
+* 添加资源时按文件类型筛选不生效 ([#423](https://github.com/anobaka/InsideWorld/issues/423))
 
 ## [1.7.1-beta5](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta5) (2023-08-08)
 
