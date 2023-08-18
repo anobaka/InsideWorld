@@ -1,4 +1,4 @@
-# [1.7.1](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1) (2023-08-18)
+## [1.7.1](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1) (2023-08-18)
 
 ### Bug Fixes
 
