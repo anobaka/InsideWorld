@@ -1,3 +1,24 @@
+## [1.7.1](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1) (2023-08-18)
+
+### Bug Fixes
+
+* 资源根目录设置为磁盘根目录时同步结果不正确 ([#432](https://github.com/anobaka/InsideWorld/issues/432))
+* 视频资源库获取封面时占用过高 ([#433](https://github.com/anobaka/InsideWorld/issues/433))
+
+## [1.7.1-beta8](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta8) (2023-08-15)
+
+### Bug Fixes
+
+* InsideWorld增强器增强结果有误 ([#429](https://github.com/anobaka/InsideWorld/issues/429))
+* 资源搜索界面，通过媒体库筛选资源时，如果分类名称过长，会和媒体库名称重叠 ([#430](https://github.com/anobaka/InsideWorld/issues/430))
+
+## [1.7.1-beta7](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta7) (2023-08-13)
+
+### Bug Fixes
+
+* 如果资源路径没变，但所属媒体库发生了变化，在下次同步时依旧会被归于原媒体库 ([#426](https://github.com/anobaka/InsideWorld/issues/426))
+* 添加资源时按文件类型筛选无结果 ([#425](https://github.com/anobaka/InsideWorld/issues/425))
+
 ## [1.7.1-beta6](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta6) (2023-08-12)
 
 ### Bug Fixes
