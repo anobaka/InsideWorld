@@ -1,3 +1,10 @@
+# [1.7.1](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1) (2023-08-18)
+
+### Bug Fixes
+
+* 资源根目录设置为磁盘根目录时同步结果不正确 ([#432](https://github.com/anobaka/InsideWorld/issues/432))
+* 视频资源库获取封面时占用过高 ([#433](https://github.com/anobaka/InsideWorld/issues/433))
+
 ## [1.7.1-beta8](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta8) (2023-08-15)
 
 ### Bug Fixes
