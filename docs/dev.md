@@ -1,4 +1,4 @@
-!> This doc is in progress, it's better not to try it if this line shows up.
+# Summary <!-- {docsify-ignore} -->
 
 There are still works to do to optimize the dev procedure.
 
@@ -12,9 +12,9 @@ Make sure you are working on `Windows`. `OS X` and `Linux` are not supported yet
 
 Clone repositories below and put them into same folder.
 
-+ [InsideWorld](https://github.com/anobaka/InsideWorld)
-+ [LazyMortal](https://github.com/anobaka/LazyMortal), `main` branch
-+ [Bakabase.Infrastructures](https://github.com/anobaka/bakabase.infrastructures), `main` branch
++ [This repo](https://github.com/anobaka/InsideWorld)
++ [LazyMortal](https://github.com/anobaka/LazyMortal) on `main` branch (by default)
++ [Bakabase.Infrastructures](https://github.com/anobaka/bakabase.infrastructures) on `main` branch (by default)
 
 ### 2. Install SDKs & Tools
 
