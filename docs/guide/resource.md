@@ -22,16 +22,36 @@
 
 随意搜现在支持使用正则表达式搜索，格式为：`reg:表达式内容`，使用空格和其他内容分开，如`冬月茉莉 reg:202\d`，将会搜索包含`冬月茉莉`关键词并且与正则`202\d`匹配的资源
 
-## 快速预览、从视频截取封面(v1.6.2+)
+## 快速预览(v1.7.2+)
+
+鼠标在资源封面悬停数秒后开启快速预览模式，鼠标可以在下方快速调整进度条。
+
+**需要在系统配置界面配置`FFMpeg`后才可以对视频资源快速预览。**
+
+![resource-quick-preview](../img/resource-quick-preview.png)
+
+## 预览、从视频截取封面(v1.6.2+)
 
 可以快速预览资源，目前仅支持部分格式的文件。
 
 ![resource-preview](../img/resource-preview-1.png)
 ![resource-preview](../img/resource-preview-2.png)
 
-可以在预览时将该资源添加到收藏夹，也可以手动截取视频作为资源封面。
+可以在预览时将该资源添加到收藏夹
 
 ![resource-preview](../img/resource-preview-3.png)
+
+## 设置封面(v1.7.2+)
+
+可以在预览时为当前资源设置新封面
+
+**视频资源在暂停时可截取图片作为新封面**
+
+![resource-save-cover-1](../img/resource-save-cover-1.png)
+
+**图片资源可直接作为新封面**
+
+![resource-save-cover-2](../img/resource-save-cover-2.png)
 
 ## 批量操作
 

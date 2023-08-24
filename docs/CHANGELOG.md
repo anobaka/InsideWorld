@@ -1,3 +1,23 @@
+## [1.7.2-beta](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.2-beta) (2023-08-24)
+
+### Bug Fixes
+
+* 子资源封面无法加载 ([#438](https://github.com/anobaka/InsideWorld/issues/438))
+* 资源匹配器中正则匹配的路径异常 ([#441](https://github.com/anobaka/InsideWorld/issues/441))
+* 正则匹配不生效 ([#436](https://github.com/anobaka/InsideWorld/issues/436))
+* 防止路径匹配器弹窗超出屏幕 ([#439](https://github.com/anobaka/InsideWorld/issues/439))
+
+### Features
+
+* 鼠标悬浮在资源封面一段时间后，自动预览资源内容 ([#364](https://github.com/anobaka/InsideWorld/issues/364))
+* 在资源详情页点击标签进行搜索 ([#422](https://github.com/anobaka/InsideWorld/issues/422))
+* 在资源列表移动资源时自动将资源同步至目标媒体库 ([#366](https://github.com/anobaka/InsideWorld/issues/366))
+* 完善封面设置功能 ([#428](https://github.com/anobaka/InsideWorld/issues/428))
+* 当使用外置播放器并且可播放文件数量>1时，显示的播放文件路径过长 ([#437](https://github.com/anobaka/InsideWorld/issues/437))
+* 暗黑模式 ([#84](https://github.com/anobaka/InsideWorld/issues/84))
+* 通过自定义属性搜索资源支持部分文本匹配 ([#442](https://github.com/anobaka/InsideWorld/issues/442))
+* 增加临时文件目录 ([#440](https://github.com/anobaka/InsideWorld/issues/440))
+
 ## [1.7.1](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1) (2023-08-18)
 
 ### Bug Fixes
