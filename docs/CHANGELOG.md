@@ -1,4 +1,16 @@
-## [1.7.2-beta2](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.2-beta2) (2023-09-05)
+## [1.7.2-beta3](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.2-beta3/installer/Bakabase.InsideWorld.zip) (2023-09-11)
+
+### Features
+
+* 可以在设置中调整默认封面保存路径 ([#457](https://github.com/anobaka/InsideWorld/issues/457))
+* 调整看板页面 ([#458](https://github.com/anobaka/InsideWorld/issues/458))
+* 调整增强器产生的封面路径 ([#456](https://github.com/anobaka/InsideWorld/issues/456))
+
+### Bug Fixes
+
+* 配置界面验证exhentai cookie时没有提示 ([#459](https://github.com/anobaka/InsideWorld/issues/459))
+
+## [1.7.2-beta2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.2-beta2/installer/Bakabase.InsideWorld.zip) (2023-09-05)
 
 ### Features
 
@@ -13,7 +25,7 @@
 * 删除媒体库根目录时，会将该媒体库内所有相同根目录的配置一起删除 ([#452](https://github.com/anobaka/InsideWorld/issues/452))
 * 同步过程中，如果新增标签与历史标签大小写不一致，其他内容相同，则同步会失败 ([#454](https://github.com/anobaka/InsideWorld/issues/454))
 
-## [1.7.2-beta](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.2-beta) (2023-08-24)
+## [1.7.2-beta](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.2-beta/installer/Bakabase.InsideWorld.zip) (2023-08-25)
 
 ### Features
 
@@ -33,34 +45,34 @@
 * 正则匹配不生效 ([#436](https://github.com/anobaka/InsideWorld/issues/436))
 * 防止路径匹配器弹窗超出屏幕 ([#439](https://github.com/anobaka/InsideWorld/issues/439))
 
-## [1.7.1](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1) (2023-08-18)
+## [1.7.1](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.1/installer/Bakabase.InsideWorld.zip) (2023-08-18)
 
 ### Bug Fixes
 
 * 资源根目录设置为磁盘根目录时同步结果不正确 ([#432](https://github.com/anobaka/InsideWorld/issues/432))
 * 视频资源库获取封面时占用过高 ([#433](https://github.com/anobaka/InsideWorld/issues/433))
 
-## [1.7.1-beta8](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta8) (2023-08-15)
+## 1.7.1-beta8 (2023-08-15)
 
 ### Bug Fixes
 
 * InsideWorld增强器增强结果有误 ([#429](https://github.com/anobaka/InsideWorld/issues/429))
 * 资源搜索界面，通过媒体库筛选资源时，如果分类名称过长，会和媒体库名称重叠 ([#430](https://github.com/anobaka/InsideWorld/issues/430))
 
-## [1.7.1-beta7](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta7) (2023-08-13)
+## 1.7.1-beta7 (2023-08-13)
 
 ### Bug Fixes
 
 * 如果资源路径没变，但所属媒体库发生了变化，在下次同步时依旧会被归于原媒体库 ([#426](https://github.com/anobaka/InsideWorld/issues/426))
 * 添加资源时按文件类型筛选无结果 ([#425](https://github.com/anobaka/InsideWorld/issues/425))
 
-## [1.7.1-beta6](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta6) (2023-08-12)
+## 1.7.1-beta6 (2023-08-12)
 
 ### Bug Fixes
 
 * 添加资源时按文件类型筛选不生效 ([#423](https://github.com/anobaka/InsideWorld/issues/423))
 
-## [1.7.1-beta5](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta5) (2023-08-08)
+## 1.7.1-beta5 (2023-08-08)
 
 ### Features
 
@@ -74,7 +86,7 @@
 * 同步时丢失已录入数据 ([#421](https://github.com/anobaka/InsideWorld/issues/421))
 * 解决部分视频ffmpeg没有成功获取截图的问题 ([#412](https://github.com/anobaka/InsideWorld/issues/412))
 
-## [1.7.1-beta4](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta4) (2023-07-28)
+## 1.7.1-beta4 (2023-07-28)
 
 ### Bug Fixes
 
@@ -82,14 +94,14 @@
 * 文件过多时，内层文件夹会出现横向滚动条 ([#407](https://github.com/anobaka/InsideWorld/issues/407))
 
 
-## [1.7.1-beta3](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta3) (2023-07-25)
+## 1.7.1-beta3 (2023-07-25)
 
 ### Bug Fixes
 
 * 在首次发起http请求的2分钟后报错：Cannot access a disposed object. Object name: 'SocketsHttpHandler' ([#413](https://github.com/anobaka/InsideWorld/issues/413))
 
 
-## [1.7.1-beta2](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta2) (2023-07-22)
+## 1.7.1-beta2 (2023-07-22)
 
 ### Bug Fixes
 
@@ -102,7 +114,7 @@
 * 支持本地网络文件的添加 ([#399](https://github.com/anobaka/InsideWorld/issues/399))
 
 
-## [1.7.1-beta](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta) (2023-07-12)
+## 1.7.1-beta (2023-07-12)
 
 ### Features
 
