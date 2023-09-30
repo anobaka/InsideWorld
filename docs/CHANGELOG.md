@@ -32,7 +32,7 @@
 * 文件移动器会多产生一级文件夹 ([#460](https://github.com/anobaka/InsideWorld/issues/460))
 * DLsite增强器，rate_average_2dp为null时会增强失败 ([#461](https://github.com/anobaka/InsideWorld/issues/461))
 * 资源筛选界面，通过【系列】筛选未生效 ([#462](https://github.com/anobaka/InsideWorld/issues/462))
-
+* 文件处理器，部分环境下解压遇到不支持的字符时结果异常 ([#465](https://github.com/anobaka/InsideWorld/issues/465))
 
 ## [1.7.1](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.1/installer/Bakabase.InsideWorld.zip) (2023-08-18)
 
