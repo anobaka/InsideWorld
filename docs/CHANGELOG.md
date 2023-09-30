@@ -1,4 +1,4 @@
-## [1.7.2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.2/installer/Bakabase.InsideWorld.zip) (2023-09-13)
+## [1.7.2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.2/installer/Bakabase.InsideWorld.zip) (2023-10-01)
 
 ### Features
 
