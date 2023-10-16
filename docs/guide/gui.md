@@ -5,6 +5,6 @@
 ![ui-shrink-menu-1](../img/ui-shrink-menu-1.png)
 ![ui-shrink-menu-2](../img/ui-shrink-menu-2.png)
 
-## 暗黑模式(v1.7.1+)
+## 深色模式(v1.7.1+)
 
 ![ui-dark-mode](../img/ui-dark-mode.png)

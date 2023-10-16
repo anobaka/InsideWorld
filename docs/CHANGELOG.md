@@ -1,11 +1,4 @@
-## [1.7.2-beta](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.2-beta) (2023-08-24)
-
-### Bug Fixes
-
-* 子资源封面无法加载 ([#438](https://github.com/anobaka/InsideWorld/issues/438))
-* 资源匹配器中正则匹配的路径异常 ([#441](https://github.com/anobaka/InsideWorld/issues/441))
-* 正则匹配不生效 ([#436](https://github.com/anobaka/InsideWorld/issues/436))
-* 防止路径匹配器弹窗超出屏幕 ([#439](https://github.com/anobaka/InsideWorld/issues/439))
+## [1.7.2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.2/installer/Bakabase.InsideWorld.zip) (2023-10-01)
 
 ### Features
 
@@ -14,94 +7,34 @@
 * 在资源列表移动资源时自动将资源同步至目标媒体库 ([#366](https://github.com/anobaka/InsideWorld/issues/366))
 * 完善封面设置功能 ([#428](https://github.com/anobaka/InsideWorld/issues/428))
 * 当使用外置播放器并且可播放文件数量>1时，显示的播放文件路径过长 ([#437](https://github.com/anobaka/InsideWorld/issues/437))
-* 暗黑模式 ([#84](https://github.com/anobaka/InsideWorld/issues/84))
+* 深色模式 ([#84](https://github.com/anobaka/InsideWorld/issues/84))
 * 通过自定义属性搜索资源支持部分文本匹配 ([#442](https://github.com/anobaka/InsideWorld/issues/442))
 * 增加临时文件目录 ([#440](https://github.com/anobaka/InsideWorld/issues/440))
-
-## [1.7.1](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1) (2023-08-18)
-
-### Bug Fixes
-
-* 资源根目录设置为磁盘根目录时同步结果不正确 ([#432](https://github.com/anobaka/InsideWorld/issues/432))
-* 视频资源库获取封面时占用过高 ([#433](https://github.com/anobaka/InsideWorld/issues/433))
-
-## [1.7.1-beta8](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta8) (2023-08-15)
+* 优化媒体库路径配置和验证步骤 ([#453](https://github.com/anobaka/InsideWorld/issues/453))
+* 移除自动同步 ([#455](https://github.com/anobaka/InsideWorld/issues/455))
+* 可以在设置中调整默认封面保存路径 ([#457](https://github.com/anobaka/InsideWorld/issues/457))
+* 调整看板页面 ([#458](https://github.com/anobaka/InsideWorld/issues/458))
+* 调整增强器产生的封面路径 ([#456](https://github.com/anobaka/InsideWorld/issues/456))
+* 限制封面缓存 ([#464](https://github.com/anobaka/InsideWorld/issues/464))
 
 ### Bug Fixes
 
-* InsideWorld增强器增强结果有误 ([#429](https://github.com/anobaka/InsideWorld/issues/429))
-* 资源搜索界面，通过媒体库筛选资源时，如果分类名称过长，会和媒体库名称重叠 ([#430](https://github.com/anobaka/InsideWorld/issues/430))
+* 子资源封面无法加载 ([#438](https://github.com/anobaka/InsideWorld/issues/438))
+* 资源匹配器中正则匹配的路径异常 ([#441](https://github.com/anobaka/InsideWorld/issues/441))
+* 正则匹配不生效 ([#436](https://github.com/anobaka/InsideWorld/issues/436))
+* 防止路径匹配器弹窗超出屏幕 ([#439](https://github.com/anobaka/InsideWorld/issues/439))
+* 调整部分深色模式的颜色 ([#448](https://github.com/anobaka/InsideWorld/issues/448))
+* 资源列表，点击筛选条件的选项后未立即搜索 ([#450](https://github.com/anobaka/InsideWorld/issues/450))
+* 通过正则表达式匹配资源会包含子文件 ([#451](https://github.com/anobaka/InsideWorld/issues/451))
+* 删除媒体库根目录时，会将该媒体库内所有相同根目录的配置一起删除 ([#452](https://github.com/anobaka/InsideWorld/issues/452))
+* 同步过程中，如果新增标签与历史标签大小写不一致，其他内容相同，则同步会失败 ([#454](https://github.com/anobaka/InsideWorld/issues/454))
+* 配置界面验证exhentai cookie时没有提示 ([#459](https://github.com/anobaka/InsideWorld/issues/459))
+* 文件移动器会多产生一级文件夹 ([#460](https://github.com/anobaka/InsideWorld/issues/460))
+* DLsite增强器，rate_average_2dp为null时会增强失败 ([#461](https://github.com/anobaka/InsideWorld/issues/461))
+* 资源筛选界面，通过【系列】筛选未生效 ([#462](https://github.com/anobaka/InsideWorld/issues/462))
+* 文件处理器，部分环境下解压遇到不支持的字符时结果异常 ([#465](https://github.com/anobaka/InsideWorld/issues/465))
 
-## [1.7.1-beta7](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta7) (2023-08-13)
-
-### Bug Fixes
-
-* 如果资源路径没变，但所属媒体库发生了变化，在下次同步时依旧会被归于原媒体库 ([#426](https://github.com/anobaka/InsideWorld/issues/426))
-* 添加资源时按文件类型筛选无结果 ([#425](https://github.com/anobaka/InsideWorld/issues/425))
-
-## [1.7.1-beta6](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta6) (2023-08-12)
-
-### Bug Fixes
-
-* 添加资源时按文件类型筛选不生效 ([#423](https://github.com/anobaka/InsideWorld/issues/423))
-
-## [1.7.1-beta5](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta5) (2023-08-08)
-
-### Bug Fixes
-
-* 内置Potplayer在安装了Potplayer后启动报错 ([#416](https://github.com/anobaka/InsideWorld/issues/416))
-* 新版路径匹配器在同步时未正确填充资源属性、父级资源定位错误 ([#418](https://github.com/anobaka/InsideWorld/issues/418))
-* 修改资源标签后UI未立即更新 ([#420](https://github.com/anobaka/InsideWorld/issues/420))
-* 同步时丢失已录入数据 ([#421](https://github.com/anobaka/InsideWorld/issues/421))
-* 解决部分视频ffmpeg没有成功获取截图的问题 ([#412](https://github.com/anobaka/InsideWorld/issues/412))
-
-### Features
-
-* 增加退出交互配置 ([#417](https://github.com/anobaka/InsideWorld/issues/417))
-
-
-## [1.7.1-beta4](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta4) (2023-07-28)
-
-### Bug Fixes
-
-* 文件处理器，包裹文件功能无法使用 ([#414](https://github.com/anobaka/InsideWorld/issues/414))
-* 文件过多时，内层文件夹会出现横向滚动条 ([#407](https://github.com/anobaka/InsideWorld/issues/407))
-
-
-## [1.7.1-beta3](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta3) (2023-07-25)
-
-### Bug Fixes
-
-* 在首次发起http请求的2分钟后报错：Cannot access a disposed object. Object name: 'SocketsHttpHandler' ([#413](https://github.com/anobaka/InsideWorld/issues/413))
-
-
-## [1.7.1-beta2](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta2) (2023-07-22)
-
-### Bug Fixes
-
-* 在创建分类时将非增强器组件加入到了增强器优先级的配置中，导致资源增强失败 ([#410](https://github.com/anobaka/InsideWorld/issues/410))
-* 文件处理器 ctrl+a全选后列表的显示状态未变更 ([#409](https://github.com/anobaka/InsideWorld/issues/409))
-* 资源界面筛选bug ([#408](https://github.com/anobaka/InsideWorld/issues/408))
-
-### Features
-
-* 支持本地网络文件的添加 ([#399](https://github.com/anobaka/InsideWorld/issues/399))
-
-
-## [1.7.1-beta](https://github.com/anobaka/InsideWorld/releases/tag/v1.7.1-beta) (2023-07-12)
-
-### Bug Fixes
-
-* 部分配置保存后未立即生效 ([#415](https://github.com/anobaka/InsideWorld/issues/415))
-* 哔哩哔哩下载器获取收藏夹失败 ([#402](https://github.com/anobaka/InsideWorld/issues/402))
-* virtual-list node被移除再重新初始化后，未获取到当前操作的进度（如解压缩） ([#385](https://github.com/anobaka/InsideWorld/issues/385))
-* 文件夹内的文件和文件夹同名的情况下，向外提取后该entry的属性还是文件夹，需要重新刷新才能变成文件 ([#384](https://github.com/anobaka/InsideWorld/issues/384))
-* 文件处理器的entry偶尔会被其他透明内容遮挡，导致部分操作很难点击 ([#383](https://github.com/anobaka/InsideWorld/issues/383))
-* 悬浮助手在未弹出任务列表时实际占用的高度和弹出任务列表时一致，导致部分操作会被遮挡 ([#396](https://github.com/anobaka/InsideWorld/issues/396))
-* 文件处理器的包裹功能失效 ([#377](https://github.com/anobaka/InsideWorld/issues/377))
-* 当文件路径包含感叹号时，内置播放器无法正确播放 ([#376](https://github.com/anobaka/InsideWorld/issues/376))
-* 内置播放器，部分遮罩区域点击后播放器不会关闭 ([#375](https://github.com/anobaka/InsideWorld/issues/375))
-* 媒体库配置路径时，如果选择了“根目录后第N层文件(夹)是资源”，当N>1时，下次再查看时会变成自定义正则 ([#372](https://github.com/anobaka/InsideWorld/issues/372))
+## [1.7.1](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.1/installer/Bakabase.InsideWorld.zip) (2023-08-18)
 
 ### Features
 
@@ -132,3 +65,36 @@
 * pixiv下载器 ([#307](https://github.com/anobaka/InsideWorld/issues/307))
 * bangumi增强器 ([#246](https://github.com/anobaka/InsideWorld/issues/246))
 * 希望标签能有反选功能 ([#329](https://github.com/anobaka/InsideWorld/issues/329))
+* 支持本地网络文件的添加 ([#399](https://github.com/anobaka/InsideWorld/issues/399))
+* 增加退出交互配置 ([#417](https://github.com/anobaka/InsideWorld/issues/417))
+
+### Bug Fixes
+
+* 部分配置保存后未立即生效 ([#415](https://github.com/anobaka/InsideWorld/issues/415))
+* 哔哩哔哩下载器获取收藏夹失败 ([#402](https://github.com/anobaka/InsideWorld/issues/402))
+* virtual-list node被移除再重新初始化后，未获取到当前操作的进度（如解压缩） ([#385](https://github.com/anobaka/InsideWorld/issues/385))
+* 文件夹内的文件和文件夹同名的情况下，向外提取后该entry的属性还是文件夹，需要重新刷新才能变成文件 ([#384](https://github.com/anobaka/InsideWorld/issues/384))
+* 文件处理器的entry偶尔会被其他透明内容遮挡，导致部分操作很难点击 ([#383](https://github.com/anobaka/InsideWorld/issues/383))
+* 悬浮助手在未弹出任务列表时实际占用的高度和弹出任务列表时一致，导致部分操作会被遮挡 ([#396](https://github.com/anobaka/InsideWorld/issues/396))
+* 文件处理器的包裹功能失效 ([#377](https://github.com/anobaka/InsideWorld/issues/377))
+* 当文件路径包含感叹号时，内置播放器无法正确播放 ([#376](https://github.com/anobaka/InsideWorld/issues/376))
+* 内置播放器，部分遮罩区域点击后播放器不会关闭 ([#375](https://github.com/anobaka/InsideWorld/issues/375))
+* 媒体库配置路径时，如果选择了“根目录后第N层文件(夹)是资源”，当N>1时，下次再查看时会变成自定义正则 ([#372](https://github.com/anobaka/InsideWorld/issues/372))
+* 在创建分类时将非增强器组件加入到了增强器优先级的配置中，导致资源增强失败 ([#410](https://github.com/anobaka/InsideWorld/issues/410))
+* 文件处理器 ctrl+a全选后列表的显示状态未变更 ([#409](https://github.com/anobaka/InsideWorld/issues/409))
+* 资源界面筛选bug ([#408](https://github.com/anobaka/InsideWorld/issues/408))
+* 在首次发起http请求的2分钟后报错：Cannot access a disposed object. Object name: 'SocketsHttpHandler' ([#413](https://github.com/anobaka/InsideWorld/issues/413))
+* 文件处理器，包裹文件功能无法使用 ([#414](https://github.com/anobaka/InsideWorld/issues/414))
+* 文件过多时，内层文件夹会出现横向滚动条 ([#407](https://github.com/anobaka/InsideWorld/issues/407))
+* 内置Potplayer在安装了Potplayer后启动报错 ([#416](https://github.com/anobaka/InsideWorld/issues/416))
+* 新版路径匹配器在同步时未正确填充资源属性、父级资源定位错误 ([#418](https://github.com/anobaka/InsideWorld/issues/418))
+* 修改资源标签后UI未立即更新 ([#420](https://github.com/anobaka/InsideWorld/issues/420))
+* 同步时丢失已录入数据 ([#421](https://github.com/anobaka/InsideWorld/issues/421))
+* 解决部分视频ffmpeg没有成功获取截图的问题 ([#412](https://github.com/anobaka/InsideWorld/issues/412))
+* 添加资源时按文件类型筛选不生效 ([#423](https://github.com/anobaka/InsideWorld/issues/423))
+* 如果资源路径没变，但所属媒体库发生了变化，在下次同步时依旧会被归于原媒体库 ([#426](https://github.com/anobaka/InsideWorld/issues/426))
+* 添加资源时按文件类型筛选无结果 ([#425](https://github.com/anobaka/InsideWorld/issues/425))
+* InsideWorld增强器增强结果有误 ([#429](https://github.com/anobaka/InsideWorld/issues/429))
+* 资源搜索界面，通过媒体库筛选资源时，如果分类名称过长，会和媒体库名称重叠 ([#430](https://github.com/anobaka/InsideWorld/issues/430))
+* 资源根目录设置为磁盘根目录时同步结果不正确 ([#432](https://github.com/anobaka/InsideWorld/issues/432))
+* 视频资源库获取封面时占用过高 ([#433](https://github.com/anobaka/InsideWorld/issues/433))
