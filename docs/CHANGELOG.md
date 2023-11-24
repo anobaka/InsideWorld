@@ -1,3 +1,19 @@
+## [1.7.3-beta](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3-beta/installer/Bakabase.InsideWorld.zip) (2023-11-24)
+
+### Features
+
+* 优化文件移动器 ([#463](https://github.com/anobaka/InsideWorld/issues/463))
+* 将文件(夹)选择控件转移至react ([#444](https://github.com/anobaka/InsideWorld/issues/444))
+* 自动或由用户触发下载/更新组件 ([#446](https://github.com/anobaka/InsideWorld/issues/446))
+* “封面大图”去掉勾选后无法记忆，下次还会默认选中 ([#466](https://github.com/anobaka/InsideWorld/issues/466))
+
+### Bug Fixes
+
+* 修复Cookie验证器在第二次验证时会报错的问题 ([#469](https://github.com/anobaka/InsideWorld/issues/469))
+* 下载器页面Label显示异常 ([#470](https://github.com/anobaka/InsideWorld/issues/470))
+* 更换哔哩哔哩下载器登录验证api ([#468](https://github.com/anobaka/InsideWorld/issues/468))
+* 如果使用正则表达式进行资源过滤，当资源A的文件名是资源B的前缀时，资源B将会被忽略 ([#467](https://github.com/anobaka/InsideWorld/issues/467))
+
 ## [1.7.2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.2/installer/Bakabase.InsideWorld.zip) (2023-10-01)
 
 ### Features

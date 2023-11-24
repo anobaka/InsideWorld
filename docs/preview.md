@@ -28,6 +28,6 @@
 ![tag](/img/tag-2.png)
 
 ## 工具
-![tool](/img/tool-frequent.png)
+![tool](/img/file-mover.png)
 ![downloader](/img/downloader-1.png)
 ![downloader](/img/downloader-2.png)
