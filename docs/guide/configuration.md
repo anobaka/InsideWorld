@@ -1,5 +1,10 @@
 ## 系统配置 <!-- {docsify-ignore} -->
 
+## 依赖组件(1.7.3+)
+
+外部依赖组件可以通过本功能更新和安装
+![configuration-function](../img/configuration-dependencies.png)
+
 ## 功能配置
 
 1. 这里可以增加封面来源，系统资源（cpu、内存等）占用程度从左往右从少变多
