@@ -1,4 +1,6 @@
-## [1.7.3-beta](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3-beta/installer/Bakabase.InsideWorld.zip) (2023-11-24)
+## [1.7.3-beta](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3-beta/installer/Bakabase.InsideWorld.zip) (2023-11-27)
+
+该版本包含[破坏性变更](./BREAKING-CHANGES.md)，在仔细阅读相关说明后再升级至该版本；
 
 ### Features
 
