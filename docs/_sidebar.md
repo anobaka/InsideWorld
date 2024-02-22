@@ -2,7 +2,7 @@
   - [首页](/README)
   - [功能预览](/preview)
 
-- 如何使用
+- 开始使用
   - [安装和运行](/guide/installation)
   - [分类](/guide/category)
   - [资源](/guide/resource)
@@ -10,6 +10,7 @@
   - [标签](/guide/tag)
   - [收藏夹](/guide/favorite)
   - [文件处理器](/guide/file-processor)
+  - [批量修改资源](/guide/bulk-modification)
   - [下载器](/guide/downloader)
   - [内置播放器](/guide/internal-player)
   - [工具](/guide/tools)
