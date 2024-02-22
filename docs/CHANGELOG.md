@@ -1,3 +1,9 @@
+## [1.7.3-beta4](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3-beta4/installer/Bakabase.InsideWorld.zip) (2024-02-22)
+
+### Bug Fixes
+
+* Javlibrary增强器匹配字段缺陷 ([#485](https://github.com/anobaka/InsideWorld/issues/485))
+
 ## [1.7.3-beta3](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3-beta3/installer/Bakabase.InsideWorld.zip) (2024-01-18)
 
 ### Features
