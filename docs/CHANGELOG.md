@@ -1,3 +1,25 @@
+## [1.7.3-beta4](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3-beta4/installer/Bakabase.InsideWorld.zip) (2024-02-22)
+
+### Bug Fixes
+
+* Javlibrary增强器匹配字段缺陷 ([#485](https://github.com/anobaka/InsideWorld/issues/485))
+
+## [1.7.3-beta3](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3-beta3/installer/Bakabase.InsideWorld.zip) (2024-01-18)
+
+### Features
+
+* 优化缩略图性能 ([#477](https://github.com/anobaka/InsideWorld/issues/477))
+* 将创建分类流程里的文件(夹)选择器替换为react版本 ([#479](https://github.com/anobaka/InsideWorld/issues/479))
+* 现在在配置媒体库路径信息时，可以选择文件夹作为样例路径 ([#480](https://github.com/anobaka/InsideWorld/issues/480))
+* 优化部分界面交互 ([#481](https://github.com/anobaka/InsideWorld/issues/481))
+* 优化资源列表页的交互和性能 ([#482](https://github.com/anobaka/InsideWorld/issues/482))
+
+### Bug Fixes
+
+* Javlibrary增强器返回多个结果时不匹配 ([#476](https://github.com/anobaka/InsideWorld/issues/476))
+* 某些情况下创建分类时会报错：ComponentKey field is required ([#483](https://github.com/anobaka/InsideWorld/issues/483))
+* 某些情况下，为媒体库指定了固定标签时会在同步媒体库时报错 ([#484](https://github.com/anobaka/InsideWorld/issues/484))
+
 ## [1.7.3-beta2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3-beta2/installer/Bakabase.InsideWorld.zip) (2023-11-28)
 
 该版本包含[破坏性变更](./BREAKING-CHANGES.md)，在仔细阅读相关说明后再升级至该版本；
