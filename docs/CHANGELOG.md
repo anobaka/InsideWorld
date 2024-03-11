@@ -1,3 +1,21 @@
+## [1.8.0-beta](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.0-beta/installer/Bakabase.InsideWorld.zip) (2024-03-11)
+
+### Features
+
+* 人工批量设置资源属性 ([#449](https://github.com/anobaka/InsideWorld/issues/449))
+* exhentai下载器，当出现连续错误时提前报错，不再尝试任务内部的后续页面 ([#486](https://github.com/anobaka/InsideWorld/issues/486))
+* 优化下载器筛选面板的计数方式 ([#487](https://github.com/anobaka/InsideWorld/issues/487))
+* 一键复制分类 ([#491](https://github.com/anobaka/InsideWorld/issues/491))
+* 将 为媒体库新增加根目录时使用的文件选择器 变更为新版 ([#489](https://github.com/anobaka/InsideWorld/issues/489))
+* 增加媒体库路径时将资源筛选规则默认设置为根目录后的第一层 ([#488](https://github.com/anobaka/InsideWorld/issues/488))
+* 批量创建媒体库，批量配置根目录 ([#490](https://github.com/anobaka/InsideWorld/issues/490))
+* 删除分类时不再要求删除媒体库 ([#492](https://github.com/anobaka/InsideWorld/issues/492))
+
+### Bug Fixes
+
+* 在资源列表页复制资源名称或标签时，如果鼠标移出名称范围会丢失复制目标 ([#494](https://github.com/anobaka/InsideWorld/issues/494))
+* exhentai下载器，当出现连续错误时提前报错，不再尝试任务内部的后续页面 ([#486](https://github.com/anobaka/InsideWorld/issues/486))
+
 ## [1.7.3](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3/installer/Bakabase.InsideWorld.zip) (2024-03-11)
 
 该版本包含[破坏性变更](./BREAKING-CHANGES.md)，在仔细阅读相关说明后再升级至该版本；

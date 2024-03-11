@@ -10,7 +10,7 @@
   - [标签](/guide/tag)
   - [收藏夹](/guide/favorite)
   - [文件处理器](/guide/file-processor)
-  - [批量修改资源](/guide/bulk-modification)
+  - [批量修改资源(v1.8.0+)](/guide/bulk-modification)
   - [下载器](/guide/downloader)
   - [内置播放器](/guide/internal-player)
   - [工具](/guide/tools)
