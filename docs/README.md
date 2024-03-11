@@ -9,14 +9,14 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速处理、�
 
 ## 近期版本
 
+*beta版本通常会修复以前的bug，并且具有更新的功能，但可能会引入新的bug；如果您更倾向于稳定性，请下载正式版本*
+
+
 | 版本 | 发布时间 | 下载地址 |
 | ------------- | ------------- | ------------- |
 | [v2.0.0](https://github.com/anobaka/InsideWorld/milestone/51) | 2024 ETA | / |
 | [v1.8.0](https://github.com/anobaka/InsideWorld/milestone/56) | 2024 ETA | / |
-| [v1.7.3-beta4](./CHANGELOG.md) | 2024-02-22 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3-beta4/installer/Bakabase.InsideWorld.zip) |
-| [v1.7.3-beta3](./CHANGELOG.md) | 2024-01-18 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3-beta3/installer/Bakabase.InsideWorld.zip) |
-| [v1.7.3-beta2](./CHANGELOG.md) | 2023-11-28 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3-beta2/installer/Bakabase.InsideWorld.zip) |
-| [v1.7.3-beta](./CHANGELOG.md) | 2023-11-27 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3-beta/installer/Bakabase.InsideWorld.zip) |
+| [v1.7.3](./CHANGELOG.md) | 2024-03-11 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3/installer/Bakabase.InsideWorld.zip) |
 | [v1.7.2](./CHANGELOG.md) | 2023-10-01 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.2/installer/Bakabase.InsideWorld.zip) |
 | [v1.7.1](./CHANGELOG.md) | 2023-08-18 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.1/installer/Bakabase.InsideWorld.zip) |
 | [v1.7.0](./CHANGELOG.md) | 2023-04-04 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.0/installer/Bakabase.InsideWorld.zip) |

@@ -1,10 +1,6 @@
-## [1.7.3-beta4](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3-beta4/installer/Bakabase.InsideWorld.zip) (2024-02-22)
+## [1.7.3](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3/installer/Bakabase.InsideWorld.zip) (2024-03-11)
 
-### Bug Fixes
-
-* Javlibrary增强器匹配字段缺陷 ([#485](https://github.com/anobaka/InsideWorld/issues/485))
-
-## [1.7.3-beta3](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3-beta3/installer/Bakabase.InsideWorld.zip) (2024-01-18)
+该版本包含[破坏性变更](./BREAKING-CHANGES.md)，在仔细阅读相关说明后再升级至该版本；
 
 ### Features
 
@@ -13,28 +9,6 @@
 * 现在在配置媒体库路径信息时，可以选择文件夹作为样例路径 ([#480](https://github.com/anobaka/InsideWorld/issues/480))
 * 优化部分界面交互 ([#481](https://github.com/anobaka/InsideWorld/issues/481))
 * 优化资源列表页的交互和性能 ([#482](https://github.com/anobaka/InsideWorld/issues/482))
-
-### Bug Fixes
-
-* Javlibrary增强器返回多个结果时不匹配 ([#476](https://github.com/anobaka/InsideWorld/issues/476))
-* 某些情况下创建分类时会报错：ComponentKey field is required ([#483](https://github.com/anobaka/InsideWorld/issues/483))
-* 某些情况下，为媒体库指定了固定标签时会在同步媒体库时报错 ([#484](https://github.com/anobaka/InsideWorld/issues/484))
-
-## [1.7.3-beta2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3-beta2/installer/Bakabase.InsideWorld.zip) (2023-11-28)
-
-该版本包含[破坏性变更](./BREAKING-CHANGES.md)，在仔细阅读相关说明后再升级至该版本；
-
-### Bug Fixes
-
-* 如果使用正则表达式进行资源过滤，当资源A的文件名是资源B的前缀时，资源B将会被忽略 ([#467](https://github.com/anobaka/InsideWorld/issues/467))
-* 文件处理器仅显示文件夹，未显示文件 ([#474](https://github.com/anobaka/InsideWorld/issues/474))
-
-## [1.7.3-beta](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3-beta/installer/Bakabase.InsideWorld.zip) (2023-11-27)
-
-该版本包含[破坏性变更](./BREAKING-CHANGES.md)，在仔细阅读相关说明后再升级至该版本；
-
-### Features
-
 * 将文件(夹)选择控件转移至react ([#444](https://github.com/anobaka/InsideWorld/issues/444))
 * 自动或由用户触发下载/更新组件 ([#446](https://github.com/anobaka/InsideWorld/issues/446))
 * 优化文件移动器 ([#463](https://github.com/anobaka/InsideWorld/issues/463))
@@ -42,6 +16,12 @@
 
 ### Bug Fixes
 
+* Javlibrary增强器匹配字段缺陷 ([#485](https://github.com/anobaka/InsideWorld/issues/485))
+* Javlibrary增强器返回多个结果时不匹配 ([#476](https://github.com/anobaka/InsideWorld/issues/476))
+* 某些情况下创建分类时会报错：ComponentKey field is required ([#483](https://github.com/anobaka/InsideWorld/issues/483))
+* 某些情况下，为媒体库指定了固定标签时会在同步媒体库时报错 ([#484](https://github.com/anobaka/InsideWorld/issues/484))
+* 如果使用正则表达式进行资源过滤，当资源A的文件名是资源B的前缀时，资源B将会被忽略 ([#467](https://github.com/anobaka/InsideWorld/issues/467))
+* 文件处理器仅显示文件夹，未显示文件 ([#474](https://github.com/anobaka/InsideWorld/issues/474))
 * 更换哔哩哔哩下载器登录验证api ([#468](https://github.com/anobaka/InsideWorld/issues/468))
 * 修复Cookie验证器在第二次验证时会报错的问题 ([#469](https://github.com/anobaka/InsideWorld/issues/469))
 * 下载器页面Label显示异常 ([#470](https://github.com/anobaka/InsideWorld/issues/470))
