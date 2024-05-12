@@ -1,3 +1,9 @@
+## [1.8.0-beta2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.0-beta2/installer/Bakabase.InsideWorld.zip) (2024-05-12)
+
+### Bug Fixes
+
+* 文件移动工具在跨磁盘移动时会将文件向上填充至1mb的整数倍 ([#500](https://github.com/anobaka/InsideWorld/issues/500))
+
 ## [1.8.0-beta](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.0-beta/installer/Bakabase.InsideWorld.zip) (2024-03-11)
 
 ### Features
