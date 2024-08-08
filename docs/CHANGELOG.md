@@ -1,10 +1,4 @@
-## [1.8.0-beta2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.0-beta2/installer/Bakabase.InsideWorld.zip) (2024-05-12)
-
-### Bug Fixes
-
-* 文件移动工具在跨磁盘移动时会将文件向上填充至1mb的整数倍 ([#500](https://github.com/anobaka/InsideWorld/issues/500))
-
-## [1.8.0-beta](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.0-beta/installer/Bakabase.InsideWorld.zip) (2024-03-11)
+## [1.8.0](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.0/installer/Bakabase.InsideWorld.zip) (2024-08-08)
 
 ### Features
 
@@ -21,6 +15,7 @@
 
 * 在资源列表页复制资源名称或标签时，如果鼠标移出名称范围会丢失复制目标 ([#494](https://github.com/anobaka/InsideWorld/issues/494))
 * exhentai下载器，当出现连续错误时提前报错，不再尝试任务内部的后续页面 ([#486](https://github.com/anobaka/InsideWorld/issues/486))
+* 文件移动工具在跨磁盘移动时会将文件向上填充至1mb的整数倍 ([#500](https://github.com/anobaka/InsideWorld/issues/500))
 
 ## [1.7.3](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.7.3/installer/Bakabase.InsideWorld.zip) (2024-03-11)
 
