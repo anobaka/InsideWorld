@@ -1,3 +1,11 @@
+## [1.8.1](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.1/installer/Bakabase.InsideWorld.zip) (2024-08-13)
+
+### Bug Fixes
+
+* 同步时报错：Attempted to divide by zero ([#511](https://github.com/anobaka/InsideWorld/issues/511))
+* 资源详情中的自定义属性应该仅显示有意义的值，而不是原始数据字段 ([#512](https://github.com/anobaka/InsideWorld/issues/512))
+* 在文件处理器编辑文件名时如果按下了Delete键会出现错误提示 ([#513](https://github.com/anobaka/InsideWorld/issues/513))
+
 ## [1.8.0](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.0/installer/Bakabase.InsideWorld.zip) (2024-08-08)
 
 ### Features

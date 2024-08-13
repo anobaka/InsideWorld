@@ -26,5 +26,3 @@
 
 - [开发文档](/dev.md)
 - [版本记录](/CHANGELOG.md)
-- 其他项目
-  - [Inside Collector](https://inside-collector.anobaka.com/)
