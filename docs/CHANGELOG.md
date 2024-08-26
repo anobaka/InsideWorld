@@ -1,3 +1,9 @@
+## [1.8.2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.2/installer/Bakabase.InsideWorld.zip) (2024-08-26)
+
+### Bug Fixes
+
+* 自定义属性的值不显示 ([#514](https://github.com/anobaka/InsideWorld/issues/514))
+
 ## [1.8.1](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.1/installer/Bakabase.InsideWorld.zip) (2024-08-13)
 
 ### Bug Fixes
