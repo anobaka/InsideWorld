@@ -3,9 +3,12 @@
   - [功能预览](/preview)
 
 - 开始使用
+  - [v1.9.0升级说明](/guide/v1.9.0)
   - [安装和运行](/guide/installation)
+  - [自定义属性(v1.9.0+)](/guide/custom-property)
   - [分类](/guide/category)
   - [资源](/guide/resource)
+  - [增强器(v1.9.0有更新)](/guide/enhancer)
   - [别名](/guide/alias)
   - [标签](/guide/tag)
   - [收藏夹](/guide/favorite)
