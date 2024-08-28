@@ -8,7 +8,7 @@
   - [自定义属性(v1.9.0+)](/guide/custom-property)
   - [分类](/guide/category)
   - [资源](/guide/resource)
-  - [增强器(v1.9.0有更新)](/guide/enhancer)
+  - [增强器(v1.9.0+)](/guide/enhancer)
   - [别名](/guide/alias)
   - [标签](/guide/tag)
   - [收藏夹](/guide/favorite)

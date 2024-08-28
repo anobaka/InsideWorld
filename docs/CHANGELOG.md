@@ -1,3 +1,28 @@
+## [1.9.0-beta](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta/installer/Bakabase.InsideWorld.zip) (2024-08-28)
+
+### Features
+
+* 缩减软件包大小，自动尝试使用系统中的WebView2环境，如未安装则提示下载 ([#529](https://github.com/anobaka/InsideWorld/issues/529))
+* 变更名称和图标 ([#528](https://github.com/anobaka/InsideWorld/issues/528))
+* 移除收藏夹、增强记录、批量修改、外部搜索引擎、封面查找源等功能 ([#527](https://github.com/anobaka/InsideWorld/issues/527))
+* 支持对单一资源指定单一增强器进行增强 ([#526](https://github.com/anobaka/InsideWorld/issues/526))
+* 重构资源搜索能力，支持任意结构和数据的组合 ([#525](https://github.com/anobaka/InsideWorld/issues/525))
+* 支持更新器本地化能力 ([#524](https://github.com/anobaka/InsideWorld/issues/524))
+* 升级主UI至NextUI ([#523](https://github.com/anobaka/InsideWorld/issues/523))
+* 移除自定义增强器，可通过配置媒体库实现相同的功能 ([#522](https://github.com/anobaka/InsideWorld/issues/522))
+* 支持自定义资源名称展示模板 ([#521](https://github.com/anobaka/InsideWorld/issues/521))
+* 当检测到有资源不属于任何分类或媒体库时，在界面上展示删除提示 ([#520](https://github.com/anobaka/InsideWorld/issues/520))
+* 支持按照分类或媒体库同步资源数据 ([#519](https://github.com/anobaka/InsideWorld/issues/519))
+* 支持增强器增强动态数据 ([#518](https://github.com/anobaka/InsideWorld/issues/518))
+* 增强器现在可以自由配置需要增强的属性 ([#517](https://github.com/anobaka/InsideWorld/issues/517))
+* 数据可以绑定至多个维度，用户可以按照自定义优先级展示资源信息 ([#516](https://github.com/anobaka/InsideWorld/issues/516))
+* 希望增加更多内置属性 ([#475](https://github.com/anobaka/InsideWorld/issues/475))
+* 保存所有增强器产生的数据，由用户在分类上的选择动态与资源绑定 ([#473](https://github.com/anobaka/InsideWorld/issues/473))
+* 优化快捷配置代理 ([#497](https://github.com/anobaka/InsideWorld/issues/497))
+* 不再支持<=v1.7.2版本自动升级 ([#507](https://github.com/anobaka/InsideWorld/issues/507))
+* 缓存第三方依赖的新版本检查结果 ([#509](https://github.com/anobaka/InsideWorld/issues/509))
+* 封面现在仅会被保存至临时文件夹，不再支持保存至资源文件夹 ([#508](https://github.com/anobaka/InsideWorld/issues/508))
+
 ## [1.8.2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.2/installer/Bakabase.InsideWorld.zip) (2024-08-26)
 
 ### Bug Fixes
