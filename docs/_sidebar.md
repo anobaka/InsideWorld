@@ -2,13 +2,19 @@
   - [首页](/README)
   - [功能预览](/preview)
 
+- v1.9.0新增/变更
+  - [v1.9.0升级说明](/guide/v190/v1.9.0)
+  - [主界面](/guide/v190/gui)
+  - [资源](/guide/v190/resource)
+  - [分类](/guide/v190/category)
+  - [自定义属性](/guide/v190/custom-property)
+
+
 - 开始使用
-  - [v1.9.0升级说明](/guide/v1.9.0)
   - [安装和运行](/guide/installation)
-  - [自定义属性(v1.9.0+)](/guide/custom-property)
   - [分类](/guide/category)
   - [资源](/guide/resource)
-  - [增强器(v1.9.0+)](/guide/enhancer)
+  - [增强器](/guide/enhancer)
   - [别名](/guide/alias)
   - [标签](/guide/tag)
   - [收藏夹](/guide/favorite)

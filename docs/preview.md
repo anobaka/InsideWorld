@@ -1,3 +1,11 @@
+## v1.9.0新增/变更
+![resource](../img/resource-list-v190-1.png)
+![resource](../img/resource-filter-v190-1.png)
+![resource](../img/resource-filter-v190-2.png)
+![resource](../img/resource-detail-v190-1.png)
+![resource](../img/resource-detail-property-scope-1.png)
+
+
 ## 浏览资源
 ![resource](/img/resource-1.png)
 ![resource](/img/resource-filter.png)

@@ -103,12 +103,6 @@
 
 请参考[增强器](/guide/enhancer)
 
-## 名称展示模板
-
-![category-resource-name-template-1](../img/category-resource-name-template-1.png)
-![category-resource-name-template-2](../img/category-resource-name-template-2.png)
-![category-resource-name-template-3](../img/category-resource-name-template-3.png)
-
 ## 媒体库
 
 每个分类可以绑定多个媒体库，每个媒体库也能绑定多个系统目录。媒体库可以拖拽排序。
