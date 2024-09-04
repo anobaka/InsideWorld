@@ -16,6 +16,7 @@ Inside World 是一款离线媒体管理库，用于本地媒体快速处理、�
 | 版本 | 发布时间 | 下载地址 | 更新说明 |
 | ------------- | ------------- | ------------- | ------------- |
 | [v2.0.0](https://github.com/anobaka/InsideWorld/milestone/51) | 2024 ETA | / | / |
+| [v1.9.0-beta2](./CHANGELOG.md) | 2024-09-05 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta2/installer/Bakabase.zip) | [老版本升级前必看](/guide/v190/v1.9.0) |
 | [v1.9.0-beta](./CHANGELOG.md) | 2024-08-28 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta/installer/Bakabase.zip) | [老版本升级前必看](/guide/v190/v1.9.0) |
 | [v1.8.2](./CHANGELOG.md) | 2024-08-26 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.2/installer/Bakabase.InsideWorld.zip) | / |
 | [v1.8.1](./CHANGELOG.md) | 2024-08-13 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.1/installer/Bakabase.InsideWorld.zip) | / |

@@ -1,3 +1,20 @@
+## [1.9.0-beta2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta2/installer/Bakabase.InsideWorld.zip) (2024-09-05)
+
+### Features
+
+* 削弱资源界面标签的颜色，突出资源标题 ([#536](https://github.com/anobaka/InsideWorld/issues/536))
+* 系统原生UI组件支持跟随UI主题类型变化 ([#537](https://github.com/anobaka/InsideWorld/issues/537))
+* v1.9.0迁移需要为历史封面创建一个自定义属性 ([#540](https://github.com/anobaka/InsideWorld/issues/540))
+* 支持多封面轮播图 ([#541](https://github.com/anobaka/InsideWorld/issues/541))
+* 调整正则增强器以适用于自定义属性 ([#542](https://github.com/anobaka/InsideWorld/issues/542))
+
+### Bug Fixes
+
+* [Bug] 点击媒体库/自定义组件触发'/component: [500]'错误 ([#530](https://github.com/anobaka/InsideWorld/issues/530))
+* [Bug] 1.9beta 资源封面显示异常 ([#532](https://github.com/anobaka/InsideWorld/issues/532))
+* [Bug] 播放资源的弹出窗口无法交互 ([#535](https://github.com/anobaka/InsideWorld/issues/535))
+* 部分属性在检查转换损失时报错 ([#538](https://github.com/anobaka/InsideWorld/issues/538))
+
 ## [1.9.0-beta](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta/installer/Bakabase.InsideWorld.zip) (2024-08-28)
 
 ### Features
