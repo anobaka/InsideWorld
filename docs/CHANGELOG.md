@@ -1,3 +1,15 @@
+## [1.9.0-beta3](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta3/installer/Bakabase.InsideWorld.zip) (2024-09-06)
+
+### Features
+
+* 在配置媒体库路径信息时，允许将正则表达式应用至资源文件(夹)名 ([#547](https://github.com/anobaka/InsideWorld/issues/547))
+* 选择属性框调整为三个维度：内置、预置和自定义，允许将增强目标绑定至预置属性 ([#546](https://github.com/anobaka/InsideWorld/issues/546))
+* 打开属性选择框时，如果没有已选属性，则默认切换至未选择列表 ([#545](https://github.com/anobaka/InsideWorld/issues/545))
+
+### Bug Fixes
+
+* 手动编辑动态增强目标时，增强名称没有实时更新 ([#544](https://github.com/anobaka/InsideWorld/issues/544))
+
 ## [1.9.0-beta2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta2/installer/Bakabase.InsideWorld.zip) (2024-09-05)
 
 ### Features
