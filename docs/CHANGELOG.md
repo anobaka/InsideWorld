@@ -1,14 +1,21 @@
-## [1.9.0-beta3](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta3/installer/Bakabase.InsideWorld.zip) (2024-09-06)
+## [1.9.0-beta3](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta3/installer/Bakabase.InsideWorld.zip) (2024-09-10)
 
 ### Features
 
-* 在配置媒体库路径信息时，允许将正则表达式应用至资源文件(夹)名 ([#547](https://github.com/anobaka/InsideWorld/issues/547))
-* 选择属性框调整为三个维度：内置、预置和自定义，允许将增强目标绑定至预置属性 ([#546](https://github.com/anobaka/InsideWorld/issues/546))
 * 打开属性选择框时，如果没有已选属性，则默认切换至未选择列表 ([#545](https://github.com/anobaka/InsideWorld/issues/545))
+* 选择属性框调整为三个维度：内置、预置和自定义，允许将增强目标绑定至预置属性 ([#546](https://github.com/anobaka/InsideWorld/issues/546))
+* 在配置媒体库路径信息时，允许将正则表达式应用至资源文件(夹)名 ([#547](https://github.com/anobaka/InsideWorld/issues/547))
+* 增加根据分类和增强器删除增强记录的功能 ([#548](https://github.com/anobaka/InsideWorld/issues/548))
+* 在增强器增强目标中配置默认预置属性，在自动绑定属性启用时尝试匹配预置属性 ([#550](https://github.com/anobaka/InsideWorld/issues/550))
+* 增加属性转换测试功能 ([#552](https://github.com/anobaka/InsideWorld/issues/552))
 
 ### Bug Fixes
 
 * 手动编辑动态增强目标时，增强名称没有实时更新 ([#544](https://github.com/anobaka/InsideWorld/issues/544))
+* 属性转换时使用了错误的目标属性Descriptor ([#551](https://github.com/anobaka/InsideWorld/issues/551))
+* 基础数据反序列化时未移除转义符 ([#553](https://github.com/anobaka/InsideWorld/issues/553))
+* 关闭资源详情窗口后资源封面显示异常 ([#554](https://github.com/anobaka/InsideWorld/issues/554))
+* 删除筛选条件会导致搜索关键字也被清空 ([#555](https://github.com/anobaka/InsideWorld/issues/555))
 
 ## [1.9.0-beta2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta2/installer/Bakabase.InsideWorld.zip) (2024-09-05)
 
