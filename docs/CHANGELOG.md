@@ -1,3 +1,16 @@
+## [1.9.0-beta4](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta4/installer/Bakabase.InsideWorld.zip) (2024-09-11)
+
+### Features
+
+* 减少资源封面加载次数 ([##559](https://github.com/anobaka/InsideWorld/issues/#559))
+* 调整资源详情布局 ([##560](https://github.com/anobaka/InsideWorld/issues/#560))
+
+### Bug Fixes
+
+* 动态增强目标配置异常 ([##556](https://github.com/anobaka/InsideWorld/issues/#556))
+* 转换增强记录时未填充预置属性 ([##557](https://github.com/anobaka/InsideWorld/issues/#557))
+* 转换增强记录时，如果目标属性类型和原数据类型不一致，会转换成异常结果 ([##558](https://github.com/anobaka/InsideWorld/issues/#558))
+
 ## [1.9.0-beta3](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta3/installer/Bakabase.InsideWorld.zip) (2024-09-10)
 
 ### Features
