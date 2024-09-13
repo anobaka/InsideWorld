@@ -33,5 +33,9 @@
   - [通用](/guide/common)
   - [最佳实践](/guide/best-practices)
 
-- [开发文档](/dev.md)
+- 开发文档
+  - [准备工作](/dev/dev)
+  - 模块
+    - [增强器](/dev/modules/enhancer)
+    - [下载器](/dev/modules/downloader)
 - [版本记录](/CHANGELOG.md)

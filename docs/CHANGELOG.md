@@ -1,3 +1,10 @@
+## [1.9.0-beta6](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta6/installer/Bakabase.InsideWorld.zip) (2024-09-13)
+
+### Features
+
+* 记录资源列表页的当前视窗页码作为上次搜索的页码，而不是最后搜索时使用的页码 ([#565](https://github.com/anobaka/InsideWorld/issues/565))
+* 将资源列表的瀑布流变更为网格排版 ([#566](https://github.com/anobaka/InsideWorld/issues/566))
+
 ## [1.9.0-beta5](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta5/installer/Bakabase.InsideWorld.zip) (2024-09-12)
 
 ### Features
