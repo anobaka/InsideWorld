@@ -1,3 +1,17 @@
+## [1.9.0-beta7](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta7/installer/Bakabase.InsideWorld.zip) (2024-09-23)
+
+### Features
+
+* 优化自定义属性转换逻辑 ([#568](https://github.com/anobaka/InsideWorld/issues/568))
+* 在自定义属性界面关闭属性框后重新加载自定义属性列表 ([#569](https://github.com/anobaka/InsideWorld/issues/569))
+* 减少多行文本属性的间距 ([#573](https://github.com/anobaka/InsideWorld/issues/573))
+
+### Bug Fixes
+
+* 增强器选项【自动绑定属性】勾选后未能正常显示 ([#570](https://github.com/anobaka/InsideWorld/issues/570))
+* 如果数据库中包含链接属性，则通过关键字搜索资源会失效 ([#571](https://github.com/anobaka/InsideWorld/issues/571))
+* 资源界面，添加筛选条件产生额外空间后，会导致资源列表触发加载下一页 ([#572](https://github.com/anobaka/InsideWorld/issues/572))
+
 ## [1.9.0-beta6](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta6/installer/Bakabase.InsideWorld.zip) (2024-09-13)
 
 ### Features
