@@ -1,3 +1,20 @@
+## [1.9.0-beta8](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta8/installer/Bakabase.InsideWorld.zip) (2024-10-07)
+
+### Features
+
+* 扩大资源列表页中资源播放按钮和菜单的点击区域 ([#579](https://github.com/anobaka/InsideWorld/issues/579))
+* 在资源有多个可播放文件时，显示完整的文件名 ([#580](https://github.com/anobaka/InsideWorld/issues/580))
+* 屏蔽部分数据库错误 ([#578](https://github.com/anobaka/InsideWorld/issues/578))
+* 增加资源列表封面的展示模式：填充空余部分 ([#581](https://github.com/anobaka/InsideWorld/issues/581))
+* 将日期时间编辑器变更为24小时制 ([#582](https://github.com/anobaka/InsideWorld/issues/582))
+* 资源搜索条件增加【分类】 ([#585](https://github.com/anobaka/InsideWorld/issues/585))
+
+### Bug Fixes
+
+* 在资源列表页更改资源列数后单个资源高度未更新 ([#577](https://github.com/anobaka/InsideWorld/issues/577))
+* 在编辑数字类自定义属性时，按下回车或使其失去焦点未能触发保存操作 ([#583](https://github.com/anobaka/InsideWorld/issues/583))
+* 编辑标签数据时无法多选 ([#584](https://github.com/anobaka/InsideWorld/issues/584))
+
 ## [1.9.0-beta7](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta7/installer/Bakabase.InsideWorld.zip) (2024-09-23)
 
 ### Features
