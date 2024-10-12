@@ -1,3 +1,19 @@
+## [1.9.0-beta9](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta9/installer/Bakabase.InsideWorld.zip) (2024-10-13)
+
+### Features
+
+* 资源列表页，支持按住Ctrl多选，支持右键点击资源移动至媒体库 ([#587](https://github.com/anobaka/InsideWorld/issues/587))
+* 资源列表页支持显示和隐藏分类、媒体库和标签信息 ([#592](https://github.com/anobaka/InsideWorld/issues/592))
+
+### Bug Fixes
+
+* 资源列表页未能正确显示资源标签 ([#591](https://github.com/anobaka/InsideWorld/issues/591))
+
+### Development
+
+* Add tests for file mover ([#588](https://github.com/anobaka/InsideWorld/issues/588))
+* Adjust move and copy operations for file system entries to adapt the changes in LazyMortal ([#589](https://github.com/anobaka/InsideWorld/issues/589))
+
 ## [1.9.0-beta8](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta8/installer/Bakabase.InsideWorld.zip) (2024-10-07)
 
 ### Features
