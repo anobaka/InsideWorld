@@ -4,6 +4,7 @@
 
 * 资源列表页，支持按住Ctrl多选，支持右键点击资源移动至媒体库 ([#587](https://github.com/anobaka/InsideWorld/issues/587))
 * 资源列表页支持显示和隐藏分类、媒体库和标签信息 ([#592](https://github.com/anobaka/InsideWorld/issues/592))
+* 增加别名导出和导入功能 ([#593](https://github.com/anobaka/InsideWorld/issues/593))
 
 ### Bug Fixes
 
