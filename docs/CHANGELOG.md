@@ -1,3 +1,21 @@
+## [1.9.0-beta10](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta10/installer/Bakabase.InsideWorld.zip) (2024-10-24)
+
+### Features
+
+* 封面图尺寸小于展示区域时不再拉伸封面 ([#596](https://github.com/anobaka/InsideWorld/issues/596))
+* 优化文件处理器 ([#597](https://github.com/anobaka/InsideWorld/issues/597))
+* 优化文件移动器UI ([#603](https://github.com/anobaka/InsideWorld/issues/603))
+* 配置媒体库跟目录时默认进入已选目录内部，而不是父级目录 ([#604](https://github.com/anobaka/InsideWorld/issues/604))
+
+### Bug Fixes
+
+* 分类的资源名称展示模板无法移除 ([#594](https://github.com/anobaka/InsideWorld/issues/594))
+* 通过自定义属性搜索资源时报错 ([#595](https://github.com/anobaka/InsideWorld/issues/595))
+* 增强记录显示未增强，实际数据已增强 ([#599](https://github.com/anobaka/InsideWorld/issues/599))
+* 无法显示尺寸过大的封面 ([#601](https://github.com/anobaka/InsideWorld/issues/601))
+* 在资源列表页移动资源后对应的分类和媒体库信息未变更 ([#602](https://github.com/anobaka/InsideWorld/issues/602))
+* 增强时报错：属性类型为空，但属性id[xxx]不为空 ([#605](https://github.com/anobaka/InsideWorld/issues/605))
+
 ## [1.9.0-beta9](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta9/installer/Bakabase.InsideWorld.zip) (2024-10-13)
 
 ### Features
