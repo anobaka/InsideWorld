@@ -1,4 +1,4 @@
-## [1.9.0-beta10](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta10/installer/Bakabase.InsideWorld.zip) (2024-10-24)
+## [1.9.0-beta10](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta10/installer/Bakabase.zip) (2024-10-24)
 
 ### Features
 
@@ -16,7 +16,7 @@
 * 在资源列表页移动资源后对应的分类和媒体库信息未变更 ([#602](https://github.com/anobaka/InsideWorld/issues/602))
 * 增强时报错：属性类型为空，但属性id[xxx]不为空 ([#605](https://github.com/anobaka/InsideWorld/issues/605))
 
-## [1.9.0-beta9](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta9/installer/Bakabase.InsideWorld.zip) (2024-10-13)
+## [1.9.0-beta9](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta9/installer/Bakabase.zip) (2024-10-13)
 
 ### Features
 
@@ -33,7 +33,7 @@
 * Add tests for file mover ([#588](https://github.com/anobaka/InsideWorld/issues/588))
 * Adjust move and copy operations for file system entries to adapt the changes in LazyMortal ([#589](https://github.com/anobaka/InsideWorld/issues/589))
 
-## [1.9.0-beta8](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta8/installer/Bakabase.InsideWorld.zip) (2024-10-07)
+## [1.9.0-beta8](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta8/installer/Bakabase.zip) (2024-10-07)
 
 ### Features
 
@@ -50,7 +50,7 @@
 * 在编辑数字类自定义属性时，按下回车或使其失去焦点未能触发保存操作 ([#583](https://github.com/anobaka/InsideWorld/issues/583))
 * 编辑标签数据时无法多选 ([#584](https://github.com/anobaka/InsideWorld/issues/584))
 
-## [1.9.0-beta7](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta7/installer/Bakabase.InsideWorld.zip) (2024-09-23)
+## [1.9.0-beta7](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta7/installer/Bakabase.zip) (2024-09-23)
 
 ### Features
 
@@ -64,14 +64,14 @@
 * 如果数据库中包含链接属性，则通过关键字搜索资源会失效 ([#571](https://github.com/anobaka/InsideWorld/issues/571))
 * 资源界面，添加筛选条件产生额外空间后，会导致资源列表触发加载下一页 ([#572](https://github.com/anobaka/InsideWorld/issues/572))
 
-## [1.9.0-beta6](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta6/installer/Bakabase.InsideWorld.zip) (2024-09-13)
+## [1.9.0-beta6](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta6/installer/Bakabase.zip) (2024-09-13)
 
 ### Features
 
 * 记录资源列表页的当前视窗页码作为上次搜索的页码，而不是最后搜索时使用的页码 ([#565](https://github.com/anobaka/InsideWorld/issues/565))
 * 将资源列表的瀑布流变更为网格排版 ([#566](https://github.com/anobaka/InsideWorld/issues/566))
 
-## [1.9.0-beta5](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta5/installer/Bakabase.InsideWorld.zip) (2024-09-12)
+## [1.9.0-beta5](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta5/installer/Bakabase.zip) (2024-09-12)
 
 ### Features
 
@@ -82,7 +82,7 @@
 
 * 无法配置自定义资源搜索条件 ([#563](https://github.com/anobaka/InsideWorld/issues/563))
 
-## [1.9.0-beta4](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta4/installer/Bakabase.InsideWorld.zip) (2024-09-11)
+## [1.9.0-beta4](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta4/installer/Bakabase.zip) (2024-09-11)
 
 ### Features
 
@@ -95,7 +95,7 @@
 * 转换增强记录时未填充预置属性 ([#557](https://github.com/anobaka/InsideWorld/issues/557))
 * 转换增强记录时，如果目标属性类型和原数据类型不一致，会转换成异常结果 ([#558](https://github.com/anobaka/InsideWorld/issues/558))
 
-## [1.9.0-beta3](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta3/installer/Bakabase.InsideWorld.zip) (2024-09-10)
+## [1.9.0-beta3](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta3/installer/Bakabase.zip) (2024-09-10)
 
 ### Features
 
@@ -114,7 +114,7 @@
 * 关闭资源详情窗口后资源封面显示异常 ([#554](https://github.com/anobaka/InsideWorld/issues/554))
 * 删除筛选条件会导致搜索关键字也被清空 ([#555](https://github.com/anobaka/InsideWorld/issues/555))
 
-## [1.9.0-beta2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta2/installer/Bakabase.InsideWorld.zip) (2024-09-05)
+## [1.9.0-beta2](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta2/installer/Bakabase.zip) (2024-09-05)
 
 ### Features
 
@@ -131,7 +131,7 @@
 * [Bug] 播放资源的弹出窗口无法交互 ([#535](https://github.com/anobaka/InsideWorld/issues/535))
 * 部分属性在检查转换损失时报错 ([#538](https://github.com/anobaka/InsideWorld/issues/538))
 
-## [1.9.0-beta](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-beta/installer/Bakabase.InsideWorld.zip) (2024-08-28)
+## [1.9.0-beta](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta/installer/Bakabase.zip) (2024-08-28)
 
 ### Features
 
