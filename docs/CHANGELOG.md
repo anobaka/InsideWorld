@@ -6,6 +6,7 @@
 * 优化文件处理器 ([#597](https://github.com/anobaka/InsideWorld/issues/597))
 * 优化文件移动器UI ([#603](https://github.com/anobaka/InsideWorld/issues/603))
 * 配置媒体库跟目录时默认进入已选目录内部，而不是父级目录 ([#604](https://github.com/anobaka/InsideWorld/issues/604))
+* 分离增强流程 ([#607](https://github.com/anobaka/InsideWorld/issues/607))
 
 ### Bug Fixes
 
@@ -15,6 +16,7 @@
 * 无法显示尺寸过大的封面 ([#601](https://github.com/anobaka/InsideWorld/issues/601))
 * 在资源列表页移动资源后对应的分类和媒体库信息未变更 ([#602](https://github.com/anobaka/InsideWorld/issues/602))
 * 增强时报错：属性类型为空，但属性id[xxx]不为空 ([#605](https://github.com/anobaka/InsideWorld/issues/605))
+* 资源列表页切换【鼠标悬浮显示封面大图】和【鼠标悬浮时预览资源文件】未立即生效 ([#606](https://github.com/anobaka/InsideWorld/issues/606))
 
 ## [1.9.0-beta9](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta9/installer/Bakabase.zip) (2024-10-13)
 
