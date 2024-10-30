@@ -1,4 +1,4 @@
-## [1.9.0-rc](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-rc/installer/Bakabase.zip) (2024-11-01)
+## [1.9.0-rc](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-rc/installer/Bakabase.zip) (2024-10-30)
 
 ### Features
 
