@@ -1,3 +1,31 @@
+## [1.9.0-rc](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-rc/installer/Bakabase.zip) (2024-11-01)
+
+### Features
+
+* 将弹窗组件调整为默认不可由点击弹窗以外的区域关闭 ([#608](https://github.com/anobaka/InsideWorld/issues/608))
+* 更换调用API报错时的toast组件 ([#610](https://github.com/anobaka/InsideWorld/issues/610))
+* 优化浮动任务助手UI ([#611](https://github.com/anobaka/InsideWorld/issues/611))
+* 优化部分UI ([#612](https://github.com/anobaka/InsideWorld/issues/612))
+* 将正则增强器的正则表达式配置功能移至增强器配置界面 ([#613](https://github.com/anobaka/InsideWorld/issues/613))
+* 特殊显示未关联属性的增强目标 ([#614](https://github.com/anobaka/InsideWorld/issues/614))
+* 优化Cookie验证组件UI ([#615](https://github.com/anobaka/InsideWorld/issues/615))
+* 为依赖组件的存储路径增加点击复制功能 ([#616](https://github.com/anobaka/InsideWorld/issues/616))
+* 使用文本搜索资源时忽略大小写 ([#620](https://github.com/anobaka/InsideWorld/issues/620))
+* 增加快捷搜索 ([#621](https://github.com/anobaka/InsideWorld/issues/621))
+* 建议将冗余选项移动至设置 ([#618](https://github.com/anobaka/InsideWorld/issues/618))
+* 增加分类、媒体库和媒体库根目录的配置提示 ([#624](https://github.com/anobaka/InsideWorld/issues/624))
+* 增加未能搜索到资源时的帮助提示 ([#625](https://github.com/anobaka/InsideWorld/issues/625))
+* 调整文件处理器的排序规则 ([#627](https://github.com/anobaka/InsideWorld/issues/627))
+* 资源详情没有可展示属性时显示绑定属性的提醒 ([#629](https://github.com/anobaka/InsideWorld/issues/629))
+
+### Bug Fixes
+
+* 封面缓存未生效 ([#609](https://github.com/anobaka/InsideWorld/issues/609))
+* 在文件系统选择器中，如果指定了类型为文件夹，则磁盘列表无法显示 ([#622](https://github.com/anobaka/InsideWorld/issues/622))
+* 文件选择器偶尔未能正确停止追踪文件变化 ([#623](https://github.com/anobaka/InsideWorld/issues/623))
+* 部分情况下文件系统选择器未能默认选中当前目录 ([#626](https://github.com/anobaka/InsideWorld/issues/626))
+* 在文件处理器中修改文件名时，双击输入框会导致进入所选目录 ([#628](https://github.com/anobaka/InsideWorld/issues/628))
+
 ## [1.9.0-beta10](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta10/installer/Bakabase.zip) (2024-10-24)
 
 ### Features

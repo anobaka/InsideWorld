@@ -9,13 +9,19 @@
 
 ## 近期版本
 
-*beta版本通常会修复以前的bug，并且具有更新的功能，但可能会引入新的bug*
+**关于版本名称**
 
-*如果您更倾向于稳定性，请下载正式版本*
+*1. alpha、beta版本通常会修复以前的bug，并且具有更新的功能，但可能会引入新的bug；*
+
+*2. rc版本一般会作为正式版的前一个版本，正式版一般和rc版本一致或仅进行细微调整；*
+
+*3. 如果您更倾向向于稳定性，请下载正式版本；*
+
 
 | 版本 | 发布时间 | 下载地址 | 更新说明 |
 | ------------- | ------------- | ------------- | ------------- |
 | [v2.0.0](https://github.com/anobaka/InsideWorld/milestone/51) | 2024 ETA | / | / |
+| [v1.9.0-rc](./CHANGELOG.md) | 2024-11 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-rc/installer/Bakabase.zip) | [<=1.9.0-beta7版本升级前必看](/guide/v190/v1.9.0) |
 | [v1.9.0-beta10](./CHANGELOG.md) | 2024-10-24 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta10/installer/Bakabase.zip) | [<=1.9.0-beta7版本升级前必看](/guide/v190/v1.9.0) |
 | [v1.8.2](./CHANGELOG.md) | 2024-08-26 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.2/installer/Bakabase.InsideWorld.zip) | / |
 | [v1.8.1](./CHANGELOG.md) | 2024-08-13 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.1/installer/Bakabase.InsideWorld.zip) | / |
@@ -30,7 +36,7 @@
 
 ## 如何参与
 
-本软件可能富含bug，欢迎大家通过提交Issue、加入Q群、[参与开发](/dev)等方式参与本项目。
+本软件可能富含bug，欢迎大家通过提交Issue、加入Q群、[参与开发](/dev/dev)等方式参与本项目。
 
 ### QQ群
 
