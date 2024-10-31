@@ -1,3 +1,16 @@
+## [1.9.0-rc2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-rc2/installer/Bakabase.zip) (2024-10-31)
+
+### Features
+
+* 在分类中绑定自定义属性时，允许创建自定义属性 ([#635](https://github.com/anobaka/InsideWorld/issues/635))
+
+### Bug Fixes
+
+* [Bug] 创建自定义属性未选择类型导致失败 ([#633](https://github.com/anobaka/InsideWorld/issues/633))
+* 在文件选择器创建新文件夹时，始终会创建在首次可创建新文件夹时的目录内 ([#636](https://github.com/anobaka/InsideWorld/issues/636))
+* [Bug] 同步媒体库时报错message: Value cannot be null. (Parameter 'key') ([#634](https://github.com/anobaka/InsideWorld/issues/634))
+* 配置媒体库路径并按照倒序层级配置属性时，应该从资源前的一级开始计数 ([#637](https://github.com/anobaka/InsideWorld/issues/637))
+
 ## [1.9.0-rc](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-rc/installer/Bakabase.zip) (2024-10-30)
 
 ### Features
