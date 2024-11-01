@@ -1,3 +1,18 @@
+## [1.9.0-rc3](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-rc3/installer/Bakabase.zip) (2024-11-01)
+
+### Features
+
+* 将分类界面媒体库配置列表中显示的自定义属性变更为生成的属性 ([#643](https://github.com/anobaka/InsideWorld/issues/643))
+* Reduce redundant rendering of common components. ([#645](https://github.com/anobaka/InsideWorld/issues/645))
+* 优化部分UI ([#646](https://github.com/anobaka/InsideWorld/issues/646))
+* 优化依赖组件UI ([#647](https://github.com/anobaka/InsideWorld/issues/647))
+
+### Bug Fixes
+
+* 在同步媒体库时，未标记对新版自定义属性的变化 ([#639](https://github.com/anobaka/InsideWorld/issues/639))
+* 同步媒体库时如果配置了自定义属性，可能会由于属性值类型转换失败而未能保存 ([#640](https://github.com/anobaka/InsideWorld/issues/640))
+* 同步媒体库时，配置的预置属性（评分、介绍）不会被保存 ([#641](https://github.com/anobaka/InsideWorld/issues/641))
+
 ## [1.9.0-rc2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-rc2/installer/Bakabase.zip) (2024-10-31)
 
 ### Features
