@@ -20,11 +20,8 @@
 
 | 版本 | 发布时间 | 下载地址 | 更新说明 |
 | ------------- | ------------- | ------------- | ------------- |
-| [v2.0.0](https://github.com/anobaka/InsideWorld/milestone/51) | 2024 ETA | / | / |
-| [v1.9.0-rc3](./CHANGELOG.md) | 2024-11-01 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-rc3/installer/Bakabase.zip) | [<=1.9.0-beta7版本升级前必看](/guide/v190/v1.9.0) |
-| [v1.9.0-rc2](./CHANGELOG.md) | 2024-10-31 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-rc2/installer/Bakabase.zip) | [<=1.9.0-beta7版本升级前必看](/guide/v190/v1.9.0) |
-| [v1.9.0-rc](./CHANGELOG.md) | 2024-10-30 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-rc/installer/Bakabase.zip) | [<=1.9.0-beta7版本升级前必看](/guide/v190/v1.9.0) |
-| [v1.9.0-beta10](./CHANGELOG.md) | 2024-10-24 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta10/installer/Bakabase.zip) | [<=1.9.0-beta7版本升级前必看](/guide/v190/v1.9.0) |
+| [v1.9.1-beta](https://github.com/anobaka/InsideWorld/milestone/75) | 2024-12 ETA | / | / |
+| [v1.9.0](./CHANGELOG.md) | 2024-12-12 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0/installer/Bakabase.zip) | [<1.9.0版本升级前请看](/guide/v190/v1.9.0) |
 | [v1.8.2](./CHANGELOG.md) | 2024-08-26 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.2/installer/Bakabase.InsideWorld.zip) | / |
 | [v1.8.1](./CHANGELOG.md) | 2024-08-13 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.1/installer/Bakabase.InsideWorld.zip) | / |
 | [v1.8.0](./CHANGELOG.md) | 2024-08-08 | [下载](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.0/installer/Bakabase.InsideWorld.zip) | / |

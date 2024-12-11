@@ -1,35 +1,13 @@
-## [1.9.0-rc3](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-rc3/installer/Bakabase.zip) (2024-11-01)
+## [1.9.0](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0/installer/Bakabase.zip) (2024-12-12)
 
 ### Features
 
+* 文件处理器，合并文件自动分组时忽略路径大小写 ([#654](https://github.com/anobaka/InsideWorld/issues/654))
 * 将分类界面媒体库配置列表中显示的自定义属性变更为生成的属性 ([#643](https://github.com/anobaka/InsideWorld/issues/643))
 * Reduce redundant rendering of common components. ([#645](https://github.com/anobaka/InsideWorld/issues/645))
 * 优化部分UI ([#646](https://github.com/anobaka/InsideWorld/issues/646))
 * 优化依赖组件UI ([#647](https://github.com/anobaka/InsideWorld/issues/647))
-
-### Bug Fixes
-
-* 在同步媒体库时，未标记对新版自定义属性的变化 ([#639](https://github.com/anobaka/InsideWorld/issues/639))
-* 同步媒体库时如果配置了自定义属性，可能会由于属性值类型转换失败而未能保存 ([#640](https://github.com/anobaka/InsideWorld/issues/640))
-* 同步媒体库时，配置的预置属性（评分、介绍）不会被保存 ([#641](https://github.com/anobaka/InsideWorld/issues/641))
-
-## [1.9.0-rc2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-rc2/installer/Bakabase.zip) (2024-10-31)
-
-### Features
-
 * 在分类中绑定自定义属性时，允许创建自定义属性 ([#635](https://github.com/anobaka/InsideWorld/issues/635))
-
-### Bug Fixes
-
-* [Bug] 创建自定义属性未选择类型导致失败 ([#633](https://github.com/anobaka/InsideWorld/issues/633))
-* 在文件选择器创建新文件夹时，始终会创建在首次可创建新文件夹时的目录内 ([#636](https://github.com/anobaka/InsideWorld/issues/636))
-* [Bug] 同步媒体库时报错message: Value cannot be null. (Parameter 'key') ([#634](https://github.com/anobaka/InsideWorld/issues/634))
-* 配置媒体库路径并按照倒序层级配置属性时，应该从资源前的一级开始计数 ([#637](https://github.com/anobaka/InsideWorld/issues/637))
-
-## [1.9.0-rc](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0-rc/installer/Bakabase.zip) (2024-10-30)
-
-### Features
-
 * 将弹窗组件调整为默认不可由点击弹窗以外的区域关闭 ([#608](https://github.com/anobaka/InsideWorld/issues/608))
 * 更换调用API报错时的toast组件 ([#610](https://github.com/anobaka/InsideWorld/issues/610))
 * 优化浮动任务助手UI ([#611](https://github.com/anobaka/InsideWorld/issues/611))
@@ -45,154 +23,40 @@
 * 增加未能搜索到资源时的帮助提示 ([#625](https://github.com/anobaka/InsideWorld/issues/625))
 * 调整文件处理器的排序规则 ([#627](https://github.com/anobaka/InsideWorld/issues/627))
 * 资源详情没有可展示属性时显示绑定属性的提醒 ([#629](https://github.com/anobaka/InsideWorld/issues/629))
-
-### Bug Fixes
-
-* 封面缓存未生效 ([#609](https://github.com/anobaka/InsideWorld/issues/609))
-* 在文件系统选择器中，如果指定了类型为文件夹，则磁盘列表无法显示 ([#622](https://github.com/anobaka/InsideWorld/issues/622))
-* 文件选择器偶尔未能正确停止追踪文件变化 ([#623](https://github.com/anobaka/InsideWorld/issues/623))
-* 部分情况下文件系统选择器未能默认选中当前目录 ([#626](https://github.com/anobaka/InsideWorld/issues/626))
-* 在文件处理器中修改文件名时，双击输入框会导致进入所选目录 ([#628](https://github.com/anobaka/InsideWorld/issues/628))
-
-## [1.9.0-beta10](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta10/installer/Bakabase.zip) (2024-10-24)
-
-### Features
-
 * 封面图尺寸小于展示区域时不再拉伸封面 ([#596](https://github.com/anobaka/InsideWorld/issues/596))
 * 优化文件处理器 ([#597](https://github.com/anobaka/InsideWorld/issues/597))
 * 优化文件移动器UI ([#603](https://github.com/anobaka/InsideWorld/issues/603))
 * 配置媒体库跟目录时默认进入已选目录内部，而不是父级目录 ([#604](https://github.com/anobaka/InsideWorld/issues/604))
 * 分离增强流程 ([#607](https://github.com/anobaka/InsideWorld/issues/607))
-
-### Bug Fixes
-
-* 分类的资源名称展示模板无法移除 ([#594](https://github.com/anobaka/InsideWorld/issues/594))
-* 通过自定义属性搜索资源时报错 ([#595](https://github.com/anobaka/InsideWorld/issues/595))
-* 增强记录显示未增强，实际数据已增强 ([#599](https://github.com/anobaka/InsideWorld/issues/599))
-* 无法显示尺寸过大的封面 ([#601](https://github.com/anobaka/InsideWorld/issues/601))
-* 在资源列表页移动资源后对应的分类和媒体库信息未变更 ([#602](https://github.com/anobaka/InsideWorld/issues/602))
-* 增强时报错：属性类型为空，但属性id[xxx]不为空 ([#605](https://github.com/anobaka/InsideWorld/issues/605))
-* 资源列表页切换【鼠标悬浮显示封面大图】和【鼠标悬浮时预览资源文件】未立即生效 ([#606](https://github.com/anobaka/InsideWorld/issues/606))
-
-## [1.9.0-beta9](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta9/installer/Bakabase.zip) (2024-10-13)
-
-### Features
-
 * 资源列表页，支持按住Ctrl多选，支持右键点击资源移动至媒体库 ([#587](https://github.com/anobaka/InsideWorld/issues/587))
 * 资源列表页支持显示和隐藏分类、媒体库和标签信息 ([#592](https://github.com/anobaka/InsideWorld/issues/592))
 * 增加别名导出和导入功能 ([#593](https://github.com/anobaka/InsideWorld/issues/593))
-
-### Bug Fixes
-
-* 资源列表页未能正确显示资源标签 ([#591](https://github.com/anobaka/InsideWorld/issues/591))
-
-### Development
-
-* Add tests for file mover ([#588](https://github.com/anobaka/InsideWorld/issues/588))
-* Adjust move and copy operations for file system entries to adapt the changes in LazyMortal ([#589](https://github.com/anobaka/InsideWorld/issues/589))
-
-## [1.9.0-beta8](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta8/installer/Bakabase.zip) (2024-10-07)
-
-### Features
-
 * 扩大资源列表页中资源播放按钮和菜单的点击区域 ([#579](https://github.com/anobaka/InsideWorld/issues/579))
 * 在资源有多个可播放文件时，显示完整的文件名 ([#580](https://github.com/anobaka/InsideWorld/issues/580))
 * 屏蔽部分数据库错误 ([#578](https://github.com/anobaka/InsideWorld/issues/578))
 * 增加资源列表封面的展示模式：填充空余部分 ([#581](https://github.com/anobaka/InsideWorld/issues/581))
 * 将日期时间编辑器变更为24小时制 ([#582](https://github.com/anobaka/InsideWorld/issues/582))
 * 资源搜索条件增加【分类】 ([#585](https://github.com/anobaka/InsideWorld/issues/585))
-
-### Bug Fixes
-
-* 在资源列表页更改资源列数后单个资源高度未更新 ([#577](https://github.com/anobaka/InsideWorld/issues/577))
-* 在编辑数字类自定义属性时，按下回车或使其失去焦点未能触发保存操作 ([#583](https://github.com/anobaka/InsideWorld/issues/583))
-* 编辑标签数据时无法多选 ([#584](https://github.com/anobaka/InsideWorld/issues/584))
-
-## [1.9.0-beta7](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta7/installer/Bakabase.zip) (2024-09-23)
-
-### Features
-
 * 优化自定义属性转换逻辑 ([#568](https://github.com/anobaka/InsideWorld/issues/568))
 * 在自定义属性界面关闭属性框后重新加载自定义属性列表 ([#569](https://github.com/anobaka/InsideWorld/issues/569))
 * 减少多行文本属性的间距 ([#573](https://github.com/anobaka/InsideWorld/issues/573))
-
-### Bug Fixes
-
-* 增强器选项【自动绑定属性】勾选后未能正常显示 ([#570](https://github.com/anobaka/InsideWorld/issues/570))
-* 如果数据库中包含链接属性，则通过关键字搜索资源会失效 ([#571](https://github.com/anobaka/InsideWorld/issues/571))
-* 资源界面，添加筛选条件产生额外空间后，会导致资源列表触发加载下一页 ([#572](https://github.com/anobaka/InsideWorld/issues/572))
-
-## [1.9.0-beta6](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta6/installer/Bakabase.zip) (2024-09-13)
-
-### Features
-
 * 记录资源列表页的当前视窗页码作为上次搜索的页码，而不是最后搜索时使用的页码 ([#565](https://github.com/anobaka/InsideWorld/issues/565))
 * 将资源列表的瀑布流变更为网格排版 ([#566](https://github.com/anobaka/InsideWorld/issues/566))
-
-## [1.9.0-beta5](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta5/installer/Bakabase.zip) (2024-09-12)
-
-### Features
-
 * 移除属性值头尾的换行和空格 ([#562](https://github.com/anobaka/InsideWorld/issues/562))
 * 为名称展示模板增加文件名属性 ([#564](https://github.com/anobaka/InsideWorld/issues/564))
-
-### Bug Fixes
-
-* 无法配置自定义资源搜索条件 ([#563](https://github.com/anobaka/InsideWorld/issues/563))
-
-## [1.9.0-beta4](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta4/installer/Bakabase.zip) (2024-09-11)
-
-### Features
-
 * 减少资源封面加载次数 ([#559](https://github.com/anobaka/InsideWorld/issues/559))
 * 调整资源详情布局 ([#560](https://github.com/anobaka/InsideWorld/issues/560))
-
-### Bug Fixes
-
-* 动态增强目标配置异常 ([#556](https://github.com/anobaka/InsideWorld/issues/556))
-* 转换增强记录时未填充预置属性 ([#557](https://github.com/anobaka/InsideWorld/issues/557))
-* 转换增强记录时，如果目标属性类型和原数据类型不一致，会转换成异常结果 ([#558](https://github.com/anobaka/InsideWorld/issues/558))
-
-## [1.9.0-beta3](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta3/installer/Bakabase.zip) (2024-09-10)
-
-### Features
-
 * 打开属性选择框时，如果没有已选属性，则默认切换至未选择列表 ([#545](https://github.com/anobaka/InsideWorld/issues/545))
 * 选择属性框调整为三个维度：内置、预置和自定义，允许将增强目标绑定至预置属性 ([#546](https://github.com/anobaka/InsideWorld/issues/546))
 * 在配置媒体库路径信息时，允许将正则表达式应用至资源文件(夹)名 ([#547](https://github.com/anobaka/InsideWorld/issues/547))
 * 增加根据分类和增强器删除增强记录的功能 ([#548](https://github.com/anobaka/InsideWorld/issues/548))
 * 在增强器增强目标中配置默认预置属性，在自动绑定属性启用时尝试匹配预置属性 ([#550](https://github.com/anobaka/InsideWorld/issues/550))
 * 增加属性转换测试功能 ([#552](https://github.com/anobaka/InsideWorld/issues/552))
-
-### Bug Fixes
-
-* 手动编辑动态增强目标时，增强名称没有实时更新 ([#544](https://github.com/anobaka/InsideWorld/issues/544))
-* 属性转换时使用了错误的目标属性Descriptor ([#551](https://github.com/anobaka/InsideWorld/issues/551))
-* 基础数据反序列化时未移除转义符 ([#553](https://github.com/anobaka/InsideWorld/issues/553))
-* 关闭资源详情窗口后资源封面显示异常 ([#554](https://github.com/anobaka/InsideWorld/issues/554))
-* 删除筛选条件会导致搜索关键字也被清空 ([#555](https://github.com/anobaka/InsideWorld/issues/555))
-
-## [1.9.0-beta2](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta2/installer/Bakabase.zip) (2024-09-05)
-
-### Features
-
 * 削弱资源界面标签的颜色，突出资源标题 ([#536](https://github.com/anobaka/InsideWorld/issues/536))
 * 系统原生UI组件支持跟随UI主题类型变化 ([#537](https://github.com/anobaka/InsideWorld/issues/537))
 * v1.9.0迁移需要为历史封面创建一个自定义属性 ([#540](https://github.com/anobaka/InsideWorld/issues/540))
 * 支持多封面轮播图 ([#541](https://github.com/anobaka/InsideWorld/issues/541))
 * 调整正则增强器以适用于自定义属性 ([#542](https://github.com/anobaka/InsideWorld/issues/542))
-
-### Bug Fixes
-
-* [Bug] 点击媒体库/自定义组件触发'/component: [500]'错误 ([#530](https://github.com/anobaka/InsideWorld/issues/530))
-* [Bug] 1.9beta 资源封面显示异常 ([#532](https://github.com/anobaka/InsideWorld/issues/532))
-* [Bug] 播放资源的弹出窗口无法交互 ([#535](https://github.com/anobaka/InsideWorld/issues/535))
-* 部分属性在检查转换损失时报错 ([#538](https://github.com/anobaka/InsideWorld/issues/538))
-
-## [1.9.0-beta](https://cdn-public.anobaka.com/app/bakabase/inside-world-dev-test/1.9.0-beta/installer/Bakabase.zip) (2024-08-28)
-
-### Features
-
 * 缩减软件包大小，自动尝试使用系统中的WebView2环境，如未安装则提示下载 ([#529](https://github.com/anobaka/InsideWorld/issues/529))
 * 变更名称和图标 ([#528](https://github.com/anobaka/InsideWorld/issues/528))
 * 移除收藏夹、增强记录、批量修改、外部搜索引擎、封面查找源等功能 ([#527](https://github.com/anobaka/InsideWorld/issues/527))
@@ -213,6 +77,58 @@
 * 不再支持<=v1.7.2版本自动升级 ([#507](https://github.com/anobaka/InsideWorld/issues/507))
 * 缓存第三方依赖的新版本检查结果 ([#509](https://github.com/anobaka/InsideWorld/issues/509))
 * 封面现在仅会被保存至临时文件夹，不再支持保存至资源文件夹 ([#508](https://github.com/anobaka/InsideWorld/issues/508))
+
+### Bug Fixes
+
+* 正则增强器无法匹配多个分组数据 ([#649](https://github.com/anobaka/InsideWorld/issues/649))
+* 在增强器配置界面将属性与分类绑定后，UI未及时更新 ([#650](https://github.com/anobaka/InsideWorld/issues/650))
+* 在增强器配置界面创建并选择新属性时，UI未及时更新 ([#651](https://github.com/anobaka/InsideWorld/issues/651))
+* 更新ExHentai下载器以解析新版结构 ([#652](https://github.com/anobaka/InsideWorld/issues/652))
+* 文件处理器，合并文件功能报错 ([#653](https://github.com/anobaka/InsideWorld/issues/653))
+* 在同步媒体库时，未标记对新版自定义属性的变化 ([#639](https://github.com/anobaka/InsideWorld/issues/639))
+* 同步媒体库时如果配置了自定义属性，可能会由于属性值类型转换失败而未能保存 ([#640](https://github.com/anobaka/InsideWorld/issues/640))
+* 同步媒体库时，配置的预置属性（评分、介绍）不会被保存 ([#641](https://github.com/anobaka/InsideWorld/issues/641))
+* [Bug] 创建自定义属性未选择类型导致失败 ([#633](https://github.com/anobaka/InsideWorld/issues/633))
+* 在文件选择器创建新文件夹时，始终会创建在首次可创建新文件夹时的目录内 ([#636](https://github.com/anobaka/InsideWorld/issues/636))
+* [Bug] 同步媒体库时报错message: Value cannot be null. (Parameter 'key') ([#634](https://github.com/anobaka/InsideWorld/issues/634))
+* 配置媒体库路径并按照倒序层级配置属性时，应该从资源前的一级开始计数 ([#637](https://github.com/anobaka/InsideWorld/issues/637))
+* 封面缓存未生效 ([#609](https://github.com/anobaka/InsideWorld/issues/609))
+* 在文件系统选择器中，如果指定了类型为文件夹，则磁盘列表无法显示 ([#622](https://github.com/anobaka/InsideWorld/issues/622))
+* 文件选择器偶尔未能正确停止追踪文件变化 ([#623](https://github.com/anobaka/InsideWorld/issues/623))
+* 部分情况下文件系统选择器未能默认选中当前目录 ([#626](https://github.com/anobaka/InsideWorld/issues/626))
+* 在文件处理器中修改文件名时，双击输入框会导致进入所选目录 ([#628](https://github.com/anobaka/InsideWorld/issues/628))
+* 分类的资源名称展示模板无法移除 ([#594](https://github.com/anobaka/InsideWorld/issues/594))
+* 通过自定义属性搜索资源时报错 ([#595](https://github.com/anobaka/InsideWorld/issues/595))
+* 增强记录显示未增强，实际数据已增强 ([#599](https://github.com/anobaka/InsideWorld/issues/599))
+* 无法显示尺寸过大的封面 ([#601](https://github.com/anobaka/InsideWorld/issues/601))
+* 在资源列表页移动资源后对应的分类和媒体库信息未变更 ([#602](https://github.com/anobaka/InsideWorld/issues/602))
+* 增强时报错：属性类型为空，但属性id[xxx]不为空 ([#605](https://github.com/anobaka/InsideWorld/issues/605))
+* 资源列表页切换【鼠标悬浮显示封面大图】和【鼠标悬浮时预览资源文件】未立即生效 ([#606](https://github.com/anobaka/InsideWorld/issues/606))
+* 资源列表页未能正确显示资源标签 ([#591](https://github.com/anobaka/InsideWorld/issues/591))
+* 在资源列表页更改资源列数后单个资源高度未更新 ([#577](https://github.com/anobaka/InsideWorld/issues/577))
+* 在编辑数字类自定义属性时，按下回车或使其失去焦点未能触发保存操作 ([#583](https://github.com/anobaka/InsideWorld/issues/583))
+* 编辑标签数据时无法多选 ([#584](https://github.com/anobaka/InsideWorld/issues/584))
+* 增强器选项【自动绑定属性】勾选后未能正常显示 ([#570](https://github.com/anobaka/InsideWorld/issues/570))
+* 如果数据库中包含链接属性，则通过关键字搜索资源会失效 ([#571](https://github.com/anobaka/InsideWorld/issues/571))
+* 资源界面，添加筛选条件产生额外空间后，会导致资源列表触发加载下一页 ([#572](https://github.com/anobaka/InsideWorld/issues/572))
+* 无法配置自定义资源搜索条件 ([#563](https://github.com/anobaka/InsideWorld/issues/563))
+* 动态增强目标配置异常 ([#556](https://github.com/anobaka/InsideWorld/issues/556))
+* 转换增强记录时未填充预置属性 ([#557](https://github.com/anobaka/InsideWorld/issues/557))
+* 转换增强记录时，如果目标属性类型和原数据类型不一致，会转换成异常结果 ([#558](https://github.com/anobaka/InsideWorld/issues/558))
+* 手动编辑动态增强目标时，增强名称没有实时更新 ([#544](https://github.com/anobaka/InsideWorld/issues/544))
+* 属性转换时使用了错误的目标属性Descriptor ([#551](https://github.com/anobaka/InsideWorld/issues/551))
+* 基础数据反序列化时未移除转义符 ([#553](https://github.com/anobaka/InsideWorld/issues/553))
+* 关闭资源详情窗口后资源封面显示异常 ([#554](https://github.com/anobaka/InsideWorld/issues/554))
+* 删除筛选条件会导致搜索关键字也被清空 ([#555](https://github.com/anobaka/InsideWorld/issues/555))
+* [Bug] 点击媒体库/自定义组件触发'/component: [500]'错误 ([#530](https://github.com/anobaka/InsideWorld/issues/530))
+* [Bug] 1.9beta 资源封面显示异常 ([#532](https://github.com/anobaka/InsideWorld/issues/532))
+* [Bug] 播放资源的弹出窗口无法交互 ([#535](https://github.com/anobaka/InsideWorld/issues/535))
+* 部分属性在检查转换损失时报错 ([#538](https://github.com/anobaka/InsideWorld/issues/538))
+
+### Development
+
+* Add tests for file mover ([#588](https://github.com/anobaka/InsideWorld/issues/588))
+* Adjust move and copy operations for file system entries to adapt the changes in LazyMortal ([#589](https://github.com/anobaka/InsideWorld/issues/589))
 
 ## [1.8.2](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.8.2/installer/Bakabase.InsideWorld.zip) (2024-08-26)
 
