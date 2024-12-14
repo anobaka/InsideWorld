@@ -2,6 +2,7 @@
 
 ### Features
 
+* 增加禁用资源列表中封面图轮播的选项 ([#660](https://github.com/anobaka/InsideWorld/issues/660))
 * 文件处理器，合并文件自动分组时忽略路径大小写 ([#654](https://github.com/anobaka/InsideWorld/issues/654))
 * 将分类界面媒体库配置列表中显示的自定义属性变更为生成的属性 ([#643](https://github.com/anobaka/InsideWorld/issues/643))
 * Reduce redundant rendering of common components. ([#645](https://github.com/anobaka/InsideWorld/issues/645))
