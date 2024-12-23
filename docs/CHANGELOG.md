@@ -1,3 +1,31 @@
+## [1.9.1-beta](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.1-beta/installer/Bakabase.zip) (2024-12-23)
+
+### Features
+
+* 筛选条件增加禁用 ([#617](https://github.com/anobaka/InsideWorld/issues/617))
+* 增加置顶选项 ([#619](https://github.com/anobaka/InsideWorld/issues/619))
+* 在更新依赖组件时，如果未能获取远程文件MD5则不进行MD5校验 ([#630](https://github.com/anobaka/InsideWorld/issues/630))
+* 优化资源封面和可播放文件的加载性能 ([#638](https://github.com/anobaka/InsideWorld/issues/638))
+* 组合展示资源内的可播放文件 ([#644](https://github.com/anobaka/InsideWorld/issues/644))
+* 批量删除增强信息时增加“仅删除空增强记录”的选项 ([#656](https://github.com/anobaka/InsideWorld/issues/656))
+* 同步媒体库时不再删除未找到路径的资源 ([#657](https://github.com/anobaka/InsideWorld/issues/657))
+* 支持批量将未知路径的资源数据转移至其他资源 ([#658](https://github.com/anobaka/InsideWorld/issues/658))
+* 在资源增强信息窗口中增加未获取到数据的提示 ([#659](https://github.com/anobaka/InsideWorld/issues/659))
+* 允许将资源转移至其他媒体库（不转移文件） ([#661](https://github.com/anobaka/InsideWorld/issues/661))
+* 当仅有一张封面图时隐藏轮播图的定位锚点 ([#662](https://github.com/anobaka/InsideWorld/issues/662))
+* 增加特殊筛选项：父级资源、置顶、文件不存在、未知媒体库 ([#663](https://github.com/anobaka/InsideWorld/issues/663))
+* 如果资源对应的文件不存在，或资源关联了未知的媒体库，则在资源封面上显示对应图标 ([#664](https://github.com/anobaka/InsideWorld/issues/664))
+* 增加批量修改属性功能 ([#665](https://github.com/anobaka/InsideWorld/issues/665))
+* 优化交互和文案 ([#666](https://github.com/anobaka/InsideWorld/issues/666))
+* 浮动助手中的后台同名任务仅显示最近运行的一个 ([#667](https://github.com/anobaka/InsideWorld/issues/667))
+* 重构内置播放器保存封面功能 ([#668](https://github.com/anobaka/InsideWorld/issues/668))
+
+### Bugs
+
+* 在增强器选择窗口中删除当前分类下的对应增强器信息时，实际删除了当前分类下全部的增强信息 ([#655](https://github.com/anobaka/InsideWorld/issues/655))
+* 启动页设置无效 ([#669](https://github.com/anobaka/InsideWorld/issues/669))
+
+
 ## [1.9.0](https://cdn-public.anobaka.com/app/bakabase/inside-world/1.9.0/installer/Bakabase.zip) (2024-12-12)
 
 ### Features
