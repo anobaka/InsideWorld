@@ -19,6 +19,8 @@
 * 优化交互和文案 ([#666](https://github.com/anobaka/InsideWorld/issues/666))
 * 浮动助手中的后台同名任务仅显示最近运行的一个 ([#667](https://github.com/anobaka/InsideWorld/issues/667))
 * 重构内置播放器保存封面功能 ([#668](https://github.com/anobaka/InsideWorld/issues/668))
+* 文件选择器默认展示全部磁盘 ([#670](https://github.com/anobaka/InsideWorld/issues/670))
+* 在资源详情弹窗中修改封面后会立即刷新封面 ([#671](https://github.com/anobaka/InsideWorld/issues/671))
 
 ### Bugs
 
