@@ -91,7 +91,7 @@
   "downloader.label.prioritizeTasksWithTorrent": "优先下载包含种子的任务",
   "downloader.tip.prioritizeTasksWithTorrentDesc": "勾选后，会先依次探测各任务，把包含种子的任务优先下完（仅下载 .torrent 文件），没有种子的任务排到最后再逐页下载图片。仅对单作品任务生效，需先开启“优先下载种子”。",
   "downloader.label.torrentCheckValidityHours": "“无种子”结果有效期（小时）",
-  "downloader.tip.torrentCheckValidityHoursDesc": "某个帖子被探测为没有种子后，在该时长内不再重复探测。否则每次重新下载整批任务都会把所有帖子从头检查一遍。结果保存在任务上，重启后依然有效。填 0 表示每次都重新检查。",
+  "downloader.tip.torrentCheckValidityHoursDesc": "某个帖子被探测为没有种子后，在该时长内不再重复探测。否则每次重新下载整批任务都会把所有帖子从头检查一遍。结果保存在任务上，重启后依然有效。默认 24 小时，填 0 表示每次都重新检查。",
   "downloader.tip.exHentaiUserscript": "您可以使用我们提供的油猴脚本在 ExHentai 网站上一键下载。",
   "downloader.tip.goToThirdPartyIntegration": "前往第三方集成页面",
   "downloader.bilibili.selectFavorites": "选择收藏夹",
@@ -100,5 +100,11 @@
   "downloader.label.configurations": "下载器配置",
   "downloader.config.tab.general": "通用",
   "downloader.config.autoStartAfterCreation.label": "创建后自动开始下载",
-  "downloader.config.autoStartAfterCreation.description": "开启后，新建的下载任务将自动开始，无需手动启动。"
+  "downloader.config.autoStartAfterCreation.description": "开启后，新建的下载任务将自动开始，无需手动启动。",
+  "downloader.label.torrentAvailable": "有种子",
+  "downloader.label.torrentUnavailable": "无种子",
+  "downloader.label.torrentDisabled": "不下种子",
+  "downloader.tip.torrentFoundAt": "{{time}} 检测到该帖子有种子。",
+  "downloader.tip.noTorrentCheckedAt": "{{time}} 检测到该帖子没有种子，将改为逐页下载图片。",
+  "downloader.tip.torrentDisabled": "该任务未开启“优先下载种子”，将直接下载图片。"
 }

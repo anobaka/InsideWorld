@@ -1,11 +1,14 @@
 ﻿using Bakabase.InsideWorld.Business.Components.Downloader.Abstractions.Components;
 using Bakabase.InsideWorld.Business.Components.Downloader.Abstractions.Models.Constants;
 using Bakabase.InsideWorld.Business.Components.Downloader.Components;
+using Bakabase.InsideWorld.Business.Components.Downloader.Components.Downloaders.ExHentai;
 using Bakabase.InsideWorld.Business.Components.Downloader.Models.Db;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
+using System.Text.Json;
 using Bakabase.InsideWorld.Business.Components.Downloader.Abstractions.Models;
+using Bakabase.InsideWorld.Models.Constants;
 using Bakabase.InsideWorld.Business.Components.Downloader.Services;
 using Bootstrap.Components.DependencyInjection;
 using Bootstrap.Components.Orm;
@@ -33,8 +36,13 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Extensions
             services.AddScoped<FullMemoryCacheResourceService<BakabaseDbContext, DownloadRecordDbModel, int>>();
             services.AddScoped<DownloadRecordService>();
             services.AddSingleton<DownloaderManager>();
+            services.AddSingleton<ITransientTorrentVerdictCache>(sp => sp.GetRequiredService<DownloaderManager>());
             services.AddTransient<IDownloaderLocalizer, DownloaderLocalizer>();
             services.AddSingleton<IDownloaderFactory, DownloaderFactory>();
+            services.AddSingleton<IDownloadTaskPrecheck, ExHentaiDownloadTaskPrecheck>();
+            services.AddSingleton<DownloadTaskPrecheckRunner>();
+            services.AddSingleton<DownloadQueuePump>();
+            services.AddHostedService<DownloaderQueueDaemon>();
 
             return services;
         }
@@ -48,15 +56,15 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Extensions
 
             var downloader = downloaderManager[task.Id];
 
-            var allDownloaders = downloaderManager.Downloaders;
-
             DownloadTaskStatus status;
             if (downloader == null)
             {
                 status = task.Status switch
                 {
-                    DownloadTaskDbModelStatus.InProgress => allDownloaders.Values.Any(a =>
-                        a.ThirdPartyId == task.ThirdPartyId && a.IsOccupyingDownloadTaskSource())
+                    // Asked rather than scanned: reading the whole downloader map here allocated a
+                    // copy of it per task, so projecting a list of a thousand tasks copied it a
+                    // thousand times — on every pushed progress tick.
+                    DownloadTaskDbModelStatus.InProgress => downloaderManager.IsSourceOccupied(task.ThirdPartyId)
                         ? DownloadTaskStatus.InQueue
                         : DownloadTaskStatus.Idle,
                     DownloadTaskDbModelStatus.Disabled => DownloadTaskStatus.Disabled,
@@ -75,11 +83,10 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Extensions
                 {
                     status = downloader.Status switch
                     {
-                        DownloaderStatus.JustCreated => allDownloaders.Any(a =>
-                            a.Key != task.Id && a.Value.ThirdPartyId == task.ThirdPartyId &&
-                            a.Value.IsOccupyingDownloadTaskSource())
-                            ? DownloadTaskStatus.InQueue
-                            : DownloadTaskStatus.Idle,
+                        DownloaderStatus.JustCreated =>
+                            downloaderManager.IsSourceOccupied(task.ThirdPartyId, task.Id)
+                                ? DownloadTaskStatus.InQueue
+                                : DownloadTaskStatus.Idle,
                         DownloaderStatus.Starting => DownloadTaskStatus.Starting,
                         DownloaderStatus.Downloading => DownloadTaskStatus.Downloading,
                         DownloaderStatus.Complete => DownloadTaskStatus.Complete,
@@ -96,9 +103,7 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Extensions
                             StoppedBy: DownloaderStopBy.AppendToTheQueue or DownloaderStopBy.Defer
                         })
                     {
-                        status = allDownloaders.Any(a =>
-                            a.Key != task.Id && a.Value.ThirdPartyId == task.ThirdPartyId &&
-                            a.Value.IsOccupyingDownloadTaskSource())
+                        status = downloaderManager.IsSourceOccupied(task.ThirdPartyId, task.Id)
                             ? DownloadTaskStatus.InQueue
                             : DownloadTaskStatus.Idle;
                     }
@@ -178,10 +183,45 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Extensions
                 AvailableActions = actions,
                 AutoRetry = task.AutoRetry,
                 CreatedAt = task.CreatedAt,
-                Options = task.Options
+                Options = task.Options,
+                Metadata = BuildMetadata(task)
             };
 
             return dto;
+        }
+
+        /// <summary>
+        /// Turns the source-shaped options blob into the handful of facts the task list can render.
+        /// Only ExHentai has any today; other sources get null and the row shows nothing extra.
+        /// Deliberately tolerant — options written by an older build, or by hand, must degrade to
+        /// "nothing to show" rather than break the list.
+        /// </summary>
+        private static DownloadTaskMetadata? BuildMetadata(DownloadTaskDbModel task)
+        {
+            if (task.ThirdPartyId != ThirdPartyId.ExHentai || string.IsNullOrEmpty(task.Options))
+            {
+                return null;
+            }
+
+            ExHentaiTaskOptions options;
+            try
+            {
+                options = JsonSerializer.Deserialize<ExHentaiTaskOptions>(task.Options, JsonSerializerOptions.Web)
+                          ?? new ExHentaiTaskOptions();
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+
+            var metadata = new DownloadTaskMetadata
+            {
+                PreferTorrent = options.PreferTorrent,
+                TorrentFoundAt = options.TorrentFoundAt,
+                NoTorrentCheckedAt = options.NoTorrentCheckedAt
+            };
+
+            return metadata.IsEmpty ? null : metadata;
         }
 
         public static DownloadTaskDbModel? ToDbModel(this DownloadTask? task)

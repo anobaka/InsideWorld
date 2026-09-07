@@ -94,8 +94,14 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
             }
         }
 
+        /// <param name="targeted">
+        /// True when the user picked these tasks by hand rather than starting everything. Picking a
+        /// task out is an explicit "run this one", so the pre-check's skip is suppressed for it — it
+        /// is the way back for someone who deleted a downloaded file and wants it fetched again.
+        /// </param>
         public async Task<BaseResponse> Start(Expression<Func<DownloadTaskDbModel, bool>>? exp = null,
-            DownloadTaskActionOnConflict actionOnConflict = DownloadTaskActionOnConflict.Ignore)
+            DownloadTaskActionOnConflict actionOnConflict = DownloadTaskActionOnConflict.Ignore,
+            bool targeted = false)
         {
             var tasks = await GetAll(exp);
             var badStatusTasks = tasks.Where(a => a.Status is DownloadTaskDbModelStatus.Disabled or DownloadTaskDbModelStatus.Failed)
@@ -107,7 +113,7 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
 
             await UpdateRange(badStatusTasks);
             var rsp = await TryStartAllTasks(DownloadTaskStartMode.ManualStart, tasks.Select(a => a.Id).ToArray(),
-                actionOnConflict);
+                actionOnConflict, skipSatisfiedTasks: !targeted);
 
             PushAllDataToUi();
 
@@ -155,18 +161,14 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
                     break;
                 case DownloaderStatus.Stopped:
                 {
-                    switch (downloader.StoppedBy!.Value)
+                    // A missing reason used to throw here, and this handler is the only thing that
+                    // moves the queue on — so one unexplained stop froze every remaining task of that
+                    // source. Treat it as a requeue, the safest reading: the task stays eligible.
+                    newStatus = downloader.StoppedBy switch
                     {
-                        case DownloaderStopBy.ManuallyStop:
-                            newStatus = DownloadTaskDbModelStatus.Disabled;
-                            break;
-                        case DownloaderStopBy.AppendToTheQueue:
-                        case DownloaderStopBy.Defer:
-                            newStatus = DownloadTaskDbModelStatus.InProgress;
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
+                        DownloaderStopBy.ManuallyStop => DownloadTaskDbModelStatus.Disabled,
+                        _ => DownloadTaskDbModelStatus.InProgress
+                    };
 
                     break;
                 }
@@ -181,6 +183,15 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
             }
 
             var task = await GetByKey(taskId);
+            if (task == null)
+            {
+                // The task row was deleted while its downloader was still winding down. Nothing left
+                // to persist, but the queue still has to be told to move on — this used to throw and
+                // take the rest of the handler (and with it the whole source's queue) down with it.
+                RequestSchedulingPass();
+                return;
+            }
+
             if (newStatus.HasValue)
             {
                 task.Status = newStatus.Value;
@@ -213,15 +224,15 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
                     }
                 }
 
-                // A Defer keeps the task eligible (InProgress) but, unlike other requeues, must kick
-                // the scheduler so the next task is picked immediately rather than waiting for the
-                // periodic trigger.
-                var deferred = downloader is
-                    { Status: DownloaderStatus.Stopped, StoppedBy: DownloaderStopBy.Defer };
-                if (newStatus is DownloadTaskDbModelStatus.Complete or DownloadTaskDbModelStatus.Failed
-                        or DownloadTaskDbModelStatus.Disabled || deferred)
+                // Any downloader reaching a resting state frees its source's single slot, so the queue
+                // has to be looked at again. This used to name only some of those states — a stop
+                // that merely requeued the task left the queue idle with nothing scheduled to notice
+                // — and it ran the next pass inline, nesting a pass inside the completion that
+                // triggered it. Both are now the pump's job.
+                if (downloader.Status is DownloaderStatus.Complete or DownloaderStatus.Failed
+                    or DownloaderStatus.Stopped)
                 {
-                    await TryStartAllTasks(DownloadTaskStartMode.AutoStart, null, DownloadTaskActionOnConflict.Ignore);
+                    RequestSchedulingPass();
                 }
 
                 // Fire the workflow trigger after persistence. Same pattern as
@@ -251,7 +262,65 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
         /// Stamps a task as probed-and-torrentless. Persisted on the task so a later run can skip the
         /// probe entirely, unlike the manager's in-memory verdict which is dropped once a task ends.
         /// </summary>
-        public async Task RecordNoTorrentVerdict(int taskId, DateTime checkedAt)
+        public Task RecordNoTorrentVerdict(int taskId, DateTime checkedAt) =>
+            RecordTorrentVerdict(taskId, checkedAt, found: false);
+
+        /// <summary>
+        /// Stamps a task as probed-and-torrent-bearing, so the UI can say so and a later probe is not
+        /// the only way to find out again.
+        /// </summary>
+        public Task RecordTorrentFoundVerdict(int taskId, DateTime checkedAt) =>
+            RecordTorrentVerdict(taskId, checkedAt, found: true);
+
+        /// <summary>
+        /// Stamps a task's torrent as downloaded. This — and not
+        /// <see cref="RecordTorrentFoundVerdict"/> — is what the scheduler's pre-check reads to skip
+        /// a finished task, so it may only ever be written after the file is actually on disk.
+        /// </summary>
+        public Task RecordTorrentDownloadedVerdict(int taskId, DateTime downloadedAt) =>
+            UpdateExHentaiOptions(taskId, options =>
+            {
+                if (options.TorrentDownloadedAt == downloadedAt)
+                {
+                    return false;
+                }
+
+                options.TorrentDownloadedAt = downloadedAt;
+                return true;
+            });
+
+        private Task RecordTorrentVerdict(int taskId, DateTime checkedAt, bool found) =>
+            UpdateExHentaiOptions(taskId, options =>
+            {
+                // The two verdicts are mutually exclusive: a gallery that now has a torrent must not
+                // keep a no-torrent stamp that would send it to the back of the queue and skip its
+                // probe.
+                var noTorrentCheckedAt = found ? null : (DateTime?) checkedAt;
+                var torrentFoundAt = found ? (DateTime?) checkedAt : null;
+
+                // A gallery that turns out to have no torrent cannot also have downloaded one, and a
+                // stale stamp here would make the pre-check skip it forever.
+                var torrentDownloadedAt = found ? options.TorrentDownloadedAt : null;
+
+                if (options.NoTorrentCheckedAt == noTorrentCheckedAt &&
+                    options.TorrentFoundAt == torrentFoundAt &&
+                    options.TorrentDownloadedAt == torrentDownloadedAt)
+                {
+                    return false;
+                }
+
+                options.NoTorrentCheckedAt = noTorrentCheckedAt;
+                options.TorrentFoundAt = torrentFoundAt;
+                options.TorrentDownloadedAt = torrentDownloadedAt;
+                return true;
+            });
+
+        /// <summary>
+        /// Reads a task's ExHentai options, lets <paramref name="mutate"/> change them, and persists
+        /// only if it reports a real change — these run on the download path, where a redundant write
+        /// also costs a database round trip and a UI broadcast.
+        /// </summary>
+        private async Task UpdateExHentaiOptions(int taskId, Func<ExHentaiTaskOptions, bool> mutate)
         {
             var task = await GetByKey(taskId);
             if (task == null)
@@ -262,43 +331,24 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
             var domain = task.ToDomainModel(DownloaderManager)!;
             var options = domain.GetTypedOptions<ExHentaiTaskOptions>();
 
-            if (options.NoTorrentCheckedAt == checkedAt)
+            if (!mutate(options))
             {
                 return;
             }
 
-            options.NoTorrentCheckedAt = checkedAt;
             domain.SetTypedOptions(options);
             task.Options = domain.Options;
 
             await Update(task);
+            InvalidatePrecheck();
         }
 
-        // True when an ExHentai task will end up downloading images (so under torrent-priority it should
-        // run after torrent-bearing tasks): it has been probed and has no torrent, or it opts out of
-        // torrents (PreferTorrent off), in which case we honor that and download its images.
-        private bool IsExHentaiImageOnly(DownloadTask task, int? torrentCheckValidityHours)
-        {
-            if (DownloaderManager.IsKnownNoTorrent(task.Id))
-            {
-                return true;
-            }
-
-            var options = task.GetTypedOptions<ExHentaiTaskOptions>();
-
-            if (!options.PreferTorrent)
-            {
-                return true;
-            }
-
-            // A still-valid persisted verdict counts the same as an in-memory one, so ordering
-            // survives a restart instead of every task looking un-probed again.
-            return ExHentaiTorrentCheckPolicy.IsNoTorrentVerdictFresh(options.NoTorrentCheckedAt,
-                torrentCheckValidityHours, DateTime.Now);
-        }
-
+        /// <param name="skipSatisfiedTasks">
+        /// Whether a pre-check may complete a task outright instead of running it. False only when
+        /// the user hand-picked the tasks, where "start this" has to mean it.
+        /// </param>
         public async Task<BaseResponse> TryStartAllTasks(DownloadTaskStartMode mode, int[]? ids,
-            DownloadTaskActionOnConflict actionOnConflict)
+            DownloadTaskActionOnConflict actionOnConflict, bool skipSatisfiedTasks = true)
         {
             var tasks = (await (ids == null ? GetAll() : GetByKeys(ids))).ToDictionary(a => a.ToDomainModel(DownloaderManager),
                 a => a);
@@ -314,25 +364,36 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
                     };
                 }).ToArray();
 
-            var exHentaiOptions = GetRequiredService<IBOptionsManager<ExHentaiOptions>>().Value;
-            var prioritizeExTorrent = exHentaiOptions.PrioritizeTasksWithTorrent;
-            var torrentCheckValidityHours = exHentaiOptions.TorrentCheckValidityHours;
+            // One bulk pass answers the source-specific questions for the whole queue. Doing it per
+            // task meant paying a start/stop lifecycle — and usually a network round-trip — just to
+            // discover a task had nothing to do, which is the entire cost of re-running a large,
+            // mostly-finished queue.
+            var verdicts = await GetRequiredService<DownloadTaskPrecheckRunner>().EvaluateAsync(targetTasks);
+
+            var satisfied = skipSatisfiedTasks
+                ? targetTasks
+                    .Where(t => verdicts.TryGetValue(t.Id, out var v) &&
+                                v.Outcome == DownloadTaskPrecheckOutcome.AlreadySatisfied)
+                    .ToArray()
+                : [];
+
+            if (satisfied.Length > 0)
+            {
+                await CompleteWithoutDownloading(satisfied, tasks);
+                targetTasks = targetTasks.Except(satisfied).ToArray();
+            }
+
             var filteredTasks = targetTasks.GroupBy(a => a.ThirdPartyId)
                 .Select(g =>
-                {
-                    // ExHentai torrent-priority: probe torrent-preferring, un-probed tasks first. Tasks
-                    // that will end up downloading images — already probed with no torrent, or opting
-                    // out of torrents — sink to the back, so they only start once there is nothing
-                    // torrent-bearing left. Stable FIFO (by id) within each tier.
-                    if (prioritizeExTorrent && g.Key == ThirdPartyId.ExHentai)
-                    {
-                        return g.OrderBy(t => IsExHentaiImageOnly(t, torrentCheckValidityHours) ? 1 : 0)
-                            .ThenBy(t => t.Id)
-                            .First();
-                    }
-
-                    return g.FirstOrDefault()!;
-                })
+                    // Deferred tasks sink to the back so they only start once there is nothing the
+                    // source considers more valuable left (for ExHentai: tasks that may still yield a
+                    // torrent). Stable FIFO (by id) within each tier.
+                    g.OrderBy(t => verdicts.TryGetValue(t.Id, out var v) &&
+                                   v.Outcome == DownloadTaskPrecheckOutcome.Defer
+                        ? 1
+                        : 0)
+                        .ThenBy(t => t.Id)
+                        .First())
                 .ToArray();
             var startedTasks = new List<DownloadTask>();
             BaseResponse? firstFailure = null;
@@ -383,6 +444,92 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
             // Surfaced so a manual start still reports why it could not run; an automatic
             // pass discards it, having already recorded the failure on the task itself.
             return firstFailure ?? BaseResponseBuilder.Ok;
+        }
+
+        /// <summary>
+        /// Completes tasks a pre-check proved have nothing left to download, without ever creating a
+        /// downloader for them.
+        ///
+        /// The outcome is the same one the downloader would have reached — it starts, sees the file
+        /// already on disk and returns — so the same things have to happen: the download record, the
+        /// completion workflow trigger. What is skipped is the cost of getting there: a downloader, a
+        /// background task, a status round-trip and a rate-limited network request per task. That is
+        /// what made re-running a large finished queue take hours.
+        ///
+        /// Written and pushed in bulk: one database round-trip and one UI refresh for the batch,
+        /// instead of the per-task write-and-push storm the normal path produces.
+        /// </summary>
+        private async Task CompleteWithoutDownloading(IReadOnlyList<DownloadTask> satisfied,
+            IReadOnlyDictionary<DownloadTask, DownloadTaskDbModel> dbModels)
+        {
+            var now = DateTime.Now;
+            var updated = new List<DownloadTaskDbModel>(satisfied.Count);
+
+            foreach (var task in satisfied)
+            {
+                if (!dbModels.TryGetValue(task, out var dbModel))
+                {
+                    continue;
+                }
+
+                dbModel.Status = DownloadTaskDbModelStatus.Complete;
+                dbModel.DownloadStatusUpdateDt = now;
+                dbModel.Progress = 100;
+                dbModel.Message = null;
+                updated.Add(dbModel);
+
+                // A downloader left over from an earlier run would otherwise keep speaking for this
+                // task — its status is what the list shows whenever one exists — and the row would
+                // report that run's outcome instead of the completion just recorded.
+                DownloaderManager.Forget(dbModel.Id);
+            }
+
+            if (updated.Count == 0)
+            {
+                return;
+            }
+
+            Logger.LogInformation(
+                "Completing {Count} download task(s) without starting them: a pre-check found nothing left to download",
+                updated.Count);
+
+            await UpdateRange(updated);
+
+            foreach (var dbModel in updated)
+            {
+                // Best-effort, exactly as on the normal completion path: a recording or trigger
+                // failure must not stop the rest of the batch from being completed.
+                try
+                {
+                    await DownloadRecordService.Record(dbModel.ThirdPartyId, dbModel.Key);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex,
+                        $"Failed to persist download record for task {dbModel.Id} ({dbModel.ThirdPartyId}/{dbModel.Key})");
+                }
+
+                try
+                {
+                    await _workflowBus.PublishAsync(
+                        DownloaderWorkflowKinds.TriggerCompleted,
+                        new DownloaderCompletedPayload
+                        {
+                            TaskId = dbModel.Id,
+                            ThirdPartyId = (int) dbModel.ThirdPartyId,
+                            Type = dbModel.Type,
+                            Key = dbModel.Key ?? "",
+                            Name = dbModel.Name,
+                            DownloadPath = dbModel.DownloadPath,
+                        });
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, $"Failed to publish the completion event for task {dbModel.Id}");
+                }
+            }
+
+            PushAllDataToUi();
         }
 
         /// <summary>
@@ -539,8 +686,44 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
             // The task's options (incl. PreferTorrent) may have changed, so drop any stale torrent
             // verdict and let it be re-probed on the next run.
             DownloaderManager.ClearNoTorrent(id);
+            InvalidatePrecheck();
             PushAllDataToUi();
             return rsp;
+        }
+
+        /// <summary>
+        /// Asks for another look at the queue, without waiting for it. Never call
+        /// <see cref="TryStartAllTasks"/> directly from a downloader event: that runs the next
+        /// scheduling pass inside the completion of the previous task, which nests without bound
+        /// when a queue drains quickly.
+        /// </summary>
+        private void RequestSchedulingPass()
+        {
+            try
+            {
+                GetRequiredService<DownloadQueuePump>().Request();
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e, "Failed to request a download scheduling pass");
+            }
+        }
+
+        /// <summary>
+        /// Drops every cached pre-check snapshot. Anything that changes what a pre-check reads — task
+        /// options, the set of tasks, a written verdict — has to call this, or the queue keeps acting
+        /// on an answer that is no longer true.
+        /// </summary>
+        private void InvalidatePrecheck()
+        {
+            try
+            {
+                GetRequiredService<DownloadTaskPrecheckRunner>().Invalidate();
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e, "Failed to invalidate the download pre-check cache");
+            }
         }
 
         public async Task<ListResponse<DownloadTask>> AddRange(IEnumerable<DownloadTask> resources)
@@ -570,6 +753,7 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
                 }
             }
 
+            InvalidatePrecheck();
             PushAllDataToUi();
             return new ListResponse<DownloadTask>(arr);
         }
@@ -587,6 +771,7 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
             await Stop(t => ids.Contains(t.Id));
             await RemoveByKeys(ids);
 
+            InvalidatePrecheck();
             PushAllDataToUi();
             return BaseResponseBuilder.Ok;
         }

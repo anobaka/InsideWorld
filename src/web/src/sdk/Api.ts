@@ -1927,6 +1927,7 @@ export interface BakabaseInsideWorldBusinessComponentsDownloaderAbstractionsMode
   /** @format date-time */
   createdAt: string;
   options?: string;
+  metadata?: BakabaseInsideWorldBusinessComponentsDownloaderAbstractionsModelsDownloadTaskMetadata;
   displayName: string;
   canStart: boolean;
 }
@@ -1938,6 +1939,14 @@ export interface BakabaseInsideWorldBusinessComponentsDownloaderAbstractionsMode
   status?: BakabaseInsideWorldBusinessComponentsDownloaderAbstractionsModelsConstantsDownloadTaskDbModelStatus;
   /** @format date-time */
   downloadedAt?: string;
+}
+
+export interface BakabaseInsideWorldBusinessComponentsDownloaderAbstractionsModelsDownloadTaskMetadata {
+  preferTorrent?: boolean;
+  /** @format date-time */
+  torrentFoundAt?: string;
+  /** @format date-time */
+  noTorrentCheckedAt?: string;
 }
 
 export interface BakabaseInsideWorldBusinessComponentsDownloaderAbstractionsModelsDownloaderDefinition {
