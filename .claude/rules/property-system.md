@@ -74,6 +74,14 @@ When a stored DbValue references an option that no longer exists, **every**
 read path drops the entry (and returns null when nothing is left) — no path
 leaks raw UUIDs to the UI. `DescriptorMissBehavior` tests lock this.
 
+That includes the layers above the descriptor: `Resource.Property.PropertyValue`
+carries a **null** `BizValue` rather than falling back to `Value`, so an
+uninterpretable value reads as absent instead of surfacing a bare id (for Tags
+and Multilevel such a fallback would also be the wrong shape — their biz type
+is not `ListString`). Callers treat null as "no value": the scope resolver
+skips it and moves to the next scope. `ResourcePropertyValueMissBehaviorTests`
+locks this end to end.
+
 ## PropertyValueFactory (reference types only)
 
 Only Choice/Tags/Multilevel need a factory (their db/biz values differ).

@@ -113,8 +113,21 @@ public record Resource
         {
             public int Scope { get; set; } = Scope;
             public object? Value { get; set; } = Value;
-            public object? BizValue { get; set; } = BizValue ?? Value;
-            public object? AliasAppliedBizValue { get; set; } = AliasAppliedBizValue ?? BizValue ?? Value;
+
+            /// <summary>
+            /// Null means the descriptor could not interpret the stored db value — it points at a
+            /// choice / tag / node that no longer exists. Falling back to <see cref="Value"/> here
+            /// would leak the raw id to the UI (and, for Tags and Multilevel, a value of the wrong
+            /// shape entirely, since their biz type is not ListString), defeating the miss
+            /// behavior every read path is supposed to share. Callers treat null as absent.
+            /// </summary>
+            public object? BizValue { get; set; } = BizValue;
+
+            /// <summary>
+            /// Alias application is optional, so falling back to <see cref="BizValue"/> is correct —
+            /// falling back to <see cref="Value"/> is not, for the reason above.
+            /// </summary>
+            public object? AliasAppliedBizValue { get; set; } = AliasAppliedBizValue ?? BizValue;
 
             public bool IsManuallySet => Scope == (int)PropertyValueScope.Manual;
         }
