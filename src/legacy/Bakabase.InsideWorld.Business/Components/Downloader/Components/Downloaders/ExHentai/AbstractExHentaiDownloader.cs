@@ -49,7 +49,8 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Components.Downloa
             bool preferTorrent = true,
             bool deferIfNoTorrent = false,
             Func<Task>? onNoTorrentDetected = null,
-            Func<Task>? onTorrentDetected = null)
+            Func<Task>? onTorrentDetected = null,
+            Func<Task>? onTorrentDownloaded = null)
         {
             // Only fetch torrent info when preferTorrent is true
             var detail = await Client.ParseDetail(url, preferTorrent, ct);
@@ -89,6 +90,14 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Components.Downloa
                 }
 
                 await Client.DownloadTorrent(bestTorrent.DownloadUrl, path, ct);
+
+                // Only now — the file is on disk. This is the stamp that lets a later run skip the
+                // task without touching the network or the folder, so it must not be written
+                // anywhere a failure could still reach it.
+                if (onTorrentDownloaded != null)
+                {
+                    await onTorrentDownloaded();
+                }
 
                 if (onProgress != null)
                 {

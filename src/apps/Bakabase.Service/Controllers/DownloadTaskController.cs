@@ -161,7 +161,8 @@ public class DownloadTaskController : Controller
     [SwaggerOperation(OperationId = "StartDownloadTasks")]
     public async Task<BaseResponse> StartAll([FromBody] DownloadTaskStartRequestModel model)
     {
-        return await _service.Start(model.Ids.Any() ? t => model.Ids.Contains(t.Id) : null, model.ActionOnConflict);
+        return await _service.Start(model.Ids.Any() ? t => model.Ids.Contains(t.Id) : null, model.ActionOnConflict,
+            targeted: model.Ids.Any());
     }
 
     [HttpDelete("download")]

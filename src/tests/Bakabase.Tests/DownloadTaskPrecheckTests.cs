@@ -104,14 +104,58 @@ public class DownloadTaskPrecheckTests
     }
 
     [TestMethod]
+    public async Task TorrentDownloadedStamp_IsSatisfiedWithoutTouchingTheDisk()
+    {
+        // The stamp is the whole point: no network, and no folder listing either. Note there is no
+        // file on disk here at all — the stamp alone has to settle it.
+        var verdict = await Evaluate(BuildPrecheck(),
+            NewTask(1, "Some Gallery", new ExHentaiTaskOptions
+            {
+                PreferTorrent = true,
+                TorrentDownloadedAt = DateTime.Now.AddDays(-3)
+            }));
+
+        Assert.AreEqual(DownloadTaskPrecheckOutcome.AlreadySatisfied, verdict?.Outcome);
+    }
+
+    [TestMethod]
+    public async Task TorrentFoundStamp_AloneIsNotEnough()
+    {
+        // TorrentFoundAt is written when a torrent is *seen*, before a download that may still fail.
+        // Reading it as "done" would complete tasks that never got their file.
+        var verdict = await Evaluate(BuildPrecheck(),
+            NewTask(1, "Some Gallery", new ExHentaiTaskOptions
+            {
+                PreferTorrent = true,
+                TorrentFoundAt = DateTime.Now.AddMinutes(-1)
+            }));
+
+        Assert.IsNull(verdict);
+    }
+
+    [TestMethod]
     public async Task TorrentAlreadyOnDisk_IsSatisfiedWithoutStarting()
     {
+        // Fallback for the backlog: tasks downloaded before the stamp existed carry no record.
         WriteTorrent("Some Gallery");
 
         var verdict = await Evaluate(BuildPrecheck(),
             NewTask(1, "Some Gallery", new ExHentaiTaskOptions { PreferTorrent = true }));
 
         Assert.AreEqual(DownloadTaskPrecheckOutcome.AlreadySatisfied, verdict?.Outcome);
+    }
+
+    [TestMethod]
+    public async Task StampIsIgnored_WhenTheTaskOptedOutOfTorrents()
+    {
+        var verdict = await Evaluate(BuildPrecheck(),
+            NewTask(1, "Some Gallery", new ExHentaiTaskOptions
+            {
+                PreferTorrent = false,
+                TorrentDownloadedAt = DateTime.Now.AddDays(-3)
+            }));
+
+        Assert.AreNotEqual(DownloadTaskPrecheckOutcome.AlreadySatisfied, verdict?.Outcome);
     }
 
     [TestMethod]

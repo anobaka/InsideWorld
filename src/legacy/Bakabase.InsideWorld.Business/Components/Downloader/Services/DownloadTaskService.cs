@@ -94,8 +94,14 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
             }
         }
 
+        /// <param name="targeted">
+        /// True when the user picked these tasks by hand rather than starting everything. Picking a
+        /// task out is an explicit "run this one", so the pre-check's skip is suppressed for it — it
+        /// is the way back for someone who deleted a downloaded file and wants it fetched again.
+        /// </param>
         public async Task<BaseResponse> Start(Expression<Func<DownloadTaskDbModel, bool>>? exp = null,
-            DownloadTaskActionOnConflict actionOnConflict = DownloadTaskActionOnConflict.Ignore)
+            DownloadTaskActionOnConflict actionOnConflict = DownloadTaskActionOnConflict.Ignore,
+            bool targeted = false)
         {
             var tasks = await GetAll(exp);
             var badStatusTasks = tasks.Where(a => a.Status is DownloadTaskDbModelStatus.Disabled or DownloadTaskDbModelStatus.Failed)
@@ -107,7 +113,7 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
 
             await UpdateRange(badStatusTasks);
             var rsp = await TryStartAllTasks(DownloadTaskStartMode.ManualStart, tasks.Select(a => a.Id).ToArray(),
-                actionOnConflict);
+                actionOnConflict, skipSatisfiedTasks: !targeted);
 
             PushAllDataToUi();
 
@@ -266,7 +272,55 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
         public Task RecordTorrentFoundVerdict(int taskId, DateTime checkedAt) =>
             RecordTorrentVerdict(taskId, checkedAt, found: true);
 
-        private async Task RecordTorrentVerdict(int taskId, DateTime checkedAt, bool found)
+        /// <summary>
+        /// Stamps a task's torrent as downloaded. This — and not
+        /// <see cref="RecordTorrentFoundVerdict"/> — is what the scheduler's pre-check reads to skip
+        /// a finished task, so it may only ever be written after the file is actually on disk.
+        /// </summary>
+        public Task RecordTorrentDownloadedVerdict(int taskId, DateTime downloadedAt) =>
+            UpdateExHentaiOptions(taskId, options =>
+            {
+                if (options.TorrentDownloadedAt == downloadedAt)
+                {
+                    return false;
+                }
+
+                options.TorrentDownloadedAt = downloadedAt;
+                return true;
+            });
+
+        private Task RecordTorrentVerdict(int taskId, DateTime checkedAt, bool found) =>
+            UpdateExHentaiOptions(taskId, options =>
+            {
+                // The two verdicts are mutually exclusive: a gallery that now has a torrent must not
+                // keep a no-torrent stamp that would send it to the back of the queue and skip its
+                // probe.
+                var noTorrentCheckedAt = found ? null : (DateTime?) checkedAt;
+                var torrentFoundAt = found ? (DateTime?) checkedAt : null;
+
+                // A gallery that turns out to have no torrent cannot also have downloaded one, and a
+                // stale stamp here would make the pre-check skip it forever.
+                var torrentDownloadedAt = found ? options.TorrentDownloadedAt : null;
+
+                if (options.NoTorrentCheckedAt == noTorrentCheckedAt &&
+                    options.TorrentFoundAt == torrentFoundAt &&
+                    options.TorrentDownloadedAt == torrentDownloadedAt)
+                {
+                    return false;
+                }
+
+                options.NoTorrentCheckedAt = noTorrentCheckedAt;
+                options.TorrentFoundAt = torrentFoundAt;
+                options.TorrentDownloadedAt = torrentDownloadedAt;
+                return true;
+            });
+
+        /// <summary>
+        /// Reads a task's ExHentai options, lets <paramref name="mutate"/> change them, and persists
+        /// only if it reports a real change — these run on the download path, where a redundant write
+        /// also costs a database round trip and a UI broadcast.
+        /// </summary>
+        private async Task UpdateExHentaiOptions(int taskId, Func<ExHentaiTaskOptions, bool> mutate)
         {
             var task = await GetByKey(taskId);
             if (task == null)
@@ -277,18 +331,11 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
             var domain = task.ToDomainModel(DownloaderManager)!;
             var options = domain.GetTypedOptions<ExHentaiTaskOptions>();
 
-            // The two verdicts are mutually exclusive: a gallery that now has a torrent must not keep
-            // a no-torrent stamp that would send it to the back of the queue and skip its probe.
-            var noTorrentCheckedAt = found ? null : (DateTime?) checkedAt;
-            var torrentFoundAt = found ? (DateTime?) checkedAt : null;
-
-            if (options.NoTorrentCheckedAt == noTorrentCheckedAt && options.TorrentFoundAt == torrentFoundAt)
+            if (!mutate(options))
             {
                 return;
             }
 
-            options.NoTorrentCheckedAt = noTorrentCheckedAt;
-            options.TorrentFoundAt = torrentFoundAt;
             domain.SetTypedOptions(options);
             task.Options = domain.Options;
 
@@ -296,8 +343,12 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
             InvalidatePrecheck();
         }
 
+        /// <param name="skipSatisfiedTasks">
+        /// Whether a pre-check may complete a task outright instead of running it. False only when
+        /// the user hand-picked the tasks, where "start this" has to mean it.
+        /// </param>
         public async Task<BaseResponse> TryStartAllTasks(DownloadTaskStartMode mode, int[]? ids,
-            DownloadTaskActionOnConflict actionOnConflict)
+            DownloadTaskActionOnConflict actionOnConflict, bool skipSatisfiedTasks = true)
         {
             var tasks = (await (ids == null ? GetAll() : GetByKeys(ids))).ToDictionary(a => a.ToDomainModel(DownloaderManager),
                 a => a);
@@ -319,10 +370,12 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
             // mostly-finished queue.
             var verdicts = await GetRequiredService<DownloadTaskPrecheckRunner>().EvaluateAsync(targetTasks);
 
-            var satisfied = targetTasks
-                .Where(t => verdicts.TryGetValue(t.Id, out var v) &&
-                            v.Outcome == DownloadTaskPrecheckOutcome.AlreadySatisfied)
-                .ToArray();
+            var satisfied = skipSatisfiedTasks
+                ? targetTasks
+                    .Where(t => verdicts.TryGetValue(t.Id, out var v) &&
+                                v.Outcome == DownloadTaskPrecheckOutcome.AlreadySatisfied)
+                    .ToArray()
+                : [];
 
             if (satisfied.Length > 0)
             {

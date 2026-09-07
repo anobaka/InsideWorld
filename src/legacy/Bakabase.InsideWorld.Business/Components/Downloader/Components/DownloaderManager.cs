@@ -222,6 +222,25 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Components
             }
         }
 
+        /// <summary>
+        /// Records that this task's torrent is now on disk, so a later run can skip it without asking
+        /// the network or the filesystem. Best-effort: losing the stamp costs one redundant lifecycle
+        /// next time, which is exactly the situation before it existed.
+        /// </summary>
+        public async Task MarkTorrentDownloadedAsync(int taskId)
+        {
+            try
+            {
+                await using var scope = _serviceProvider.CreateAsyncScope();
+                var service = scope.ServiceProvider.GetRequiredService<DownloadTaskService>();
+                await service.RecordTorrentDownloadedVerdict(taskId, DateTime.Now);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to persist the torrent-downloaded stamp for task {TaskId}", taskId);
+            }
+        }
+
         /// <summary>Whether a task is already known (this run) to have no torrent.</summary>
         public bool IsKnownNoTorrent(int taskId) => _noTorrentTaskIds.ContainsKey(taskId);
 

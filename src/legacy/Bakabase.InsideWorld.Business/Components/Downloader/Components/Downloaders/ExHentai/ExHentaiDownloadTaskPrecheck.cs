@@ -56,10 +56,12 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Components.Downloa
 
                 var taskOptions = task.GetTypedOptions<ExHentaiTaskOptions>();
 
-                if (IsTorrentAlreadyOnDisk(task, taskOptions, torrentsByFolder))
+                var satisfied = IsTorrentAlreadyDownloaded(task, taskOptions, torrentsByFolder);
+
+                if (satisfied != null)
                 {
-                    verdicts[task.Id] = new DownloadTaskPrecheckVerdict(
-                        DownloadTaskPrecheckOutcome.AlreadySatisfied, "torrent file already downloaded");
+                    verdicts[task.Id] =
+                        new DownloadTaskPrecheckVerdict(DownloadTaskPrecheckOutcome.AlreadySatisfied, satisfied);
                     continue;
                 }
 
@@ -77,28 +79,46 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Components.Downloa
         }
 
         /// <summary>
-        /// True when the torrent this task would download is already sitting in its download folder.
-        ///
-        /// Only decidable once the task has run far enough to learn the gallery's name, because that
-        /// name <em>is</em> the file name (see AbstractExHentaiDownloader.DownloadSingleWork). A task
-        /// that has never run has no name, so it is never skipped — which is the correct answer, not
-        /// a limitation.
+        /// Why this task has nothing left to download, or null if it still has work.
         /// </summary>
-        private bool IsTorrentAlreadyOnDisk(DownloadTask task, ExHentaiTaskOptions taskOptions,
+        /// <remarks>
+        /// The task's own <see cref="ExHentaiTaskOptions.TorrentDownloadedAt"/> answers this outright,
+        /// with no I/O — that is what the stamp exists for. The folder listing below is only for tasks
+        /// downloaded before that stamp existed: they carry no record at all, and they are exactly the
+        /// backlog this pre-check was added to spare.
+        ///
+        /// Deliberately not <see cref="ExHentaiTaskOptions.TorrentFoundAt"/>, which is stamped when a
+        /// torrent is *seen*, before a download that may still fail — reading it here would complete
+        /// tasks that never got their file.
+        /// </remarks>
+        private string? IsTorrentAlreadyDownloaded(DownloadTask task, ExHentaiTaskOptions taskOptions,
             IDictionary<string, HashSet<string>> torrentsByFolder)
         {
-            // A task that opted out of torrents downloads images; the folder says nothing about it.
-            if (!taskOptions.PreferTorrent ||
-                task.Type != (int) ExHentaiDownloadTaskType.SingleWork ||
-                task.Name.IsNullOrEmpty() ||
-                task.DownloadPath.IsNullOrEmpty())
+            // A task that opted out of torrents downloads images; none of this says anything about it.
+            if (!taskOptions.PreferTorrent || task.Type != (int) ExHentaiDownloadTaskType.SingleWork)
             {
-                return false;
+                return null;
+            }
+
+            if (taskOptions.TorrentDownloadedAt.HasValue)
+            {
+                return "torrent already downloaded";
+            }
+
+            // Fallback, and only decidable once the task has run far enough to learn the gallery's
+            // name — that name *is* the file name (see AbstractExHentaiDownloader.DownloadSingleWork).
+            // A task that has never run has no name, so it is never skipped, which is the correct
+            // answer rather than a limitation.
+            if (task.Name.IsNullOrEmpty() || task.DownloadPath.IsNullOrEmpty())
+            {
+                return null;
             }
 
             var expected = $"{task.Name!.RemoveInvalidFileNameChars()}.torrent";
 
-            return ListTorrents(task.DownloadPath, torrentsByFolder).Contains(expected);
+            return ListTorrents(task.DownloadPath, torrentsByFolder).Contains(expected)
+                ? "torrent file found in the download folder"
+                : null;
         }
 
         private HashSet<string> ListTorrents(string folder, IDictionary<string, HashSet<string>> cache)

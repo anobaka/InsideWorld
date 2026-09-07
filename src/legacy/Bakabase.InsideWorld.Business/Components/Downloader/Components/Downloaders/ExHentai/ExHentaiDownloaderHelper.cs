@@ -55,7 +55,8 @@ public class ExHentaiDownloaderHelper(
             // Carried over rather than reset, so re-submitting a task does not throw away a
             // still-valid torrent verdict.
             NoTorrentCheckedAt = patch?.NoTorrentCheckedAt,
-            TorrentFoundAt = patch?.TorrentFoundAt
+            TorrentFoundAt = patch?.TorrentFoundAt,
+            TorrentDownloadedAt = patch?.TorrentDownloadedAt
         };
         return JsonSerializer.Serialize(options, JsonSerializerOptions.Web);
     }

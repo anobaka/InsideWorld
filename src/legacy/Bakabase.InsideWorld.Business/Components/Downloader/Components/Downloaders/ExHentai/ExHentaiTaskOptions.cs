@@ -28,6 +28,22 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Components.Downloa
         /// torrent-priority task. Null means never probed, or probed and no torrent was found.
         /// </remarks>
         public DateTime? TorrentFoundAt { get; set; }
+
+        /// <summary>
+        /// When this gallery's torrent was last written to the download folder.
+        /// </summary>
+        /// <remarks>
+        /// Distinct from <see cref="TorrentFoundAt"/>, which is stamped the moment a torrent is seen
+        /// — before a download that may still fail. Only this one means "there is nothing left to
+        /// do", which is why the scheduler's pre-check reads it and not the other: taking
+        /// <see cref="TorrentFoundAt"/> for done would silently complete tasks whose torrent download
+        /// failed.
+        ///
+        /// It is what lets the pre-check answer "already downloaded?" from the task itself, with no
+        /// I/O at all. Tasks downloaded before this field existed have no stamp, so the pre-check
+        /// falls back to looking in the folder for them.
+        /// </remarks>
+        public DateTime? TorrentDownloadedAt { get; set; }
     }
 
     /// <summary>Nullable mirror of ExHentaiTaskOptions for parsing: tells an absent value apart from an explicit one. Keep members in sync.</summary>
@@ -36,5 +52,6 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Components.Downloa
         public bool? PreferTorrent { get; set; }
         public DateTime? NoTorrentCheckedAt { get; set; }
         public DateTime? TorrentFoundAt { get; set; }
+        public DateTime? TorrentDownloadedAt { get; set; }
     }
 }
