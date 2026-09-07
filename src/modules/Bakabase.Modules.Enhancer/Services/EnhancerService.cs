@@ -135,7 +135,15 @@ namespace Bakabase.Modules.Enhancer.Services
                 {
                     continue;
                 }
-                
+
+                // A dynamic target exists as soon as it is named (a regex capture group, an
+                // AI field) — binding it to a property is a separate step the user may not
+                // have taken yet. Nothing to write until they do.
+                if ((int) targetOptions.PropertyPool <= 0 || targetOptions.PropertyId <= 0)
+                {
+                    continue;
+                }
+
                 enhancementTargetOptionsMap[enhancement] = targetOptions;
             }
 

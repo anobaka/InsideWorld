@@ -98,10 +98,15 @@ const TargetRow = (props: Props) => {
     setOptions(newOptions);
     log("Patch target options", newOptions);
 
-    if (
-      !newOptions.autoBindProperty &&
-      (newOptions.propertyPool == undefined || newOptions.propertyId == undefined)
-    ) {
+    // A dynamic row counts as configured the moment it is named — the name is the
+    // configuration (a regex capture group), and binding it to a property is a
+    // separate step that may happen here or in the panel that opened this modal.
+    const isConfigured =
+      newOptions.autoBindProperty ||
+      (newOptions.propertyPool != undefined && newOptions.propertyId != undefined) ||
+      (descriptor.isDynamic && newOptions.dynamicTarget != undefined);
+
+    if (!isConfigured) {
       return;
     }
 
@@ -226,7 +231,13 @@ const TargetRow = (props: Props) => {
               type={descriptor.propertyType}
               onValueChanged={(property) => {
                 if (!property) {
-                  onDeleted?.();
+                  // A candidate-driven row can't be removed — its name comes from the
+                  // configuration above — so clearing it means "unbind", not "delete".
+                  if (onDeleted) {
+                    onDeleted();
+                  } else {
+                    patchTargetOptions({ propertyId: undefined, propertyPool: undefined });
+                  }
 
                   return;
                 }

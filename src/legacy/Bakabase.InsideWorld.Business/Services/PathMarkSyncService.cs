@@ -19,6 +19,9 @@ using Bakabase.InsideWorld.Models.Constants;
 using Bakabase.Modules.Property;
 using Bakabase.Modules.Property.Abstractions.Models.Db;
 using Bakabase.Modules.Property.Abstractions.Services;
+using Bakabase.Modules.Property.Extensions;
+using Bakabase.Modules.StandardValue;
+using Bakabase.Modules.StandardValue.Extensions;
 using Bootstrap.Components.Configuration.Abstractions;
 using CustomProperty = Bakabase.Abstractions.Models.Domain.CustomProperty;
 using Bootstrap.Components.DependencyInjection;
@@ -539,10 +542,27 @@ public class PathMarkSyncService : ScopedService
 
             if (propertyType == null) continue;
 
-            // Use PropertySystem to combine all effect values
-            var combinedValue = PropertySystem.Property.CombineSerializedDbValues(
-                propertyType.Value,
-                effects.Select(e => e.Value));
+            // A mark always yields human-readable text (a directory name, a regex capture),
+            // never an option id. For reference types (choice / tags / multilevel) that text
+            // is a biz value: combine it as one, then convert it into the db value so the
+            // option is created on the property. Skipping that step leaves the property with
+            // no options at all, so the resource filter has nothing to offer — while the
+            // resource itself still reads fine, because Resource.Property.PropertyValue
+            // falls back to the raw db value once the descriptor returns a null biz value.
+            // That fallback is what makes this failure look like a filter-only problem.
+            string? combinedValue;
+            if (pool == PropertyPool.Custom &&
+                PropertySystem.Property.IsReferenceValueType(propertyType.Value) &&
+                customProperties.TryGetValue(propertyId, out var referenceProperty))
+            {
+                combinedValue = ToReferenceDbValue(referenceProperty, effects.Select(e => e.Value), ctx);
+            }
+            else
+            {
+                combinedValue = PropertySystem.Property.CombineSerializedDbValues(
+                    propertyType.Value,
+                    effects.Select(e => e.Value));
+            }
 
             ctx.FinalPropertyValues[(resourceId, pool, propertyId)] = combinedValue;
 
@@ -583,6 +603,39 @@ public class PathMarkSyncService : ScopedService
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Combines the texts a set of marks contributed to a reference-typed property
+    /// (choice / tags / multilevel) and converts them into that property's db value,
+    /// creating an option for every label that doesn't have one yet. Properties whose
+    /// options grew are recorded on the context so Phase 3 persists them ahead of the
+    /// values pointing at them.
+    /// </summary>
+    private static string? ToReferenceDbValue(CustomProperty customProperty, IEnumerable<string?> texts,
+        SyncContext ctx)
+    {
+        var bizValueType = PropertySystem.Property.GetBizValueType(customProperty.Type);
+        var bizValues = texts
+            .Where(t => !string.IsNullOrEmpty(t))
+            .Select(t => t!.DeserializeAsStandardValue(bizValueType))
+            .ToList();
+        if (bizValues.Count == 0) return null;
+
+        // customProperty is the single instance loaded for this sync, so an option added
+        // for one resource is already on it when the next resource carrying the same
+        // label comes through — the label maps to one option id, not one per resource.
+        var property = customProperty.ToProperty();
+        var (dbValue, propertyChanged) =
+            PropertySystem.Property.ToDbValue(property, StandardValueSystem.Combine(bizValues, bizValueType));
+
+        if (propertyChanged)
+        {
+            customProperty.Options = property.Options;
+            ctx.ChangedCustomProperties[customProperty.Id] = customProperty;
+        }
+
+        return dbValue?.SerializeAsStandardValue(PropertySystem.Property.GetDbValueType(customProperty.Type));
     }
 
     /// <summary>
@@ -683,6 +736,16 @@ public class PathMarkSyncService : ScopedService
     {
         var applied = 0;
         var deleted = 0;
+
+        // Options first: a value referencing an option that isn't on the property yet
+        // reads back as empty.
+        if (ctx.ChangedCustomProperties.Count > 0)
+        {
+            await _customPropertyService.UpdateRange(
+                ctx.ChangedCustomProperties.Values.Select(p => p.ToDbModel()).ToList());
+            _logger.LogInformation("[Sync] Updated options of {Count} custom properties",
+                ctx.ChangedCustomProperties.Count);
+        }
 
         // Write property values
         if (ctx.FinalPropertyValuesToWrite.Count > 0)
