@@ -1,0 +1,424 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>纯客户端模式执行计划</title>
+<style>
+:root{--bg:#0e1116;--panel:#161b22;--panel2:#1c222c;--code:#0b0e14;--line:#2a313c;
+--ink:#e6e9ef;--mut:#98a2b0;--dim:#6b7482;--a:#6ea8fe;--g:#5ecb9e;--y:#e6b566;--r:#e8776f;--p:#b08cff;--c:#4bc0d9;--chip:#222a35;}
+@media (prefers-color-scheme:light){:root{--bg:#f6f7f9;--panel:#fff;--panel2:#eef1f5;--code:#f4f6f9;--line:#e2e6ec;
+--ink:#1a1f27;--mut:#586274;--dim:#8a94a3;--a:#2f6fed;--g:#1f9d6b;--y:#a9761f;--r:#cf4d43;--p:#7a52d6;--c:#1893ad;--chip:#eef1f5;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.62;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:40px 22px 80px}
+h1{font-size:25px;margin:0 0 6px}.sub{color:var(--mut);font-size:14.5px;margin:0 0 4px}
+h2{font-size:17px;margin:36px 0 8px;padding-bottom:8px;border-bottom:1px solid var(--line);scroll-margin-top:12px}
+h2 .n{color:var(--dim);font-weight:700;margin-right:8px}
+h3{font-size:14.5px;margin:20px 0 6px;color:var(--mut)}
+h4{font-size:13px;margin:16px 0 4px;color:var(--ink);font-weight:650}
+p{margin:9px 0}
+ul,ol{margin:9px 0 9px 4px;padding-left:22px}li{margin:4px 0}
+.note{font-size:12.5px;color:var(--dim);margin:10px 0}
+b{font-weight:650}
+a{color:var(--a)}
+code.i{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;background:var(--chip);padding:1px 5px;border-radius:5px}
+table{width:100%;border-collapse:collapse;font-size:13px;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:10px 0}
+th,td{padding:8px 11px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--panel2);color:var(--mut);font-weight:600;font-size:12px}
+tr:last-child td{border-bottom:none}
+td.k{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+td.e{font-weight:700;white-space:nowrap;color:var(--dim)}
+.mono{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+.tag{display:inline-block;font-size:10.5px;padding:1px 7px;border-radius:20px;background:var(--chip);color:var(--mut);white-space:nowrap}
+.t-add{color:var(--g);border:1px solid var(--g)}.t-mod{color:var(--y);border:1px solid var(--y)}.t-del{color:var(--r);border:1px solid var(--r)}
+.t-none{color:var(--c);border:1px solid var(--c)}.t-dec{color:var(--p);border:1px solid var(--p)}
+pre.dia{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-x:auto;margin:10px 0;
+font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;white-space:pre}
+pre.dia .have{color:var(--g)}pre.dia .new{color:var(--p)}pre.dia .cm{color:var(--dim)}pre.dia .warn{color:var(--r)}
+.rule{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--a);border-radius:10px;padding:10px 14px;margin:10px 0;font-size:13px}
+.rule.warn{border-left-color:var(--r)}
+.rule.ask{border-left-color:var(--y)}
+.rule.ok{border-left-color:var(--g)}
+.toc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:16px 0;font-size:13px}
+.toc ol{margin:4px 0;padding-left:20px;columns:2;column-gap:28px}
+.toc li{margin:3px 0;break-inside:avoid}
+footer{margin-top:36px;color:var(--dim);font-size:12px;border-top:1px solid var(--line);padding-top:14px}
+</style></head><body><div class="wrap">
+
+<h1>纯客户端模式执行计划</h1>
+<p class="sub">按模块列出要新增、修改、删除的内容，以及大致怎么改。配套设计文档：<a href="pc-client-design.html">pc-client-design.html</a></p>
+
+<table>
+<tr><th style="width:16%">字段</th><th>值</th></tr>
+<tr><td class="e">状态</td><td>执行计划第一版。基于对 14 个子系统的逐行盘点（含两个子模块 <code class="i">Bakabase.Infrastructures</code>、<code class="i">LazyMortal</code>，已签出）。<b>发现设计文档有十余处前提与代码不符</b>，本计划以代码为准，修订清单见 <a href="#s7">§7</a></td></tr>
+<tr><td class="e">分支</td><td class="mono">claude/bakabase-client-server-split-l6dqa5</td></tr>
+<tr><td class="e">最后更新</td><td>2026-09-07</td></tr>
+<tr><td class="e">阅读建议</td><td>只想"大概了解"：读 <a href="#s1">§1</a>（要你拍板的事）、<a href="#s2">§2</a>（硬规则）、<a href="#s3">§3</a>（模块总表）、<a href="#s4">§4</a>（分阶段）。想知道"具体怎么改"：读 <a href="#s5">§5</a></td></tr>
+</table>
+
+<div class="toc"><b>目录</b>
+<ol>
+<li><a href="#s1">需要你拍板的决策（含推荐）</a></li>
+<li><a href="#s2">全局硬规则</a></li>
+<li><a href="#s3">模块增删改总览</a></li>
+<li><a href="#s4">分阶段执行计划</a></li>
+<li><a href="#s5">关键机制的具体做法</a></li>
+<li><a href="#s6">对一体版零影响的验证清单</a></li>
+<li><a href="#s7">设计文档需要修订的地方</a></li>
+<li><a href="#s8">明确不做与后置</a></li>
+</ol></div>
+
+<div class="rule warn"><b>三条最重要的盘点结论，它们改变了设计文档的前提：</b>
+<ol style="margin-bottom:0">
+<li><b><code class="i">RuntimeMode</code> 是编译期常量</b>（<code class="i">AppService.cs:250-258</code> 用 <code class="i">#if RUNTIME_MODE_*</code>，常量来自 <code class="i">Bakabase.Infrastructures.csproj:7</code>，由 <code class="i">_build.yml:147</code> 的 <code class="i">-p:RuntimeMode=</code> 传入）。"模式是设置项"必须是它之上的另一个运行时概念，本计划命名为 <code class="i">LaunchMode</code>。</li>
+<li><b><code class="i">AppService</code> 的静态锚点不改子模块就绕不开</b>：它没有接口，<code class="i">AppDataDirectory</code> / <code class="i">RequestAppDataDirectory</code> 非虚且硬连静态 <code class="i">DefaultAppDataDirectory</code>；静态构造函数在<b>任何</b>静态成员首次访问时创建一体版目录、跑迁移、落日志（<code class="i">AppService.cs:184-216</code>），触发点包括 <code class="i">RuntimeMode</code>、<code class="i">CoreVersion</code>、<code class="i">OsPlatform</code>。设计里"注入不同的解析器、上层一行不改"在代码里没有落点。</li>
+<li><b>授权过滤器第 30 行判断的是 <code class="i">IsUnrestricted</code>，不是回环</b>（<code class="i">IsUnrestricted = IsLoopback || Mode == Unrestricted</code>）。新的用户侧检查若放在它之后，对 Docker 默认的 Unrestricted 模式根本不生效——今天远程浏览器调 <code class="i">/resource/{id}/play</code> 就会在服务器上拉起播放器并返回成功。</li>
+</ol></div>
+
+<h2 id="s1"><span class="n">§1</span>需要你拍板的决策（含推荐）</h2>
+<p>下面每一条都直接影响某个模块怎么改。没有结论之前不宜动手；有推荐的，按推荐执行也可以。</p>
+<table>
+<tr><th style="width:4%">#</th><th style="width:22%">决策</th><th style="width:38%">选项与影响</th><th>推荐</th></tr>
+<tr><td class="e">1</td><td><b>是否允许修改两个子模块</b></td><td>不允许：客户端必须完全绕开 <code class="i">AppService</code>、<code class="i">AppHost</code>、<code class="i">AppOptionsManager</code>、<code class="i">AppUpdater</code>，自建一套（复刻 JSON 默认设置、编码注册、日志、单实例约 200 行），且 Velopack 更新器无法复用。<br>允许：只做"加法"——静态锚点的一次性覆盖入口、显式锚点构造函数、纯搬移的日志与单实例类。一体版不调用新入口，默认分支与今天逐字相同。</td><td><b>允许，限于加法</b>。外壳注释里"子模块只读"的说法与事实不符：子模块仓库最近三次触及 <code class="i">AppHost.cs</code> 的提交（b1b688a 锚点重定向、13fcfd6 数据目录搬迁、7648eee macOS 运行模式）全是为 Bakabase 的功能改的，它一直在随主仓库演进。改法见 <a href="#s51">§5.1</a></td></tr>
+<tr><td class="e">2</td><td><b><code class="i">[RunsOnUserMachine]</code> 是否豁免 Unrestricted</b></td><td>豁免：Docker 浏览器用户零变化，但"两侧都设防"在 Unrestricted 下只剩客户端一侧。<br>不豁免：远程浏览器不再能让 Docker 服务器在无人看的屏幕上拉起播放器（今天会，且返回成功）。这是对 Docker 用户的行为变化，不影响一体版。</td><td><b>不豁免</b>。被去掉的是一个毫无意义的能力，换来的是硬保证。写进变更说明</td></tr>
+<tr><td class="e">3</td><td><b>签名算法</b></td><td>HMAC-SHA256：服务端必须存密钥原文（设计里"只存摘要"是错的——摘要无法验证 HMAC）；Dart 侧 <code class="i">crypto</code> 包已是传递依赖。<br>ECDSA P-256：服务端只存公钥，泄露 devices.json 不能冒充设备；Dart 侧要引入 <code class="i">cryptography</code> 包，实现与测试成本更高。</td><td><b>HMAC</b>。威胁模型是局域网无传输层加密，密钥文件位于用户私有目录且永不进入选项广播（<a href="#s55">§5.5</a>）。ECDSA 的额外收益与成本不匹配</td></tr>
+<tr><td class="e">4</td><td><b>是否新增 <code class="i">RequirePairing</code> 开关</b></td><td>不加：<code class="i">/file/raw</code> 等 52 个端点本就 <code class="i">[RemoteAccessible]</code>，未配对设备照样取流，签名地址在阶段一没有必需场景，公网部署没有"只允许配对设备"的落脚点。<br>加（默认关）：打开后未配对设备只剩配对握手端点可达，签名地址成为外部播放器的唯一取流方式。</td><td><b>加，默认关闭</b>。它是"部署到公网"这个新场景的安全落脚点，默认关闭保证局域网用户零变化</td></tr>
+<tr><td class="e">5</td><td><b>Enabled 模式下 <code class="i">/hub/ui</code> 泄露全部选项</b></td><td>今天任何局域网设备连上 <code class="i">/hub/ui</code> 调 <code class="i">GetInitialData</code> 就能拿到所有选项对象，<b>含各第三方站点的明文 cookie</b>（<code class="i">WebGuiHub.cs:112-119</code>）。这不在"52 个端点"的统计里。<br>选项甲：Enabled 下 <code class="i">/hub/</code> 要求配对（局域网浏览器用户失去实时推送）。<br>选项乙：<code class="i">GetInitialData</code> 对未配对连接不推送带凭据的选项（只改推送内容）。</td><td><b>乙</b>。堵住泄露而不改变未配对用户的可见行为；<code class="i">RequirePairing</code> 打开时自然走甲</td></tr>
+<tr><td class="e">6</td><td><b>模式标记存在哪</b></td><td>它必须在选定任何数据目录之前就能读到。候选：一体版锚点目录下的 <code class="i">.launch-mode</code> 文件（与已有的 <code class="i">.redirect</code> 同级，路径可纯计算）；或第三个中立目录。<br>放锚点意味着：纯客户端启动时<b>读</b>一次一体版锚点；从客户端切回一体版时<b>删</b>一次该文件——这是纯客户端对一体版目录仅有的两次触碰。</td><td><b>锚点下 <code class="i">.launch-mode</code></b> + 命令行 <code class="i">--client</code> / <code class="i">--all-in-one</code> 覆盖。在 §6 里把这两次触碰写成明确例外</td></tr>
+<tr><td class="e">7</td><td><b>资源画像里播放器可执行文件路径的语义</b></td><td><code class="i">MediaLibraryPlayer.ExecutablePath</code> 存在<b>服务端数据库</b>（<code class="i">ResourceProfileDbModel.PlayerSettingsJson</code>），指向的是配置时那台机器的文件系统。同一服务端被 Windows 与 macOS 客户端共用时必有一方失效。</td><td><b>客户端按已知播放器匹配</b>：用 <code class="i">KnownPlayerDefinitions.MatchByExecutable</code> 识别服务端配置的是哪个播放器，再用客户端本机发现结果替换路径；识别不了则退到系统默认播放器。不改数据模型</td></tr>
+<tr><td class="e">8</td><td><b>已配对的远程设备能否重启/更新服务端</b></td><td>今天 Unrestricted 下远程浏览器可以调 <code class="i">/app/restart</code>、<code class="i">/updater/*</code>。若给它们打 <code class="i">[RunsOnUserMachine]</code>，这个能力就没了，且数据目录迁移流程（<code class="i">Relocation/index.tsx:324</code>）依赖远程重启。</td><td><b>保留，不打标记</b>。客户端自己的重启/更新/日志走新的 <code class="i">/client/*</code> 路由，转发层按"覆盖表"拦截（<a href="#s510">§5.10</a>）</td></tr>
+<tr><td class="e">9</td><td><b>转发层是否引入 <code class="i">Yarp.ReverseProxy</code></b></td><td>引入：用它的 <code class="i">IHttpForwarder</code> 直接转发，WebSocket 升级、流式不缓冲、逐跳头、范围请求都现成。约 1 MB，只进桌面安装包。<br>不引入：自写 HTTP 转发 + WebSocket 双向泵，等于重写 YARP 最容易出错的部分。</td><td><b>引入</b>，且只加在客户端工程的 csproj 里，不进 <code class="i">Bakabase.Service</code> 与 Docker 镜像</td></tr>
+<tr><td class="e">10</td><td><b>配对批准的权限模型</b></td><td>任意已配对设备可批准新设备：方便，但一台设备被盗用即可扩散。<br>仅回环（主机）可批准：安全，但 Docker 服务端没有主机界面，只能靠日志配对码。</td><td><b>任意已配对设备可批准</b>，配合设备列表可见、可逐台撤销、批准记录写明批准者。</td></tr>
+<tr><td class="e">11</td><td><b>Linux 桌面纯客户端第一版是否发布</b></td><td>Linux 桌面今天不在发布矩阵里（<code class="i">_build.yml:118-122</code> 只发布 Docker），内嵌浏览器仅支持 X11。</td><td><b>第一版只发 Windows 与 macOS</b>，文档如实说明</td></tr>
+</table>
+
+<h2 id="s2"><span class="n">§2</span>全局硬规则</h2>
+<p>这些规则由代码事实推出，违反任何一条都会直接破坏一体版。实现期间每次评审都对照它们。</p>
+<table>
+<tr><th style="width:4%">#</th><th style="width:34%">规则</th><th>为什么（代码事实）</th></tr>
+<tr><td class="e">R1</td><td><b>客户端程序集只能被 <code class="i">src/apps/Bakabase/Bakabase.csproj</code> 引用</b>；<code class="i">Bakabase.Service</code> 与任何模块绝不反向引用它</td><td>Docker 镜像是 <code class="i">COPY . .</code> 整个 Service 发布目录（<code class="i">docker/Dockerfile:5</code>）。一旦 Service 引用客户端，转发层、YARP 都会进入服务端进程与镜像</td></tr>
+<tr><td class="e">R2</td><td><b>客户端程序集里不得定义 <code class="i">Controller</code> 子类</b>；本地端点一律用最小接口（<code class="i">MapGet</code> / <code class="i">MapPost</code>）</td><td>MVC 会自动发现入口程序集及其引用程序集里的控制器（<code class="i">Bakabase.Cli/Program.cs:37</code> 需显式 <code class="i">AddApplicationPart</code> 正说明范围由入口决定）。一体版的 <code class="i">AddMvc</code> 会把客户端控制器挂进 Kestrel：同路由的会触发 <code class="i">AmbiguousMatchException</code>，直接破坏一体版播放端点</td></tr>
+<tr><td class="e">R3</td><td><b>客户端选项类不得打 <code class="i">[Options]</code> 特性</b>；用手工构造的 <code class="i">OptionsDescriber</code> 注册</td><td><code class="i">ConfigurationRegistrations.DiscoverAllOptionsDescribers</code> 扫描入口程序集引用的全部程序集（<code class="i">ConfigurationRegistrations.cs:43-62</code>）。一体版会把客户端选项注册进容器、在一体版 <code class="i">configs</code> 目录挂文件监视，并经 <code class="i">WebGuiHub.GetInitialData</code> 推给一体版前端</td></tr>
+<tr><td class="e">R4</td><td><b>客户端程序集里不得定义 <code class="i">IPredefinedBTaskBuilder</code></b></td><td><code class="i">AddBTask</code> 扫描 AppDomain 全部程序集（<code class="i">BTaskExtensions.cs:22-25</code>）</td></tr>
+<tr><td class="e">R5</td><td><b>客户端组合根不得调用 <code class="i">AddRemoteAccess</code></b>，不得继承 <code class="i">AppHost</code> / <code class="i">AppStartup</code></td><td><code class="i">AddRemoteAccess</code> 注册的 <code class="i">RemoteAccessDiscoveryService</code> 会用 mDNS 与固定 UDP 端口 33333 把客户端广播成服务器；<code class="i">AppHost.CreateHost</code> 私有且固定监听 <code class="i">0.0.0.0</code>（<code class="i">AppHost.cs:200、213</code>），<code class="i">AppHost.Start</code> 无条件迁移 <code class="i">LogDbContext</code>（:366），<code class="i">AppStartup</code> 无条件注册 SQLite 日志库与单页应用托管（:89、:95-97、:167-192）</td></tr>
+<tr><td class="e">R6</td><td><b>本地转发层只绑定 <code class="i">127.0.0.1</code>，并校验 <code class="i">Host</code> 头</b></td><td>它会用设备密钥代签一切发出的请求。监听所有网卡等于把用户的配对身份交给局域网；不校验 <code class="i">Host</code> 则 DNS 重绑定可从任意网页驱动它</td></tr>
+<tr><td class="e">R7</td><td><b>模式分支必须早于 <code class="i">Bakabase/Program.cs:45</code></b>，一切新增的闸门检查必须晚于 <code class="i">RemoteAccessMiddleware.cs:52</code> 的回环直通</td><td>前者是进程第一次触碰 <code class="i">AppService</code> 静态成员的位置；后者是一体版零影响的基石</td></tr>
+<tr><td class="e">R8</td><td><b>子模块改动只做加法</b>：新入口默认不生效、旧签名委托到新重载、纯搬移不改行为；每处配现有测试或新增测试</td><td>决策 1 的前提</td></tr>
+<tr><td class="e">R9</td><td><b>服务端拒绝集合 ≠ 转发层拦截集合</b>：拦截集合 = <code class="i">[RunsOnUserMachine]</code> 集合 + 一份显式覆盖表</td><td>有些端点服务端不能拒绝远程调用但客户端必须本地处理（<code class="i">/tampermonkey/script</code>、<code class="i">/remote-access/context</code>、<code class="i">PATCH /options/app</code> 的字段拆分、<code class="i">/app/restart</code> 的客户端语义）。见 <a href="#s510">§5.10</a></td></tr>
+<tr><td class="e">R10</td><td><b>设备密钥、配对码、签名密钥永不进入任何 <code class="i">[Options]</code> 类型</b></td><td>所有 <code class="i">[Options]</code> 对象在 <code class="i">/hub/ui</code> 连接建立时整体推送（<code class="i">WebGuiHub.cs:112-119</code>）、变更时向 <code class="i">Clients.All</code> 广播（<code class="i">WebGuiHubConfigurationAdapter.cs:35</code>）。85e2c05 之前的旧实现正好踩在这条路径上</td></tr>
+</table>
+
+<h2 id="s3"><span class="n">§3</span>模块增删改总览</h2>
+<p><span class="tag t-add">新增</span> <span class="tag t-mod">修改</span> <span class="tag t-del">删除</span> <span class="tag t-none">不改</span>。规模：小 = 一两天内的改动；中 = 一周量级；大 = 需要拆成多个提交的持续工作。</p>
+
+<h3>3.1 新增的工程与目录</h3>
+<table>
+<tr><th style="width:30%">位置</th><th>内容</th><th style="width:8%">阶段</th><th style="width:6%">规模</th></tr>
+<tr><td class="k"><span class="tag t-add">新增</span> src/apps/Bakabase.Client/</td><td>纯客户端类库（不含 Avalonia，可在 Linux 持续集成上测试）。内容：<code class="i">BakabaseClientHost</code>（宿主，不继承 <code class="i">AppHost</code>）、<code class="i">BakabaseClientStartup</code>（最小组合根）、<code class="i">Forwarding/</code>（<code class="i">UpstreamForwarder</code>、<code class="i">UserMachineRouteTable</code>、<code class="i">LocalEndpoints</code>）、<code class="i">Connection/</code>（服务器档案、设备凭据、<code class="i">RequestSigningHandler</code>、协议握手）、<code class="i">Discovery/</code>（<code class="i">MdnsBrowser</code>、<code class="i">UdpProbeClient</code>——C# 侧今天只有应答器没有浏览器）、<code class="i">AppData/</code>（<code class="i">ClientAppDataPaths</code>、<code class="i">ClientDataDirectory</code>）、<code class="i">Options/</code>（三个客户端选项类 + <code class="i">ClientOptionsRegistrar</code>）、<code class="i">Playback/</code>（<code class="i">ClientResourcePlayService</code>、远程取数适配器）、<code class="i">PathMapping/</code>（阶段三）。遵守 R1–R5</td><td>二</td><td>大</td></tr>
+<tr><td class="k"><span class="tag t-add">新增</span> src/tests/Bakabase.Client.Tests/</td><td>独立测试工程（独立进程，因为 <code class="i">AppService</code> 静态缓存只解析一次）：数据目录隔离实测、转发层测试（<code class="i">TestHost</code> + 假远端）、路径映射测试</td><td>二</td><td>中</td></tr>
+<tr><td class="k"><span class="tag t-add">新增</span> src/apps/Bakabase/Views/ConnectView.axaml</td><td>原生"连接服务器"视图，嵌在 <code class="i">MainWindow</code> 里与内嵌浏览器互斥切换（服务端 Disabled 时连 index.html 都被拒绝，所以这一步不可能在网页里做）</td><td>二</td><td>中</td></tr>
+</table>
+
+<h3>3.2 修改的现有模块（按改动量排序）</h3>
+<table>
+<tr><th style="width:26%">模块 / 文件</th><th>改什么</th><th style="width:8%">阶段</th><th style="width:6%">规模</th></tr>
+<tr><td class="k"><span class="tag t-mod">修改</span> src/apps/Bakabase.Service/Components/RemoteAccess/</td><td><code class="i">RemoteAccessMiddleware</code>：回环直通之后插入设备识别（所有模式都识别，只有 <code class="i">RequirePairing</code> 才拒绝）、<code class="i">bkbt</code> 签名地址校验。<code class="i">RemoteAccessAuthorizationFilter</code>：拆成"回环 → 用户侧标记 → Unrestricted/已配对 → 现有逻辑"四步。<code class="i">RemoteAccessPathGuardFilter</code>：已配对与签名路径放行。新增 <code class="i">UserMachineEndpointCatalog</code></td><td>一</td><td>中</td></tr>
+<tr><td class="k"><span class="tag t-mod">修改</span> src/modules/Bakabase.Modules.RemoteAccess/</td><td>新增 <code class="i">RunsOnUserMachineAttribute</code>（放模块里让两侧共享）、<code class="i">IRemoteDeviceStore</code>（devices.json，懒创建）、<code class="i">IRemoteDeviceService</code>（配对码、配对申请、批准、撤销、验签）、<code class="i">RemoteRequestSignature</code>（规范串，两侧共用同一份代码）、<code class="i">NonceCache</code>、<code class="i">ISignedMediaUrlService</code>（从 85e2c05^ 取回）、<code class="i">FirstDevicePairingCodeAnnouncer</code>。<code class="i">RemoteAccessContext</code> 加 <code class="i">Device</code>、<code class="i">IsPaired</code>、<code class="i">SignedPath</code>；<code class="i">RemoteAccessDenialReason</code> 追加 4 个值；<code class="i">RemoteAccessProtocol</code> 追加头名与常量（<b>不升</b> <code class="i">CurrentVersion</code>）；<code class="i">AddRemoteAccess</code> 内追加注册（这是不改 <code class="i">BakabaseStartup</code> 的唯一入口）</td><td>一</td><td>大</td></tr>
+<tr><td class="k"><span class="tag t-mod">修改</span> src/apps/Bakabase.Service/Controllers/</td><td>约 16 个动作加 <code class="i">[RunsOnUserMachine]</code>（完整清单 <a href="#s510">§5.10</a>）；<code class="i">RemoteAccessController</code> 新增配对/设备/签名地址端点；<code class="i">ResourceController</code> 新增"只挑不播"的随机端点；<code class="i">PlayListController</code> 新增可播放条目端点；<code class="i">ResourceProfileController</code> 新增生效播放器端点；<code class="i">ToolController</code> 的缩略图 <code class="i">[ResponseCache]</code> 加 <code class="i">bkbt</code> 到 <code class="i">VaryByQueryKeys</code></td><td>一 / 二</td><td>中</td></tr>
+<tr><td class="k"><span class="tag t-mod">修改</span> src/libs/Bakabase.Infrastructures/（子模块，决策 1）</td><td><code class="i">AppService</code>：一次性静态锚点覆盖入口；<code class="i">DefaultAppDataPathResolver</code>：带 <code class="i">AppDataPathProfile</code> 的新重载，旧签名委托；<code class="i">AppOptionsManager</code>：显式锚点构造函数；<code class="i">AppFileLogger</code>（从 <code class="i">AppService.CreateFileLogger</code> 纯搬移）；<code class="i">SingleInstanceGuard</code>（从 <code class="i">AppHost</code> 纯搬移，名字格式不变）；<code class="i">IWebViewSession.UserAgent</code> 默认接口成员（阶段四）</td><td>二</td><td>中</td></tr>
+<tr><td class="k"><span class="tag t-mod">修改</span> src/apps/Bakabase/（桌面外壳）</td><td><code class="i">Program.cs</code>：第 45 行之前插入模式分支；<code class="i">App.axaml.cs</code>：按模式构造宿主，一体版分支语句不动；<code class="i">ExitCoordinator</code>：经 <code class="i">IShellHost</code> 接口取宿主与阻塞任务（客户端返回空）；<code class="i">AvaloniaGuiAdapter</code>：加 <code class="i">NavigateMainWebView</code>（切换服务器不重建窗口）；<code class="i">NativeWebViewHost</code>：按模式设置浏览器用户数据目录、三处 User-Agent 常量收敛为一处</td><td>二</td><td>中</td></tr>
+<tr><td class="k"><span class="tag t-mod">修改</span> src/modules/Bakabase.Modules.Player/</td><td><code class="i">BatchPlayService</code> 改依赖两个窄端口：<code class="i">IBatchPlayResourceSource</code>（资源、可播放文件、生效播放器、标记已播放）与 <code class="i">IPlayTargetResolver</code>（服务端路径 → 本地路径 / 流地址 / 不可用）。一体版注册进程内适配器与恒等解析器，行为逐字不变。<code class="i">ToOsSafePath</code> 只对本地路径生效；m3u8 条目显式传标题</td><td>二</td><td>中</td></tr>
+<tr><td class="k"><span class="tag t-mod">修改</span> src/web/（前端）</td><td><code class="i">stores/remoteAccess.ts</code> 加字段与两个 hook（<code class="i">isLocal</code>、<code class="i">useIsRemoteClient</code> 不动）；<code class="i">PlayControl</code> 两处判据改用新 hook；三处 <code class="i">isDesktopApp</code> 门控加 <code class="i">|| isPureClient</code>；设置页远程访问分区加配对码/待批准/设备表；<code class="i">UIHubConnection</code> 加配对请求通知；新增一级分组 <code class="i">/client/connection</code>、<code class="i">/client/path-mapping</code>（菜单需要运行时可见性）；<code class="i">ClientStatusBanner</code>；<code class="i">AppUpdateBanner</code>、日志页、应用信息页在纯客户端下区分两端；<code class="i">gen-sdk.js</code> 错误模板识别"需要更新客户端/服务端"与"路径未映射"；文案同时写 en 与 cn</td><td>一至四</td><td>大</td></tr>
+<tr><td class="k"><span class="tag t-mod">修改</span> src/legacy/Bakabase.InsideWorld.Business/</td><td><code class="i">WebGuiHub.GetInitialData</code>：对未配对连接过滤带凭据的选项（决策 5）；<code class="i">IWebGuiClient</code> 加 <code class="i">OnRemotePairingRequest</code>；<code class="i">ResourceService.PlayRandomResource</code> 拆出 <code class="i">PickRandomPlayableAsync</code>；<code class="i">CookieCaptureOrchestrator</code> 加返回环境信息的重载（阶段四）</td><td>一 / 二</td><td>小</td></tr>
+<tr><td class="k"><span class="tag t-mod">修改</span> src/apps/mobile/app/</td><td>Dio 签名拦截器、安全存储的设备凭据、服务器档案加配对状态、配对页与设备页、<code class="i">server-info</code> 的 <code class="i">pairingSupported</code>。未配对 = 今天的行为，根路由不变</td><td>并行里程碑</td><td>中</td></tr>
+<tr><td class="k"><span class="tag t-mod">修改</span> src/apps/Bakabase.Cli/Program.cs、src/web/tools/gen-sdk.js</td><td>Cli 额外映射客户端本地端点以生成 <code class="i">BApi.client.*</code>；swagger 输出 <code class="i">x-runs-on-user-machine</code> 扩展，<code class="i">constants.ts</code> 生成 <code class="i">UserMachineOperationIds</code></td><td>一 / 二</td><td>小</td></tr>
+<tr><td class="k"><span class="tag t-mod">修改</span> .github/workflows/ci.yml、src/Bakabase.sln、.claude/rules/*、CLAUDE.md、docs/</td><td>测试工程登记（顺带补上已漏掉的 Alias / Enhancer 测试工程）；规则文件加"新增动作必须判断执行位置"；设计文档修订（<a href="#s7">§7</a>）；<code class="i">mobile-app-design.md</code> §4.4 与 §7.1 修订</td><td>零 / 一</td><td>小</td></tr>
+</table>
+
+<h3>3.3 删除</h3>
+<table>
+<tr><th style="width:30%">位置</th><th>删什么、为什么</th><th style="width:8%">阶段</th></tr>
+<tr><td class="k"><span class="tag t-del">删除</span> AliasController.cs:22、PlayHistoryController.cs:28、DownloadTaskController.cs:37-49、DownloadTaskService.cs:46-54、MediaLibraryV2Service.cs:54、FileController.cs:78/103</td><td>从未使用的 <code class="i">IGuiAdapter</code> / <code class="i">ISystemService</code> / <code class="i">ISystemPlayer</code> 构造注入。不删，<a href="#s6">§6</a> 的"依赖了用户侧能力的控制器必须标记"检查就需要一长串白名单</td><td>零</td></tr>
+<tr><td class="k"><span class="tag t-del">删除</span> FileSystemResolver.cs:503-552、DLsiteResolver.cs:171-184、SteamResolver.cs:218-230、ExHentaiResolver.cs:138-151</td><td>四个不在 <code class="i">IResourceResolver</code> 接口上、无调用者、含 <code class="i">Process.Start</code> 的 <code class="i">PlayAsync</code>。它们会让"谁调用了 <code class="i">Process.Start</code>"的自动检查误报</td><td>零</td></tr>
+</table>
+
+<h3>3.4 明确不改</h3>
+<table>
+<tr><th style="width:36%">位置</th><th>理由</th></tr>
+<tr><td class="k"><span class="tag t-none">不改</span> BakabaseHost.cs、BakabaseStartup.cs、Bakabase.Service/Program.cs</td><td>一体版与 Docker 共用的组合根。阶段一的全部服务端注册走 <code class="i">AddRemoteAccess</code>，逻辑写进已挂载的中间件与两个过滤器内部。验收用差异比对</td></tr>
+<tr><td class="k"><span class="tag t-none">不改</span> src/web/src/config/env.ts、sdk/BApi.tsx、SignalR 两条连接的地址</td><td>全部同源相对地址，页面从转发层加载后请求自然发到转发层。这是候选二的收益</td></tr>
+<tr><td class="k"><span class="tag t-none">不改</span> Player 模块的 PlayerDiscoveryService、KnownPlayerDefinitions、M3u8Playlist、BatchPlayArguments、ProcessBatchPlayLauncher</td><td>已是纯本机逻辑，客户端组合根原样注册</td></tr>
+<tr><td class="k"><span class="tag t-none">不改</span> RemoteAccessMode 三个取值与默认值、.github/workflows/deploy.yml、_build.yml、docker/</td><td>同一个安装包、同一条更新通道、Docker 镜像不含客户端程序集（R1）</td></tr>
+</table>
+
+<h2 id="s4"><span class="n">§4</span>分阶段执行计划</h2>
+<p>与设计文档相比多了一个"阶段零"，并把三件事提前：客户端日志与更新器（阶段二，否则发布的客户端没有日志也没有升级通道）、用户主动登录态采集（阶段二，它不需要转交通道）、<code class="i">/updater/*</code> 与 <code class="i">/app/restart</code> 的执行位置定案（阶段一，否则阶段二的客户端一打开就会开始更新服务器）。</p>
+
+<h3>阶段零：准备（一体版行为零变化的清理）</h3>
+<table>
+<tr><th style="width:44%">事项</th><th>验收</th></tr>
+<tr><td>删除 <a href="#s3">§3.3</a> 的死注入与死代码</td><td>编译通过；<code class="i">Bakabase.Tests</code> 全绿</td></tr>
+<tr><td><code class="i">ci.yml:52-61</code> 补上已漏掉的 <code class="i">Bakabase.Modules.Alias.Tests</code>、<code class="i">Bakabase.Modules.Enhancer.Tests</code>（先本地确认能过）</td><td>持续集成跑到它们</td></tr>
+<tr><td>子模块指针：在主仓库把两个子模块的 <code class="i">.gitmodules</code> 地址改为 https（当前是 ssh，持续集成与远程环境无法签出）</td><td><code class="i">git submodule update --init</code> 在干净环境可用</td></tr>
+<tr><td>按 <a href="#s7">§7</a> 修订设计文档；<code class="i">.claude/rules/api-conventions.md</code> 加"新增控制器动作必须判断是否 <code class="i">[RunsOnUserMachine]</code>"；<code class="i">appdata-paths.md</code> 把不存在的 <code class="i">IAppService</code> 改为 <code class="i">AppService</code></td><td>文档与代码一致</td></tr>
+</table>
+
+<h3>阶段一：服务端——执行位置、设备配对、签名地址</h3>
+<table>
+<tr><th style="width:44%">事项</th><th>验收</th></tr>
+<tr><td><code class="i">RunsOnUserMachineAttribute</code> + 约 16 个动作标记（<a href="#s510">§5.10</a> A、B 组）+ <code class="i">UserMachineEndpointCatalog</code></td><td>快照测试锁定集合；"依赖用户侧能力的动作必须标记"测试通过（<a href="#s6">§6</a>）</td></tr>
+<tr><td>授权过滤器四步顺序（<a href="#s53">§5.3</a>）；中间件设备识别与签名地址校验</td><td>回环请求不进入任何新增分支（用"一旦被调用就抛异常"的桩证明）；非回环 + Unrestricted + 标记 → 403</td></tr>
+<tr><td>设备存储 <code class="i">devices.json</code>（懒创建）、配对码、配对申请与批准、逐台撤销、请求签名验证、随机数缓存（<a href="#s54">§5.4</a>、<a href="#s55">§5.5</a>）</td><td>从 85e2c05^ 取回的约 20 个用例改写后全绿；一体版默认 Disabled 下数据目录<b>不出现</b> <code class="i">remote-access</code> 子目录</td></tr>
+<tr><td><code class="i">RequirePairing</code> 开关（决策 4）；<code class="i">GetInitialData</code> 对未配对连接过滤带凭据的选项（决策 5）</td><td>Enabled + 未配对连接收不到 cookie 字段；Unrestricted 不变</td></tr>
+<tr><td>签名地址：<code class="i">ISignedMediaUrlService</code>（取回）+ <b>新写</b>签发端点 <code class="i">GET /remote-access/signed-media-url</code>（旧树只有校验半边，没有签发端点，前端与移动端从未消费过）</td><td>旧的 9 个签名令牌测试 + 压缩包条目绑定、HEAD 放行、缩略图缓存键含 <code class="i">bkbt</code></td></tr>
+<tr><td><code class="i">RemoteAccessController</code>：<code class="i">context</code> 加 <code class="i">paired/deviceId/deviceName</code>；<code class="i">server-info</code> 加 <code class="i">pairingSupported/pairingProtocolVersion/serverTime</code>（<b>不升</b> <code class="i">CurrentVersion</code>，否则所有已装移动端会以"协议过新"拒绝连接）</td><td>移动端 <code class="i">maxSupportedProtocol=1</code> 仍能连</td></tr>
+<tr><td>前端：设置页配对码/待批准/设备表；<code class="i">UIHubConnection</code> 配对请求通知；<code class="i">yarn gen-sdk</code></td><td>一体版默认 Disabled 时设置页外观不变</td></tr>
+<tr><td><code class="i">/updater/*</code>、<code class="i">/app/restart</code>、<code class="i">/log/*</code>、<code class="i">/app/info</code> 定为"不打标记、客户端另开 <code class="i">/client/*</code>"（决策 8）</td><td>写进目录的覆盖表</td></tr>
+</table>
+<div class="rule ok">阶段一独立成立：即使后面全部不做，它也让"用浏览器打开服务器地址"从受限变成完整（配对后），并堵住 <code class="i">/hub/ui</code> 的凭据泄露。</div>
+
+<h3>阶段二：客户端骨架——能连上、能浏览、能播（流地址）</h3>
+<table>
+<tr><th style="width:44%">事项</th><th>验收</th></tr>
+<tr><td>子模块加法（决策 1，<a href="#s51">§5.1</a>）+ 子模块指针更新</td><td><code class="i">DefaultAppDataPathResolverTests</code> 现有 10 例不改全绿；新增"覆盖入口在首次解析后调用即抛"的测试</td></tr>
+<tr><td><code class="i">LaunchMode</code> + <code class="i">.launch-mode</code> 标记 + 命令行覆盖；<code class="i">Program.cs</code> 分支；<code class="i">ClientAppDataPaths</code>（<code class="i">BAKABASE_CLIENT_DATA_DIR</code>、<code class="i">Bakabase.Client.AppData</code>、调试后缀 <code class="i">.Client.Debugging</code>）；客户端 Serilog 安装在进入 Avalonia 之前</td><td>纯客户端启动后：客户端目录无任何 <code class="i">*.db</code>；一体版目录未被创建（除读标记）；两模式可同机同时运行（互斥体名不同，需 <code class="i">-p:RuntimeMode=WINFORMS</code> 发布构建验证，Dev 构建不走单实例）</td></tr>
+<tr><td><code class="i">src/apps/Bakabase.Client</code> 工程；<code class="i">BakabaseClientHost</code> / <code class="i">BakabaseClientStartup</code>（<a href="#s52">§5.2</a>）；三个客户端选项文件（R3）；<code class="i">IShellHost</code> 与 <code class="i">ExitCoordinator</code> 改造</td><td>一体版容器描述符里不存在 <code class="i">Bakabase.Client</code> 命名空间的类型；退出流程三条手工用例（关闭确认、关键任务阻塞、强制退出）回归</td></tr>
+<tr><td>服务发现客户端（<code class="i">MdnsBrowser</code>、<code class="i">UdpProbeClient</code>，复用 <code class="i">DiscoveryProtocol</code> 常量）；<code class="i">ConnectView</code> 原生视图；配对流程；服务器档案与凭据</td><td>能发现本机一体版并标注"本机"；配对码与批准两条路都通；断线回到连接视图</td></tr>
+<tr><td>本地转发层（<a href="#s56">§5.6</a>）：YARP 直接转发 + 签名 + 用户侧路由表 + <code class="i">/remote-access/context</code> 自答 + 固定回环端口 + <code class="i">Host</code> 校验；WebView 用户数据目录按模式分开</td><td><a href="#s56">§5.6</a> 的验证清单逐条通过；<code class="i">/hub/ui</code>、<code class="i">/hub/progressor</code>、<code class="i">/resource/discovery/stream</code>、带 Range 的 <code class="i">/file/raw</code> 都能穿过</td></tr>
+<tr><td>前端第三态（<a href="#s57">§5.7</a>）：新字段与 hook、<code class="i">PlayControl</code> 两处判据、<code class="i">isDesktopApp</code> 三处、<code class="i">/client/connection</code> 页、状态条、"需要更新客户端/服务端"错误提示</td><td>一体版取值下 <code class="i">PlayControl</code>、<code class="i">ResourceCover</code> 的 <code class="i">renderToStaticMarkup</code> 快照与改动前一致</td></tr>
+<tr><td>播放（<a href="#s58">§5.8</a>）：Player 模块两个窄端口；客户端 <code class="i">ClientResourcePlayService</code>；服务端三个数据端点；本地播放器拿 <code class="i">http://127.0.0.1:{转发层端口}/file/raw?...</code>（转发层代签，桌面客户端不需要签名地址）</td><td>单项、批量、播放列表、随机四条路径都能在客户端拉起本机播放器并回写播放记录；一体版 <code class="i">Bakabase.Modules.Player.Tests</code> 54 例全绿</td></tr>
+<tr><td>登录态采集：转发层本地执行 <code class="i">POST /tool/cookie-capture</code>（<a href="#s59">§5.9</a>）</td><td>Docker 服务端 + 纯客户端可弹窗采集，User-Agent 自动正确</td></tr>
+<tr><td>客户端更新器：复用 <code class="i">AppUpdater</code>（依赖决策 1 的 <code class="i">AppService</code> 覆盖 + 显式锚点 <code class="i">AppOptionsManager</code>）；<code class="i">/client/updater/*</code> 与 <code class="i">/client/app/restart</code>、<code class="i">/client/app/info</code></td><td>纯客户端能检查并应用自己的更新</td></tr>
+<tr><td>模式切换端点 <code class="i">POST /app/launch-mode</code>（写标记后走既有重启）+ 设置页开关（显式确认）</td><td>切换往返后一体版数据完好</td></tr>
+<tr><td>持续集成：<code class="i">Bakabase.Client.Tests</code> 登记；Docker 发布产物不含 <code class="i">Bakabase.Client.dll</code> 的断言</td><td>持续集成绿</td></tr>
+</table>
+
+<h3>阶段三：路径映射——本地播放器吃本地路径、打开目录可用</h3>
+<table>
+<tr><th style="width:44%">事项</th><th>验收</th></tr>
+<tr><td><code class="i">ClientPathMappingOptions</code>（按 <code class="i">ServerId</code> 分组）+ <code class="i">IServerPathTranslator</code>：两侧先 <code class="i">StandardizePath</code>、最长前缀匹配、分隔符锚定、按<b>客户端</b>操作系统的大小写规则、输出客户端原生分隔符、支持盘符与 <code class="i">\\server\share</code>。建立在 <code class="i">RemotePathNormalizer</code> 与 <code class="i">StringExtensions.StandardizePath</code> 之上（设计里说的 <code class="i">CrossPlatformPath</code> 是 internal 且只有取文件名两个方法，不是雏形）</td><td>翻译器测试：<code class="i">/media/library-other</code> 不匹配 <code class="i">/media/library</code>、<code class="i">Z:/</code> 与 <code class="i">Z:</code> 边界、压缩包条目保留 <code class="i">!entry</code> 后缀</td></tr>
+<tr><td><code class="i">MappedPlayTargetResolver</code> 三层降级：命中且文件存在 → 本地路径；命中但不存在（网络存储未挂载）→ 流地址并附原因；未命中 → 流地址；压缩包条目 → 只能 <code class="i">/file/play</code>（不可跳转）；目录类操作 → 不可用（原因 <code class="i">NoMapping</code>）</td><td>m3u8 里本地路径与流地址混合时内容正确；<code class="i">MissingFileCount</code> 带原因</td></tr>
+<tr><td>本地执行 <code class="i">/tool/open</code>、<code class="i">/tool/open-file</code>、<code class="i">/resource/directory</code>（含路径不存在时回退父目录）、<code class="i">/aigc/artifacts/{id}/open</code>、<code class="i">/dlsite-work/{id}/launch</code>（含客户端侧 Locale Emulator 定位）</td><td>映射命中则打开本机文件管理器；未命中返回 <code class="i">X-Bakabase-Client: PathNotMapped</code></td></tr>
+<tr><td>前端 <code class="i">/client/path-mapping</code> 页（从媒体库列表引导逐个填本机挂载点，保存时转发层校验存在）；资源级 5 处"打开目录"按映射状态置灰并引导；其余调用点靠错误提示引导（在 <code class="i">gen-sdk.js</code> 的错误模板里识别 <code class="i">PathNotMapped</code>，一处改动覆盖全部 42 处调用点）；文件浏览器的回收站按钮在纯客户端下隐藏</td><td>一体版下映射状态恒为"可用"，按钮渲染不变</td></tr>
+</table>
+
+<h3>阶段四：收尾——日志、更新区分、托盘、文案、移动端</h3>
+<table>
+<tr><th style="width:44%">事项</th><th>验收</th></tr>
+<tr><td><code class="i">/client/log</code>（读 Serilog 文件，客户端没有 SQLite 日志库）；日志页来源切换；应用信息页两端区分；<code class="i">AppUpdateBanner</code> 在纯客户端只关心客户端更新，服务端更新提示放在连接页</td><td>纯客户端界面能分别查看两端日志与版本</td></tr>
+<tr><td>托盘运行态跟随服务端 BTask 推送；Sentry 在客户端组合根初始化并打 <code class="i">launch_mode=client</code> 标签，独立匿名标识；同机双运行时更新器互相提示</td><td>—</td></tr>
+<tr><td>User-Agent 收敛：<code class="i">NativeWebViewHost</code> 三处常量并为一处，<code class="i">IWebViewSession.UserAgent</code> 默认接口成员，<code class="i">CaptureCookie</code> 优先取上报值（一体版取值与今天逐字相同）</td><td>断言 Avalonia 上报值 == 旧推断值</td></tr>
+<tr><td>文案：依赖组件"安装在服务器上"（Locale Emulator 例外，它在客户端）、文件浏览器"这是服务器上的路径"、Steam 同步"扫描的是服务端的 Steam"、登录态采集的出口地址说明、Remux/Transcode 与压缩包条目不可跳转</td><td><code class="i">keysResolve.test.ts</code> 通过（en 与 cn 同时写）</td></tr>
+<tr><td><b>移动端里程碑（可与阶段二并行）</b>：Dio 签名拦截器、<code class="i">flutter_secure_storage</code> 凭据、档案加配对状态（缺省未配对）、配对页、设备页（轮询，移动端不接 SignalR）、拒绝判断从仅 403 扩到 401；媒体地址保持无凭据（除非服务端开了 <code class="i">RequirePairing</code>，那时改用批量签名地址）</td><td>旧档案 JSON 可加载且状态为未配对；签名黄金向量与 C# 侧共用</td></tr>
+</table>
+
+<h2 id="s5"><span class="n">§5</span>关键机制的具体做法</h2>
+
+<h3 id="s51">5.1 启动分支与数据目录（子模块加法 + 外壳分支）</h3>
+<pre class="dia"><code><span class="cm">── src/apps/Bakabase/Program.cs（改动后）──────────────────────────</span>
+VelopackApp.Build()...Run();            <span class="have">[不变]</span>
+CrashHandler.Install();                 <span class="have">[不变]</span>
+<span class="new">var mode = LaunchModeSelector.Resolve(args, getEnv, getFolder);   // 纯计算：命令行 → 一体版锚点下 .launch-mode → AllInOne</span>
+<span class="new">if (mode == LaunchMode.Client)</span>
+<span class="new">    AppService.UseAppDataAnchor(ClientAppDataPaths.Anchor, "BAKABASE_CLIENT_DATA_DIR");  // 子模块新增，只允许在首次解析前调用一次</span>
+_ = AppService.DefaultAppDataDirectory; <span class="have">[不变，但此时解析到的已是客户端目录]</span>
+BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+
+<span class="cm">── 子模块 Bakabase.Infrastructures 的加法 ─────────────────────────</span>
+AppService.UseAppDataAnchor(...)        <span class="new">[新增]</span> 已解析后再调用 → 抛异常；一体版从不调用
+DefaultAppDataPathResolver.Resolve(AppDataPathProfile profile, ...)  <span class="new">[新增重载]</span> 旧签名委托并传 Profile.AllInOne
+AppDataPathProfile { EnvVarName, FolderName, WindowsAppDataFolderName, DebugSuffix }
+   AllInOne = BAKABASE_DATA_DIR / Bakabase / Bakabase.AppData / .Debugging        <span class="cm">与今天逐字相同</span>
+   Client   = BAKABASE_CLIENT_DATA_DIR / Bakabase.Client / Bakabase.Client.AppData / .Client.Debugging
+new AppOptionsManager(anchorDir)         <span class="new">[新增构造函数]</span> Default 静态单例不变
+AppFileLogger.Create(logsDir)            <span class="new">[纯搬移]</span> 自 AppService.CreateFileLogger（:218-234）
+SingleInstanceGuard                      <span class="new">[纯搬移]</span> 自 AppHost.cs:53-64、266-282、417-480；互斥体/管道名格式不变</code></pre>
+<ul>
+<li><b>为什么覆盖静态锚点而不是绕开 <code class="i">AppService</code></b>：客户端要复用的共享代码（<code class="i">AppUpdater</code>、<code class="i">CookieCaptureOrchestrator</code> 的本地化、<code class="i">FileController.OpenRecycleBin</code> 用的 <code class="i">AppService.OsPlatform</code>、<code class="i">AppContext.RuntimeMode</code>）都会触碰 <code class="i">AppService</code> 静态成员，"完全不引用"在工程上不可执行。覆盖之后，同一个 <code class="i">AppService</code> 类在客户端进程里报告客户端目录，<code class="i">app.json</code>、<code class="i">configs</code>、<code class="i">logs</code> 自动落到客户端目录。</li>
+<li><b>调试构建也要隔离</b>：解析器在 DEBUG 下用 <code class="i">{入口程序集名}.Debugging</code>，两种模式入口程序集同名，所以 Profile 里必须有独立的调试后缀。</li>
+<li><b>不要用"进程内设置 <code class="i">BAKABASE_DATA_DIR</code>"取巧</b>：<code class="i">/app/restart</code> 用 <code class="i">Process.Start</code> 拉起的新进程会继承环境变量，切回一体版后会误用客户端目录。</li>
+<li><code class="i">App.axaml.cs</code>：第 61 行的数据目录搬迁与第 66 行读 <code class="i">app.json</code> 包进一体版分支（语句不动）；第 69 行按模式构造 <code class="i">BakabaseHost</code> 或 <code class="i">BakabaseClientHost</code>；<code class="i">Host</code> 属性类型改为接口 <code class="i">IShellHost</code>（<code class="i">Start</code>、<code class="i">IHost</code>、阻塞任务名、关闭行为读写、<code class="i">Dispose</code>），<code class="i">ExitCoordinator</code> 只经它访问。</li>
+</ul>
+
+<h3 id="s52">5.2 客户端组合根（不继承 AppHost / AppStartup）</h3>
+<table>
+<tr><th style="width:24%">保留（都不依赖数据库）</th><th style="width:38%">去掉</th><th>新增</th></tr>
+<tr><td>Serilog 文件日志（客户端目录）；<code class="i">AddLocalization</code> + <code class="i">AppLocalizer</code> + <code class="i">BakabaseLocalizer</code>；<code class="i">IGuiAdapter</code> / <code class="i">ISystemService</code> / <code class="i">ITrayIconController</code>（同 <code class="i">BakabaseStartup.cs:167-169</code> 的转型注册）；<code class="i">AppUpdater</code> + <code class="i">BakabaseUpdateSource</code>；Newtonsoft 同款设置 + <code class="i">UseSimpleExceptionHandler</code>（本地端点的错误信封与今天一致）；<code class="i">AddPlayerModule</code>（<code class="i">TempPlaylistDirectory</code> 指向客户端目录）；<code class="i">CookieCaptureOrchestrator</code> + 十个 <code class="i">ICookieCaptureFlow</code>；<code class="i">OsShell</code>（静态）</td><td><code class="i">AddBootstrapServices&lt;BakabaseDbContext&gt;</code>、<code class="i">AddBootstrapLogService&lt;LogDbContext&gt;</code>、<code class="i">AddBakabaseMigrations</code>、<code class="i">AddInsideWorldBusinesses</code> 整体、<code class="i">AddBTask</code> / <code class="i">DynamicTaskRegistry</code>、全部托管服务、<code class="i">AddRemoteAccess</code>（R5）、两个过滤器与 <code class="i">RemoteAccessMiddleware</code>、MiniProfiler、Swagger、单页应用托管、<code class="i">AddResponseCaching</code>、<code class="i">WebGuiHub</code>、Cookie 校验器、依赖组件服务、<code class="i">ITelemetrySnapshotService</code></td><td><code class="i">UpstreamForwarder</code>、<code class="i">UserMachineRouteTable</code>、本地端点（最小接口）、<code class="i">RequestSigningHandler</code>、服务器档案与凭据存储、服务发现客户端、<code class="i">ClientDataDirectory</code>、<code class="i">ClientOptionsRegistrar</code>（三个选项文件：<code class="i">client-servers.json</code>、<code class="i">client-preferences.json</code>、<code class="i">client-path-mappings.json</code>，走 <code class="i">ConfigurationRegistrations.AddRegisteredFile + Configure</code>，从而得到带 <code class="i">OnChange</code> 的 <code class="i">AspNetCoreOptionsManager&lt;T&gt;</code>）</td></tr>
+</table>
+<p><b>宿主启动序列</b>（<code class="i">BakabaseClientHost.Start</code>）：<code class="i">SingleInstanceGuard("Bakabase.Client")</code> → 初始化窗口 → 设置文化（读客户端偏好）→ 启动本地 Kestrel（<code class="i">http://127.0.0.1:{偏好端口或随机}</code>，避开 34567-34569）→ 显示 <code class="i">ConnectView</code>（发现 / 档案 / 手动地址 / 配对）→ 握手成功后主题同步（读服务端 <code class="i">UiOptions</code> 一次）→ <code class="i">ShowMainWebView(转发层地址)</code> → <code class="i">ApplicationStopping → Shutdown</code>。跳过备份、迁移、写版本、<code class="i">ExecuteCustomProgress</code>。DEBUG 下同样支持指向 <code class="i">localhost:3000</code> 的前端开发服务器（此时 Vite 的 <code class="i">VITE_API_ENDPOINT</code> 要指向转发层端口）。</p>
+<p><b>本地端点如何进入 SDK</b>：本地端点写成 <code class="i">IEndpointRouteBuilder</code> 扩展 <code class="i">MapClientEndpoints()</code>，带 <code class="i">.WithName(OperationId)</code> 与 <code class="i">.WithTags("client")</code>；<code class="i">Bakabase.Cli</code> 在生成 swagger 时也调用它，于是前端得到 <code class="i">BApi.client.*</code>，不违反 R2。</p>
+
+<h3 id="s53">5.3 闸门顺序与 [RunsOnUserMachine]</h3>
+<pre class="dia"><code><span class="cm">── RemoteAccessMiddleware.InvokeAsync ──────────────────────────────</span>
+isLoopback / mode → SetRemoteAccessContext                     <span class="have">[不变]</span>
+if (isLoopback) → next                                          <span class="have">[不变：一体版在这里离开]</span>
+<span class="new">device = await deviceService.AuthenticateAsync(request)          // 所有非回环请求都识别（缺头 → null，不算错误）</span>
+<span class="new">signedPath = TryValidateSignedUrl(request)                       // 仅 GET/HEAD 且查询串带 bkbt</span>
+<span class="new">context = context with { Device, IsPaired = device != null, SignedPath }</span>
+if (mode == Unrestricted) → next                                <span class="have">[不变]</span>
+if (mode == Disabled) → 403 Disabled                            <span class="have">[不变：已配对设备在 Disabled 下同样被拒]</span>
+<span class="new">if (options.RequirePairing && device == null && !AnonymousAllowlist(path) && signedPath == null) → 401 Unauthenticated</span>
+HostOnlyPathPrefixes → 403 HostOnly                             <span class="have">[不变]</span>
+next
+
+<span class="cm">── RemoteAccessAuthorizationFilter.OnAuthorization ─────────────────</span>
+① if (context.IsLoopback) return;                              <span class="cm">回环第一步直通（原来判的是 IsUnrestricted）</span>
+② <span class="new">if (动作或控制器带 [RunsOnUserMachine]) → Deny 403 RunsOnUserMachine   // 不豁免 Unrestricted（决策 2）</span>
+③ if (context.IsUnrestricted || context.IsPaired) return;      <span class="cm">已配对 = 除用户侧端点外全部可用</span>
+④ <span class="new">if (context.SignedPath != null && 动作带 PathParameters && 方法为 GET/HEAD) return;</span>
+⑤ [RemoteAccessible] 放行 / 403 HostOnly                        <span class="have">[不变]</span>
+
+<span class="cm">── RemoteAccessPathGuardFilter ────────────────────────────────────</span>
+IsUnrestricted → 跳过                                            <span class="have">[不变]</span>
+<span class="new">IsPaired → 跳过（与一体版功能对等：播放列表条目可在媒体库根之外）</span>
+<span class="new">SignedPath != null → 每个 PathParameters 参数规范化后必须等于 SignedPath（保留 !entry 后缀）</span>
+其余 → IMediaPathGuard                                           <span class="have">[不变]</span></code></pre>
+<ul>
+<li><b><code class="i">IsPaired</code> 单独建模，不折叠进 <code class="i">IsUnrestricted</code></b>：后者有四个消费者，折叠会顺带放开直播转码（<code class="i">RemoteTranscodePolicy.cs:22</code>）。已配对设备的转码仍受 <code class="i">AllowLiveTranscode</code> 约束；<code class="i">ResourceController.cs:226</code> 的"远程不保存搜索"对已配对设备放开（同一个用户的两台设备共享上次搜索是合理的，写进说明）。</li>
+<li><code class="i">RemoteAccessDenialReason</code> 追加：<code class="i">RunsOnUserMachine = 5</code>、<code class="i">Unauthenticated = 6</code>、<code class="i">SignatureExpired = 7</code>（含时钟偏差，界面要区分"未配对"与"时钟不同步"）、<code class="i">DeviceRevoked = 8</code>。数值一旦定下就不能改（<code class="i">constants.ts</code> 按数值生成）。</li>
+<li>已建立的 WebSocket 不会因撤销自动断开：<code class="i">WebGuiHub.OnConnectedAsync</code> 登记连接与设备，撤销时 <code class="i">Abort()</code>。</li>
+<li>反向代理与服务端同机（宿主机 nginx、<code class="i">network_mode: host</code>）时所有外部请求都是回环，会<b>整个绕过</b>配对——文档必须警告；受控的"信任转发头"开关列为后续。</li>
+</ul>
+
+<h3 id="s54">5.4 请求签名格式（HMAC，决策 3）</h3>
+<pre class="dia"><code>Authorization: Bakabase-Device {deviceId}:{timestampSeconds}:{nonce}:{base64url(sig)}
+
+sig = HMAC-SHA256(deviceKey, 规范串)
+规范串 = "1\n" + deviceId + "\n" + METHOD + "\n" + path + "\n" + 原始查询串 + "\n" + timestamp + "\n" + nonce
+         (+ "\n" + SHA-256(请求体)  仅非 GET 且请求体小于阈值，否则用空摘要)
+
+服务端：|now - timestamp| ≤ 5 分钟；同设备同 nonce 在窗口内只接受一次（NonceCache 按设备分桶、限容）</code></pre>
+<ul>
+<li><b>为什么放 <code class="i">Authorization</code> 头而不是自定义头</b>：<code class="i">UseResponseCaching</code> 在 MVC 过滤器之前（<code class="i">AppStartup.cs:121</code>），<code class="i">/tool/thumbnail</code> 的 <code class="i">[ResponseCache]</code> 缓存键只含 <code class="i">path/w/h</code>；带 <code class="i">Authorization</code> 的请求既不读也不写响应缓存，已配对设备加载过的库外缩略图才不会被匿名调用方命中。</li>
+<li><b>查询串必须参与签名</b>：<code class="i">/file/raw?fullname=</code> 的路径在查询串里。按<b>原始字节</b>签，服务端不要重新编码再比对（Dart 的 Dio 对列表参数编码为 <code class="i">ids=1&amp;ids=2</code>）。</li>
+<li><b>浏览器无法给 WebSocket 加头</b>：第一版<b>不支持</b>"普通浏览器配对"，只有转发层与移动端是签名方（二者都能加头）。查询串签名明确排除。</li>
+<li>规范串代码 <code class="i">RemoteRequestSignature</code> 是静态类，服务端验签与客户端签名用同一份；与 Dart 共用一组黄金向量测试。</li>
+<li><code class="i">server-info</code> 下发 <code class="i">serverTime</code>，客户端算时钟偏移后再签。</li>
+</ul>
+
+<h3 id="s55">5.5 设备与密钥的存放</h3>
+<table>
+<tr><th style="width:18%">侧</th><th style="width:34%">文件</th><th>内容与纪律</th></tr>
+<tr><td>服务端</td><td class="k">{数据目录}/remote-access/devices.json</td><td><code class="i">Devices[]{Id, Name, Platform, Key, CreatedAt, LastSeenAt(10 分钟节流), ApprovedByDeviceId}</code>、<code class="i">PendingRequests[]</code>、当前配对码的摘要与有效期、签名地址用的 <code class="i">SigningSecret</code>。<b>不带 <code class="i">[Options]</code></b>（R10）；<b>懒创建</b>——目录与文件只在第一次签发配对码时出现（<code class="i">RequestAppDataDirectory</code> 会立即建目录，构造函数与托管服务启动时都不能调用它；用测试锁定"一体版默认 Disabled 下无 <code class="i">remote-access</code> 子目录"）；原子写</td></tr>
+<tr><td>服务端</td><td class="k">RemoteAccessOptions</td><td>只加公开开关 <code class="i">RequirePairing</code>（默认 false）。不加任何密钥、配对码、设备列表</td></tr>
+<tr><td>客户端</td><td class="k">{客户端目录}/configs/client-servers.json</td><td><code class="i">CurrentServerId</code>、<code class="i">Servers[]{ServerId, Name, Addresses[], LastConnectedAt, DeviceId, DeviceKey, PairedAt}</code>。位于用户私有目录；操作系统级保护（DPAPI / Keychain）列为后续</td></tr>
+<tr><td>移动端</td><td class="k">flutter_secure_storage: bakabase.deviceCredential.{serverId}</td><td>密钥不进明文的 <code class="i">SharedPreferences</code>；档案只加非机密的配对状态字段</td></tr>
+</table>
+<p><b>第一台设备的配对码</b>：<code class="i">FirstDevicePairingCodeAnnouncer</code>（托管服务，经 <code class="i">AddRemoteAccess</code> 注册）仅当 <code class="i">RuntimeMode == Docker</code> 且无已配对设备且模式非 Disabled 时签发并同时 <code class="i">ILogger</code> + <code class="i">Console.Out</code> 打印（Release 下控制台日志提供者不一定在）。一体版兼作服务端时设置页直接显示配对码。配对码 6 位、10 分钟、一次性、失败 5 次作废。</p>
+
+<h3 id="s56">5.6 本地转发层</h3>
+<pre class="dia"><code>内嵌浏览器 ──回环──▶ Kestrel(127.0.0.1:{port})
+                      ├ Host 头校验（不是 127.0.0.1:{port} → 400）；非 GET 校验 Origin
+                      ├ 命中 UserMachineRouteTable（[RunsOnUserMachine] 集合 + 覆盖表）→ 本地端点执行
+                      ├ /remote-access/context → 自答（上游答案 + clientMode/paired/serverId/clientVersion/cookieCaptureAvailable；isLocal 保持 false）
+                      └ 其余 → UpstreamForwarder（YARP IHttpForwarder.SendAsync）
+                              ├ TransformRequest：加 Authorization 签名头
+                              ├ WebSocket 升级透传（/hub/ 前缀整体）、SSE 与文件流不缓冲、HEAD/Range 透传、客户端断开即取消上游
+                              ├ 不套 UseResponseCaching / 压缩 / 更短空闲超时
+                              └ 上游不可达 → 统一 JSON 错误 + X-Bakabase-Remote-Access 头；/ 返回极简"正在重连"状态页</code></pre>
+<p><b>实现期必须逐条验证</b>：协商响应字节级透传；WebSocket 升级成功并收到 <code class="i">GetInitialData</code>；把上游 <code class="i">KeepAliveInterval</code> 调短后连接不掉；上游停机后浏览器侧收到 Close 且前端 5 秒守护循环重连；推送毫秒级到达；<code class="i">/file/play</code> 的 Remux/Transcode 管道流不缓冲且断开时服务端 <code class="i">FfMpegStreamingSlots</code> 不泄漏；<code class="i">/resource/discovery/stream</code>（SSE）可用。本项目没有 Azure SignalR，"协商响应含重定向"永不触发，从设计文档的清单里删掉。</p>
+<p><b>本地播放器拿什么地址</b>：<code class="i">http://127.0.0.1:{port}/file/raw?fullname=...</code>。转发层代签、透传 Range，本机播放器零依赖。签名地址只服务移动端与浏览器场景。</p>
+
+<h3 id="s57">5.7 前端第三态</h3>
+<ul>
+<li><code class="i">/remote-access/context</code> 由转发层自答，<b><code class="i">isLocal</code> 保持 false</b>（这样 <code class="i">ResourceCover</code> 继续用 <code class="i">window.location.origin</code>，不会去用服务端经集线器推来的本机端口列表；<code class="i">appContext.bApi2</code> 也不会被启用）。新增 <code class="i">clientMode: AllInOne | RemoteBrowser | PureClient</code>、<code class="i">paired</code>、<code class="i">serverId/serverName</code>、<code class="i">clientVersion</code>、<code class="i">cookieCaptureAvailable</code>。旧后端不返回新字段时按一体版处理。</li>
+<li>两个新 hook：<code class="i">useUserSideActionsRunHere() = initialized &amp;&amp; (isLocal || clientMode === PureClient)</code>、<code class="i">useIsPureClient()</code>。<code class="i">useIsRemoteClient()</code> 一字不改。</li>
+<li><code class="i">PlayControl/index.tsx:248、322</code> 的判据改为 <code class="i">!useUserSideActionsRunHere()</code>；第 127-133 行的原生 <code class="i">fetch</code> 改走 SDK，否则转发层返回的"未映射 / 需要升级"原因会被静默吞掉。</li>
+<li><code class="i">AccountsPanel.tsx:57</code>、<code class="i">DownloaderOptionsConfig.tsx:34</code>、<code class="i">ThirdParty/index.tsx:92</code> 的 <code class="i">isDesktopApp = runtimeMode !== Docker</code> 改为 <code class="i">|| isPureClient</code>（否则连 Docker 服务端时"登录导入"按钮被藏掉）。</li>
+<li>菜单可见性：<code class="i">menuConfig.tsx:33</code> 是模块加载时静态计算，要改成在 <code class="i">AntdMenu</code> 渲染时按状态过滤；一级分组 <code class="i">menu.client</code> 下两个子页；页面在非纯客户端下渲染"仅纯客户端可用"。文案按页分文件（<code class="i">pages/clientConnection.json</code>、<code class="i">pages/clientPathMapping.json</code>），不学 <code class="i">mobileApp.*</code> 塞进 <code class="i">common.json</code>。</li>
+<li><code class="i">gen-sdk.js:221-229</code> 的错误模板识别 <code class="i">X-Bakabase-Client: NeedsNewerClient | PathNotMapped</code> 与服务端 404，给出可点击的引导——一处改动覆盖全部 42 处用户侧调用点。</li>
+<li>集线器推来的服务端 <code class="i">AppContext</code> / <code class="i">AppUpdater.State</code> / <code class="i">RelocationPending</code> 无法在转发层改写（WebSocket 载荷）；前端按 <code class="i">isPureClient</code> 把更新横幅与迁移提示标明"服务端"。</li>
+</ul>
+
+<h3 id="s58">5.8 播放链路</h3>
+<table>
+<tr><th style="width:22%">端点</th><th>纯客户端下的做法</th></tr>
+<tr><td class="k">/resource/{id}/play-item</td><td>转发层本地：<code class="i">GET /resource/{id}/playable-items</code>（已 <code class="i">[RemoteAccessible]</code>）→ 按 <code class="i">origin</code> 分派：FileSystem → <code class="i">IPlayTargetResolver</code>（阶段二恒为流地址，阶段三先映射）→ 与 <code class="i">LocalFilePlayableItemProvider.cs:191-195</code> 相同的扩展名选播放器规则（可执行文件路径按决策 7 替换）→ <code class="i">BatchPlayArguments.BuildFromTemplate</code> → <code class="i">IBatchPlayProcessLauncher</code>，否则客户端自己的 <code class="i">ISystemPlayer</code>（按操作系统处理分隔符，不复用 <code class="i">SelfPlayer</code> 的无条件反斜杠转换）；Steam → <code class="i">steam://rungameid/{key}</code>；DLsite / ExHentai → 浏览器打开网页。完成后 <code class="i">POST /resource/{id}/played-at</code>，<code class="i">Item</code> 用与 <code class="i">ResourceService.PlayItem</code> 相同的 <code class="i">{origin}:{key}</code> 格式</td></tr>
+<tr><td class="k">/resource/play/random</td><td>服务端拆出 <code class="i">GET /resource/play/random/pick</code>（只挑不播；<code class="i">PlayRandomResourceTests</code> 锁定原行为），转发层先挑再本地拉起</td></tr>
+<tr><td class="k">/player/batch-play 系列（含 candidates）</td><td><code class="i">BatchPlayService</code> 改依赖 <code class="i">IBatchPlayResourceSource</code>（客户端实现走 <code class="i">/resource/keys</code>、<code class="i">playable-items</code>、新的 <code class="i">/resource/{id}/effective-player-options</code>、<code class="i">played-at</code>）与 <code class="i">IBatchPlayPlaylistSource</code>（客户端实现走新的 <code class="i">/playlist/{id}/playable-entries</code>）。候选计算含本机播放器发现，必须在客户端。m3u8 写到客户端目录；<code class="i">ToOsSafePath</code> 只对本地路径生效（否则 <code class="i">http://</code> 会被改成 <code class="i">http:\\</code>）；扩展名匹配在服务端原始路径上做、再解析目标</td></tr>
+<tr><td class="k">/dlsite-work/{id}/launch</td><td><code class="i">GET /dlsite-work/{id}/playable-files</code>（已有）→ 路径映射（可执行文件没有流地址可退，未命中即明确禁用）→ 客户端按 <code class="i">DLsiteWorkService.cs:657-689</code> 的规则用 Locale Emulator 或直接拉起。Locale Emulator 是唯一必须装在<b>客户端</b>的依赖组件</td></tr>
+</table>
+<p class="note">AI 工具 <code class="i">ResourcePlayTool</code> 在服务端进程内直接调 <code class="i">IResourceService.Play</code>，不经控制器：纯客户端下用户在聊天里说"播放"会在服务器上拉起播放器。阶段二把它改为在非回环会话下返回"请在客户端播放"。</p>
+
+<h3 id="s59">5.9 登录态采集</h3>
+<ul>
+<li><b>用户主动采集不需要转交通道</b>：前端调 <code class="i">POST /tool/cookie-capture</code> → 转发层本地执行（同一进程里有 <code class="i">CookieCaptureOrchestrator</code>、十个流程、<code class="i">AvaloniaGuiAdapter</code>）→ 结果原样返回前端（取消时 <code class="i">code=Success、data=null、message=CookieCapture_Cancelled</code>，前端 <code class="i">notifyCookieCaptureDismissal.ts</code> 依赖这个形状）→ 前端照旧 <code class="i">PATCH /options/{platform}</code> 写回，被正常转发。<b>不存在"保存 cookie"的写端点需要新增。</b></li>
+<li>User-Agent 在这条路径上<b>自动正确</b>：<code class="i">GetWebViewUserAgent()</code> 在客户端进程执行，按客户端操作系统返回。设计文档 §9.1 第二环的论据需要改成"只有转交路径才需要弹窗方上报"。</li>
+<li><b>转交通道（服务端 → 客户端）本计划不做</b>：代码里不存在任何后台触发的采集（<code class="i">CaptureAsync</code> 唯一调用方是 <code class="i">ToolController.cs:64</code>），没有生产者就是死代码。等"服务端主动发起重新认证"的功能出现再立项，且届时应做流程级转交（按 <code class="i">Target</code> 整体交给客户端跑完整编排后一次回传），而不是会话级转交。</li>
+<li>如实修正一处宣传：环境一致性（User-Agent / TLS 指纹）今天只有 SoulPlus 端到端生效；<code class="i">ExHentaiAccount</code>、<code class="i">DLsiteAccount</code> 没有这两个字段，其余平台存了不用。文案不得许诺对所有平台生效。</li>
+</ul>
+
+<h3 id="s510">5.10 用户侧端点全量清单（服务端拒绝集合 vs 转发层拦截集合）</h3>
+<p>设计文档 §6.3 的 12 行表漏了 7 项、错了 2 项。以下以路由模板为准（<code class="i">/tool/open</code> 才是真实路由，<code class="i">OpenFileOrDirectory</code> 只是 OperationId）。</p>
+<h4>A. 打 <code class="i">[RunsOnUserMachine]</code>，转发层本地执行</h4>
+<table>
+<tr><th style="width:34%">端点</th><th>客户端做法</th><th style="width:8%">阶段</th></tr>
+<tr><td class="k">GET /gui/url</td><td>本地 <code class="i">Process.Start</code>，直接可用</td><td>二</td></tr>
+<tr><td class="k">GET /tool/open、GET /tool/open-file<br>GET /resource/directory<br>POST /aigc/artifacts/{id}/open</td><td>路径映射后 <code class="i">OsShell.Open</code> / <code class="i">Process.Start</code>；未命中返回 <code class="i">PathNotMapped</code>；<code class="i">/resource/directory</code> 保留"路径不存在回退父目录"的语义</td><td>三</td></tr>
+<tr><td class="k">GET /resource/{id}/play、/play-item、/play/random<br>POST /player/batch-play、/playlist/{id}/batch-play<br>POST /player/batch-play/candidates、GET /player/playlist/{id}/batch-play/candidates</td><td><a href="#s58">§5.8</a></td><td>二 / 三</td></tr>
+<tr><td class="k">POST /dlsite-work/{id}/launch</td><td><a href="#s58">§5.8</a>，含 Locale Emulator</td><td>三</td></tr>
+<tr><td class="k">POST /tool/cookie-capture</td><td><a href="#s59">§5.9</a></td><td>二</td></tr>
+<tr><td class="k">GET /tampermonkey/install</td><td>本地打开链接（脚本地址指向转发层）</td><td>二</td></tr>
+<tr><td class="k">GET /file/recycle-bin</td><td><b>拒绝并说明</b>"被删除的文件位于服务端的回收站"（删除发生在服务端 <code class="i">FileController.cs:790/796</code>；这不是路径映射问题）；前端隐藏按钮</td><td>二</td></tr>
+<tr><td class="k">GET /file/icon</td><td>返回 null。一体版今天就恒返回 null（<code class="i">AvaloniaGuiAdapter.cs:378-383</code>），不存在"降级"；是否整个删除列为可选清理</td><td>二</td></tr>
+</table>
+<h4>B. 不打标记，但转发层按覆盖表本地处理</h4>
+<table>
+<tr><th style="width:34%">端点</th><th>为什么不能打标记 / 怎么处理</th></tr>
+<tr><td class="k">GET /remote-access/context</td><td>转发层自答（<a href="#s57">§5.7</a>）</td></tr>
+<tr><td class="k">GET /tampermonkey/script/bakabase.user.js、/health</td><td>脚本由普通浏览器直连调用，拿不到设备密钥，必须由转发层本地生成并把地址指向 <code class="i">127.0.0.1</code>；但浏览器直连服务端的部署仍要从服务端取，服务端不能拒绝</td></tr>
+<tr><td class="k">PATCH /options/app、GET /options/app</td><td>同一动作混有按机器生效的字段（<code class="i">UiTheme</code>、<code class="i">CloseBehavior</code>、<code class="i">Language</code>、<code class="i">EnablePreReleaseChannel</code>）与服务端字段（<code class="i">ListeningPorts</code>、<code class="i">TimeZoneId</code>）。转发层拆请求体：机器字段写客户端偏好并施加（<code class="i">IGuiAdapter.ChangeUiTheme</code>），其余转发；GET 合并视图。<code class="i">startupPage</code>（<code class="i">PATCH /options/ui</code>）同理由客户端偏好承载</td></tr>
+<tr><td class="k">POST /app/restart、GET /app/info、/updater/*、/log/*</td><td>决策 8：服务端保留供已配对设备远程操作；客户端另开 <code class="i">/client/app/restart</code>、<code class="i">/client/app/info</code>、<code class="i">/client/updater/*</code>、<code class="i">/client/log</code>，前端按 <code class="i">isPureClient</code> 分别显示两端</td></tr>
+</table>
+<h4>C. 服务端执行，界面如实说明</h4>
+<p><code class="i">POST /steam-app/sync</code>（扫的是服务端的 Steam，<code class="i">InstallPath</code> 是服务端路径）、<code class="i">/component/*</code>（依赖组件装在服务端，Locale Emulator 例外）、<code class="i">DELETE /file</code>（服务端回收站）、<code class="i">/app-data-path/*</code>（服务端数据目录）、<code class="i">/tool/thumbnail</code>（服务端图标提取，Linux 下本就返回 null——连 Docker 服务端时非图片封面整片空白，界面需要占位图）。</p>
+
+<h2 id="s6"><span class="n">§6</span>对一体版零影响的验证清单</h2>
+<p>设计文档 §10.1 的表有四行验证方式不成立（例如 <code class="i">CookieCaptureOrchestratorTests</code> 直接 <code class="i">new</code> 编排器，证明不了容器里注册了什么），以下替换之。</p>
+<table>
+<tr><th style="width:30%">断言</th><th style="width:40%">怎么测</th><th>阶段</th></tr>
+<tr><td>回环请求不进入任何新增分支</td><td><code class="i">RemoteAccessMiddlewareTests</code>：<code class="i">DefaultHttpContext</code> 设四种回环地址形态（127.0.0.1、::1、::ffff:127.0.0.1、null）× 三种模式，把设备识别与签名校验服务注入为"一旦被调用就抛异常"的桩。注意 <code class="i">RemoteIpAddress == null</code> 被视为回环，测远程调用方必须显式设地址</td><td>一</td></tr>
+<tr><td>Unrestricted 远程 + 标记 → 拒绝；已配对 + 无标记 → 放行</td><td><code class="i">RemoteAccessAuthorizationFilterTests</code>：手工构造 <code class="i">AuthorizationFilterContext</code>；建议把判断抽成静态纯函数（仿 <code class="i">RemoteTranscodePolicy.ShouldRefuse</code>）以便穷举</td><td>一</td></tr>
+<tr><td>用户侧端点集合快照</td><td>反射 <code class="i">Bakabase.Service</code> 全部控制器动作，以"HTTP 方法 + 路由模板 + OperationId"为键与黄金列表集合相等；把 <code class="i">HostOnlyPathPrefixes</code> 一并纳入（改 <code class="i">internal</code> + <code class="i">InternalsVisibleTo</code>）</td><td>一</td></tr>
+<tr><td>漏标检查（§10.3 的可执行形态）</td><td>三层：① 控制器构造依赖 <code class="i">IGuiAdapter</code> / <code class="i">ISystemPlayer</code> / <code class="i">IBatchPlayService</code> / <code class="i">TampermonkeyService</code> / <code class="i">IDLsiteWorkService</code> 的，其动作要么标记要么在带理由的白名单；② 一层方法体扫描（<code class="i">Mono.Cecil</code>，跟随 <code class="i">AsyncStateMachineAttribute</code> 到 <code class="i">MoveNext</code>，扫嵌套 <code class="i">DisplayClass</code>），命中 <code class="i">Process.Start</code>、<code class="i">ProcessStartInfo</code>、<code class="i">OsShell.Open</code>、<code class="i">IGuiAdapter.*</code>、<code class="i">CliWrap</code>、登记的用户侧服务方法者必须标记；③ 登记表闭包。完整调用图不可行（穿依赖注入接口与委托）</td><td>一</td></tr>
+<tr><td>一体版容器不含客户端类型；Docker 产物不含 <code class="i">Bakabase.Client.dll</code></td><td><code class="i">AllInOneCompositionRootTests</code>：<code class="i">new BakabaseStartup(...).ConfigureServices(services)</code> 后遍历描述符（不构建容器），断言无 <code class="i">Bakabase.Client</code> 命名空间类型、无该来源的 <code class="i">[Options]</code>、<code class="i">ApplicationPartManager</code> 不含它；对称断言客户端容器无 <code class="i">DbContext</code> / <code class="i">BTaskManager</code> / <code class="i">IPredefinedBTaskBuilder</code>。持续集成里对 Service 发布目录 grep</td><td>二</td></tr>
+<tr><td>纯客户端不产生数据库文件、不创建一体版目录</td><td>独立进程的 <code class="i">Bakabase.Client.Tests</code>（<code class="i">AppService</code> 静态缓存只解析一次，且测试进程里锚点名是 <code class="i">Bakabase.Tests</code> 而非 <code class="i">Bakabase</code>）：用两个环境变量指向临时目录，启动客户端宿主到"转发层监听"阶段，断言客户端目录无 <code class="i">*.db</code>，一体版临时目录不存在（读标记不创建目录）</td><td>二</td></tr>
+<tr><td>前端一体版取值下渲染不变</td><td>先建 <code class="i">vi.mock("@/sdk/BApi")</code> 与 store 预置帮助（今天没有），<code class="i">PlayControl</code>、<code class="i">ResourceCover</code> 在改动前记录 <code class="i">renderToStaticMarkup</code> 快照，改后断言相同；store 测试断言旧后端形状下 <code class="i">useIsRemoteClient</code> 不变</td><td>二</td></tr>
+<tr><td>一体版启动序列未改</td><td><code class="i">BakabaseHost.cs</code>、<code class="i">BakabaseStartup.cs</code> 差异比对为零；子模块改动逐个配现有测试；<code class="i">-p:RuntimeMode=WINFORMS</code> 发布后手工跑 <code class="i">upgrade-tests</code>（现有 B/C/D 场景与模式无关，需新增客户端场景 E）</td><td>二</td></tr>
+<tr><td>一体版默认 Disabled 下无新副作用</td><td>启动后数据目录无 <code class="i">remote-access</code> 子目录、日志无配对码行、<code class="i">app.json</code> 无新键（模式标记是独立文件，不进 <code class="i">app.json</code>）</td><td>一</td></tr>
+</table>
+<div class="rule ask"><b>§10.1 需要写明的两条例外</b>（决策 6）：纯客户端启动时读一次一体版锚点下的 <code class="i">.launch-mode</code>（只读，不创建目录）；从纯客户端切回一体版时删除该文件。此外一体版工程会多加载客户端程序集（同一进程映像），"一体版进程里不存在转发层"只能在<b>容器描述符</b>层面断言，不能在程序集层面断言。</div>
+
+<h2 id="s7"><span class="n">§7</span>设计文档需要修订的地方</h2>
+<p>以下每条都已在代码中核实。建议在决策 1–11 定稿后一次性修订 <a href="pc-client-design.html">设计文档</a>，本计划不重复它的内容。</p>
+<table>
+<tr><th style="width:12%">章节</th><th>修订内容</th></tr>
+<tr><td class="e">§5.2</td><td>"在 RuntimeMode 上增加取值"改为运行时 <code class="i">LaunchMode</code>；枚举实际位于 <code class="i">LazyMortal</code> 子模块，且两个子模块都已签出（"本仓库未签出"不成立）；写明模式标记位置与命令行覆盖</td></tr>
+<tr><td class="e">§5.4</td><td>删除"注入不同的解析器、上层一行不改、只有 15 处"的论述（无接口、非虚、静态构造副作用、实际调用点 18 处含子模块 4 处运行时调用）；改为"必须早于 <code class="i">Program.cs:45</code> 分支 + 子模块加法"；补调试构建的目录隔离；"启动锚点不构成障碍"不成立</td></tr>
+<tr><td class="e">§1/§4</td><td>转发层是同进程内的第二个 Kestrel 宿主，不是"小型 HTTP 进程"；补 <code class="i">Host</code> 校验、固定端口、WebView 数据目录隔离；§4.4 清单补 <code class="i">/hub/progressor</code>、SSE、Range，删"重定向地址重写"</td></tr>
+<tr><td class="e">§2</td><td><code class="i">RemoteAccessProtocol.cs</code> 路径；C# 侧没有服务发现客户端；"流式支持断点范围"只对 <code class="i">/file/raw</code> 与 DirectPlay 成立；52 个端点未计 <code class="i">/hub/ui</code>（含 cookie 泄露）；前端远程感知不止两处</td></tr>
+<tr><td class="e">§6.2/§6.3</td><td>按 <a href="#s510">§5.10</a> 重写端点表；写明"属性 = 拒绝集合，拦截集合 = 属性 + 覆盖表"；回收站与图标结论更正；<code class="i">PATCH /options/app</code> 字段级拆分；play-item 三种第三方来源不涉及路径</td></tr>
+<tr><td class="e">§7</td><td>"旧代码可直接取回"改为精确清单：可取回模型、配对码、设备增删改、签名令牌与 9 个测试、服务端视图模型；不可取回三态模式、bearer token + cookie 认证、旧中间件的直接 401；旧树没有签发端点；前端与 Dart 侧从零写</td></tr>
+<tr><td class="e">§7.3</td><td>删除"服务端只保存摘要"（HMAC 做不到），按决策 3 写明算法、线上格式（<a href="#s54">§5.4</a>）、<code class="i">Authorization</code> 头与响应缓存的关系、不支持浏览器配对</td></tr>
+<tr><td class="e">§7.4/§7.5</td><td>零变化按三个模式分别陈述（Disabled 对已配对设备同样全拒；Unrestricted 未配对已是全量，移动端不得在该模式下推配对）；§7.5 前提错误——<code class="i">/file/raw</code> 本就匿名可达，签名地址的必需场景是 <code class="i">RequirePairing</code>、库外路径、移动端原生播放器；桌面客户端用转发层回环地址；配对不升 <code class="i">CurrentVersion</code>，用 <code class="i">server-info</code> 的能力字段</td></tr>
+<tr><td class="e">§8.3</td><td><code class="i">CrossPlatformPath</code> 不是雏形；改为 <code class="i">RemotePathNormalizer</code> + <code class="i">StandardizePath</code>；资源画像播放器路径语义（决策 7）</td></tr>
+<tr><td class="e">§9.1</td><td>四处修订见 <a href="#s59">§5.9</a>；"Docker 第一次拥有自动采集"改为"Docker + 纯客户端可采集，Docker + 浏览器仍不可"</td></tr>
+<tr><td class="e">§10.1/§10.2</td><td>按 <a href="#s6">§6</a> 替换验证方式；共享改动面远不止三处（<code class="i">Program.cs</code>/<code class="i">App.axaml.cs</code> 分支、<code class="i">AddRemoteAccess</code> 新注册、闸门三件套逻辑、约 16 个动作标记、<code class="i">IWebGuiClient</code> 新方法、Player 与 <code class="i">ResourceService</code> 重构、子模块改动、<code class="i">ci.yml</code>、SDK 产物）</td></tr>
+<tr><td class="e">§11/§12</td><td>补 Remux/Transcode 不可跳转、Steam 同步、Locale Emulator 例外、Linux 不发布；分期按 <a href="#s4">§4</a> 调整（日志与更新器提前到阶段二、用户主动采集提前到阶段二、转交通道移出计划）</td></tr>
+<tr><td class="e">§13.2</td><td>"没有需要拍板的问题"不成立，替换为 <a href="#s1">§1</a> 的 11 条</td></tr>
+<tr><td class="e">mobile-app-design.md</td><td>§4.4 与 §7.1 的"HTTP 客户端统一走拦截器管道、未来只改一处"与代码不符（Dio 没有任何拦截器，媒体地址绕过 Dio）；§1 安全前置需注明"配对后能力天花板 = Unrestricted"</td></tr>
+</table>
+
+<h2 id="s8"><span class="n">§8</span>明确不做与后置</h2>
+<table>
+<tr><th style="width:34%">事项</th><th>理由 / 触发条件</th></tr>
+<tr><td>登录态采集的服务端 → 客户端转交通道</td><td>没有生产者（<a href="#s59">§5.9</a>）。触发条件：出现"服务端主动发起重新认证"的功能</td></tr>
+<tr><td>普通浏览器配对（单页应用内签名、WebSocket 查询串签名）</td><td>工作量大、设计未要求。局域网浏览器保持未配对行为</td></tr>
+<tr><td>客户端数据目录的用户迁移（<code class="i">.redirect</code> / <code class="i">PendingRelocationRunner</code>）</td><td>阶段二只允许环境变量覆盖</td></tr>
+<tr><td>设备密钥的操作系统级保护（DPAPI / Keychain）、反向代理"信任转发头"开关、缩略图本地缓存、客户端侧 Steam 扫描、DLsite 可执行文件复制到本地再运行</td><td>第一版之后按需求评估</td></tr>
+<tr><td>删除 <code class="i">GET /file/icon</code> 与 <code class="i">IGuiAdapter.GetIcon</code>、把 <code class="i">/resource/directory</code> 收敛到 <code class="i">/tool/open</code>、让环境一致性对全部第三方平台生效</td><td>都是对一体版可见的改动，各自独立立项，不搭本设计</td></tr>
+</table>
+
+<footer>
+本计划由对 14 个子系统的逐行盘点汇总而来，每条结论附有文件与行号。分歧处的裁决与推荐是本文作者的判断，需要所有者在 §1 逐条确认后才进入实现。
+</footer>
+</div></body></html>
