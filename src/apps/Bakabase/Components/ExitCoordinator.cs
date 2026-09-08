@@ -68,6 +68,18 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
     private static readonly TimeSpan NoUiCriticalTaskTimeout = TimeSpan.FromSeconds(30);
 
     /// <summary>
+    /// How long a task that has been *asked* to stop gets to actually stop before the shutdown
+    /// moves on without it.
+    ///
+    /// Unlike the critical wait this is bounded: the task has already been told to go, so what is
+    /// left is only letting it reach its next checkpoint and release the DB and file handles it
+    /// holds before the container that owns them is disposed. A body that ignores cancellation
+    /// must not be able to make the app unquittable. Matches
+    /// <c>BTaskHandler.StopGraceTimeout</c>, which is where such a body already gets logged.
+    /// </summary>
+    private static readonly TimeSpan CancelledTaskDrainTimeout = TimeSpan.FromSeconds(10);
+
+    /// <summary>
     /// Ceiling on stopping the web host itself. Unlike background tasks this should always be
     /// quick; if a hosted service wedges, exiting must not become impossible.
     /// </summary>
@@ -589,7 +601,10 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
                 Serilog.Log.Warning(e, "Failed to ask background tasks to stop while exiting");
             }
 
-            await WaitForCriticalTasksAsync(taskManager, setTasks, offerForceQuit, ct);
+            // Then let them finish stopping before anything they depend on is taken away. Stopping
+            // the host is what disposes the DB contexts, HTTP clients and file handles a task body
+            // is still holding between its last checkpoint and its next one.
+            await WaitForTasksToWindDownAsync(taskManager, setTasks, offerForceQuit, ct);
         }
 
         ct.ThrowIfCancellationRequested();
@@ -604,9 +619,10 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
         using var stopCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         stopCts.CancelAfter(HostStopTimeout);
 
-        // This is where the non-critical tasks are actually stopped, and it can take the whole
-        // fifteen seconds. Keep naming what is still running instead of clearing the list and
-        // leaving the user with a bare spinner for the longest part of the shutdown.
+        // Background work has normally gone quiet by now, but this can still take the whole fifteen
+        // seconds, and anything that outstayed its grace above is still listed. Keep naming what is
+        // running rather than clearing the list and leaving a bare spinner over the longest part of
+        // the shutdown.
         using var reporting = StartReportingActiveTasks(taskManager, setTasks);
 
         try
@@ -723,7 +739,23 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
         await dispose;
     }
 
-    private static async Task WaitForCriticalTasksAsync(
+    /// <summary>
+    /// Waits for background work to actually go quiet, having just asked all of it to stop.
+    ///
+    /// Two waits in one loop, because the two kinds of task mean different things here:
+    /// <list type="bullet">
+    /// <item>Tasks that were cancelled were told to stop, so all that is left is letting them
+    /// reach their next checkpoint and release their DB and file handles before the container
+    /// holding those is disposed. Bounded by <see cref="CancelledTaskDrainTimeout"/>.</item>
+    /// <item>Critical tasks were deliberately <em>not</em> asked to stop — interrupting them is
+    /// what loses data — so that wait stays unbounded and the user gets "Quit now" rather than a
+    /// timer deciding for them.</item>
+    /// </list>
+    ///
+    /// Waiting here rather than letting the cancelled tasks unwind alongside the host stop is the
+    /// point: the host stop is what tears down the services they are still using.
+    /// </summary>
+    private static async Task WaitForTasksToWindDownAsync(
         BTaskManager taskManager,
         Action<ActiveTasks> setTasks,
         Func<bool> offerForceQuit,
@@ -737,8 +769,6 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
             ActiveTasks active;
             try
             {
-                // Report everything that is running, but keep waiting only for the critical ones —
-                // those are the ones whose interruption loses data.
                 active = CollectActiveTasks(taskManager);
             }
             catch (Exception e)
@@ -749,10 +779,18 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
 
             setTasks(active);
 
-            var remaining = active.Critical;
-
-            if (remaining == 0)
+            if (active.Total == 0)
             {
+                return;
+            }
+
+            // Nothing left but tasks that have had their grace and not taken it. Whatever they are
+            // doing between checkpoints, it is not worth holding the exit open for.
+            if (active.Critical == 0 && waited >= CancelledTaskDrainTimeout)
+            {
+                Serilog.Log.Warning(
+                    "Proceeding with shutdown after {Timeout} with {Count} task(s) still winding down",
+                    CancelledTaskDrainTimeout, active.Total);
                 return;
             }
 
@@ -760,14 +798,14 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
             {
                 forceQuitOffered = offerForceQuit();
 
-                if (!forceQuitOffered && waited >= NoUiCriticalTaskTimeout)
+                if (!forceQuitOffered && active.Critical > 0 && waited >= NoUiCriticalTaskTimeout)
                 {
                     // No window came up, so there is nobody to ask and no button to press.
                     // Waiting on unbounded critical work would leave a process that cannot be
                     // quit; a bounded grace period is the lesser evil.
                     Serilog.Log.Warning(
                         "Proceeding with shutdown after {Timeout} with {Count} critical task(s) still active and no UI to ask",
-                        NoUiCriticalTaskTimeout, remaining);
+                        NoUiCriticalTaskTimeout, active.Critical);
                     return;
                 }
             }
