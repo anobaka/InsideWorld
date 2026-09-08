@@ -1,7 +1,10 @@
 "use client";
 
 import type { EnhancerDescriptor } from "@/components/EnhancerSelectorV2/models";
-import type { EnhancerFullOptions } from "@/components/EnhancerSelectorV2/models";
+import type {
+  EnhancerFullOptions,
+  EnhancerTargetFullOptions,
+} from "@/components/EnhancerSelectorV2/models";
 import type { IProperty } from "@/components/Property/models";
 import type { DestroyableProps } from "@/components/bakaui/types";
 import type { BangumiSubjectType } from "@/sdk/constants";
@@ -306,7 +309,7 @@ export default function EnhancerOptionsModal({
   const expressions = options?.expressions || [];
   const captureGroups = extractCaptureGroups(expressions);
   const prerequisiteEnhancers = options.requirements?.map((r) => r.toString());
-  let candidateTargetsMap: Record<number, string[] | undefined> = {};
+  const candidateTargetsMap: Record<number, string[] | undefined> = {};
 
   if (enhancer.id == EnhancerId.Regex) {
     candidateTargetsMap[RegexEnhancerTarget.CaptureGroups] = captureGroups;
@@ -314,55 +317,27 @@ export default function EnhancerOptionsModal({
 
   const hasDynamicTargets = enhancer.targets?.some((t) => t.isDynamic);
   const hasFixedTargets = enhancer.targets?.some((t) => !t.isDynamic);
-  // When candidateTargetsMap is populated (e.g. Regex), dynamic targets are fully driven by candidates
-  const hasCandidateTargets = Object.keys(candidateTargetsMap).length > 0;
 
-  // Auto-sync candidate targets (e.g. regex capture groups) into targetOptions
-  // so that DynamicTargets UI is not needed for candidate-driven enhancers
-  const captureGroupsKey = captureGroups.join("\0");
+  const dynamicTargetIds = new Set(
+    (enhancer.targets ?? []).filter((t) => t.isDynamic).map((t) => t.id),
+  );
+  /** A row belongs to the dynamic table once it names one of this enhancer's dynamic targets. */
+  const isDynamicRow = (to: EnhancerTargetFullOptions) =>
+    dynamicTargetIds.has(to.target) && to.dynamicTarget != undefined;
 
-  useEffect(() => {
-    if (!hasCandidateTargets) return;
-
-    const dynamicDescriptor = enhancer.targets.find((t) => t.isDynamic);
-
-    if (!dynamicDescriptor) return;
-
-    setOptions((prev) => {
-      const current = prev.targetOptions ?? [];
-
-      // Separate non-candidate targets from candidate-driven ones
-      const kept = current.filter(
-        (to) => to.target !== dynamicDescriptor.id || to.dynamicTarget == undefined,
-      );
-
-      // Build synced list from candidates, preserving existing config (property binding etc.)
-      const existingByName = new Map(
-        current
-          .filter((to) => to.target === dynamicDescriptor.id && to.dynamicTarget != undefined)
-          .map((to) => [to.dynamicTarget!, to]),
-      );
-
-      const synced = captureGroups.map(
-        (group) =>
-          existingByName.get(group) ?? { target: dynamicDescriptor.id, dynamicTarget: group },
-      );
-
-      // Check if anything actually changed
-      const oldDynamic = current.filter(
-        (to) => to.target === dynamicDescriptor.id && to.dynamicTarget != undefined,
-      );
-
-      if (
-        synced.length === oldDynamic.length &&
-        synced.every((s, i) => s.dynamicTarget === oldDynamic[i]?.dynamicTarget)
-      ) {
-        return prev;
-      }
-
-      return { ...prev, targetOptions: [...kept, ...synced] };
-    });
-  }, [captureGroupsKey]);
+  /**
+   * Each table owns one slice of targetOptions and reports only that slice, so merge
+   * rather than replace — otherwise editing one table drops the other table's rows.
+   */
+  const mergeTargetOptions = (list: EnhancerTargetFullOptions[], fromDynamicTable: boolean) => {
+    setOptions((prev) => ({
+      ...prev,
+      targetOptions: [
+        ...(prev.targetOptions ?? []).filter((to) => isDynamicRow(to) !== fromDynamicTable),
+        ...list.filter((to) => isDynamicRow(to) === fromDynamicTable),
+      ],
+    }));
+  };
 
   return (
     <Modal
@@ -379,11 +354,15 @@ export default function EnhancerOptionsModal({
       }
       onDestroyed={onDestroyed}
       onOk={async () => {
-        // Filter out target entries without valid property binding to prevent saving invalid data
+        // Drop fixed targets that were never bound — they carry nothing but a target id.
+        // A named dynamic target is kept even when unbound: its name is the configuration
+        // (a regex capture group), and in `hideBindingAndConfig` mode the binding is made
+        // by the panel that opened this modal, after it reads these entries back.
         const sanitized = {
           ...options,
           targetOptions: options.targetOptions?.filter(
             (to) =>
+              to.dynamicTarget != undefined ||
               to.autoBindProperty ||
               (to.propertyPool && to.propertyPool > 0 && to.propertyId && to.propertyId > 0),
           ),
@@ -484,7 +463,7 @@ export default function EnhancerOptionsModal({
         />
       </div>
 
-      {(hasFixedTargets || (hasDynamicTargets && !hasCandidateTargets)) && (
+      {(hasFixedTargets || hasDynamicTargets) && (
         <div>
           <div className="text-base">
             {t<string>("enhancer.options.enhanceProperties.label")}
@@ -500,28 +479,18 @@ export default function EnhancerOptionsModal({
                   hideBindingAndConfig={hideBindingAndConfig}
                   optionsList={options.targetOptions}
                   propertyMap={propertyMap}
-                  onChange={(list) => {
-                    setOptions({
-                      ...options,
-                      targetOptions: list,
-                    });
-                  }}
+                  onChange={(list) => mergeTargetOptions(list, false)}
                   onPropertyChanged={loadAllProperties}
                 />
               )}
-              {hasDynamicTargets && !hasCandidateTargets && (
+              {hasDynamicTargets && (
                 <DynamicTargets
                   candidateTargetsMap={candidateTargetsMap}
                   enhancer={enhancer}
                   hideBindingAndConfig={hideBindingAndConfig}
                   optionsList={options.targetOptions}
                   propertyMap={propertyMap}
-                  onChange={(list) => {
-                    setOptions({
-                      ...options,
-                      targetOptions: list,
-                    });
-                  }}
+                  onChange={(list) => mergeTargetOptions(list, true)}
                   onPropertyChanged={loadAllProperties}
                 />
               )}

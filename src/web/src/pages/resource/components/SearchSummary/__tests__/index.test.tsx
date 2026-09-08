@@ -141,6 +141,29 @@ describe("SearchSummary", () => {
     expect(host.querySelector(".text-primary")).toBeNull();
   });
 
+  // A filter with a property and an operator but no value is dropped server-side,
+  // so listing it here described a criterion that never ran — "Author contains",
+  // with nothing after it.
+  it("leaves out a filter the user never gave a value to", () => {
+    const host = render(
+      <SearchSummary
+        form={form({
+          group: group({ filters: [filter("Author"), filter("Series", "bleach")] }),
+        })}
+      />,
+    );
+
+    expect(host.textContent).not.toContain("Author");
+    expect(host.textContent).toContain("Series");
+  });
+
+  it("says a tab carries no criteria when none of its filters has a value", () => {
+    expect(
+      render(<SearchSummary form={form({ group: group({ filters: [filter("Author")] }) })} />)
+        .textContent,
+    ).toBe("resource.tab.summary.empty");
+  });
+
   it("keeps a disabled filter visible but struck through", () => {
     const host = render(
       <SearchSummary

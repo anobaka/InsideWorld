@@ -78,6 +78,11 @@ const DynamicTargets = (props: Props) => {
   const dynamicTargetDescriptors = enhancer.targets.filter((x) => x.isDynamic);
   const [groups, setGroups] = useState<Group[]>([]);
 
+  // The host rebuilds candidateTargetsMap on every render, so key the effect off its
+  // contents instead of its identity — otherwise this re-runs (and resets the rows)
+  // on renders that changed nothing about the targets.
+  const candidateTargetsKey = JSON.stringify(candidateTargetsMap);
+
   useEffect(() => {
     const newGroups = buildGroups(dynamicTargetDescriptors, optionsList, candidateTargetsMap);
 
@@ -130,7 +135,7 @@ const DynamicTargets = (props: Props) => {
 
       onChange?.(ol);
     }
-  }, [candidateTargetsMap]);
+  }, [candidateTargetsKey, optionsList]);
 
   const updateGroups = (groups: Group[]) => {
     setGroups([...groups]);

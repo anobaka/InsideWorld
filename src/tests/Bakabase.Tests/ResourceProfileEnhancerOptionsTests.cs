@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Bakabase.Abstractions.Extensions;
 using Bakabase.Abstractions.Models.Db;
 using Bakabase.Abstractions.Models.Domain;
@@ -50,6 +51,46 @@ public class ResourceProfileEnhancerOptionsTests
         dropped.Should().Be(3);
         options.Enhancers![0].TargetOptions.Should().HaveCount(1);
         options.Enhancers[0].TargetOptions![0].Target.Should().Be(1);
+    }
+
+    /// <summary>
+    /// A dynamic target's name (a regex capture group, an AI field) is configuration in
+    /// its own right and is entered before any property is bound to it — the binding is
+    /// made afterwards, in the panel that lists those names. Stripping it on read would
+    /// erase what the user just configured.
+    /// </summary>
+    [TestMethod]
+    public void StripInvalidEnhancerTargetOptions_KeepsUnboundDynamicTargets()
+    {
+        var options = new ResourceProfileEnhancerOptions
+        {
+            Enhancers = new List<EnhancerFullOptions>
+            {
+                new()
+                {
+                    EnhancerId = 4,
+                    TargetOptions = new List<EnhancerTargetFullOptions>
+                    {
+                        // A capture group the user named but hasn't bound yet — keep.
+                        new() { Target = 0, DynamicTarget = "author" },
+                        // Bound capture group — keep.
+                        new()
+                        {
+                            Target = 0, DynamicTarget = "series",
+                            PropertyPool = PropertyPool.Custom, PropertyId = 42
+                        },
+                        // Unnamed and unbound — nothing to keep.
+                        new() { Target = 0 },
+                    },
+                },
+            },
+        };
+
+        var dropped = options.StripInvalidEnhancerTargetOptions();
+
+        dropped.Should().Be(1);
+        options.Enhancers![0].TargetOptions!.Select(t => t.DynamicTarget)
+            .Should().BeEquivalentTo(new[] {"author", "series"});
     }
 
     [TestMethod]

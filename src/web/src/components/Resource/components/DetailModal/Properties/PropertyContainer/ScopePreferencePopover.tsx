@@ -31,8 +31,18 @@ type Props = {
   onOpenChange?: (open: boolean) => void;
 };
 
-const hasValue = (v?: { value?: any; bizValue?: any }) => {
-  const x = v?.bizValue ?? v?.value;
+/**
+ * The scope resolver decides emptiness from `aliasAppliedBizValue ?? bizValue`
+ * (PropertyValueScopeResolver.IsNonEmptyValue) — read the same pair here. Falling back to
+ * the raw db value would call a scope non-empty that the resolver skips, and preview it as
+ * a bare choice id.
+ */
+type ScopeValue = { bizValue?: any; aliasAppliedBizValue?: any };
+
+const effectiveValueOf = (v?: ScopeValue) => v?.aliasAppliedBizValue ?? v?.bizValue;
+
+const hasValue = (v?: ScopeValue) => {
+  const x = effectiveValueOf(v);
 
   if (x == null) return false;
   if (Array.isArray(x)) return x.length > 0;
@@ -41,8 +51,8 @@ const hasValue = (v?: { value?: any; bizValue?: any }) => {
   return true;
 };
 
-const previewText = (v?: { value?: any; bizValue?: any }) => {
-  const x = v?.bizValue ?? v?.value;
+const previewText = (v?: ScopeValue) => {
+  const x = effectiveValueOf(v);
 
   if (x == null) return "";
   if (Array.isArray(x))

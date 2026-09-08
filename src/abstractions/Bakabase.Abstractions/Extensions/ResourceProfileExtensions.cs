@@ -64,11 +64,14 @@ public static class ResourceProfileExtensions
     /// AV sources options), but the entries themselves survived deserialization — only the
     /// removed field is silently ignored by Newtonsoft, not the whole record.
     ///
-    /// Left in place, they trip
+    /// Left in place, they used to trip
     /// <see cref="Models.Domain.EnhancerFullOptions.TargetOptions"/> handling inside
-    /// <c>ApplyEnhancementsToResources</c>'s <c>switch (targetOptions.PropertyPool)</c>
-    /// (default arm → <see cref="ArgumentOutOfRangeException"/>) and tank the Enhancement
-    /// BTask on every cycle.
+    /// <c>ApplyEnhancementsToResources</c>; that path now skips unbound entries itself,
+    /// so this strip is about keeping stored options clean rather than about crash safety.
+    ///
+    /// A <b>dynamic</b> target is exempt: its name (a regex capture group, an AI field)
+    /// is configuration in its own right, entered before any property is bound to it —
+    /// dropping it would erase what the user just typed on the way back out of the DB.
     ///
     /// Returns the number of entries dropped (for diagnostics; callers may log).
     /// </summary>
@@ -81,7 +84,8 @@ public static class ResourceProfileExtensions
             if (enhancer.TargetOptions == null) continue;
             var before = enhancer.TargetOptions.Count;
             enhancer.TargetOptions = enhancer.TargetOptions
-                .Where(t => (int)t.PropertyPool > 0 && t.PropertyId > 0)
+                .Where(t => !string.IsNullOrEmpty(t.DynamicTarget) ||
+                            ((int)t.PropertyPool > 0 && t.PropertyId > 0))
                 .ToList();
             dropped += before - enhancer.TargetOptions.Count;
         }

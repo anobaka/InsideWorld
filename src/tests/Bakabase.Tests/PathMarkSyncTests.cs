@@ -12,7 +12,11 @@ using Bakabase.Abstractions.Models.Dto;
 using Bakabase.Abstractions.Models.Input;
 using Bakabase.Abstractions.Services;
 using Bakabase.InsideWorld.Business.Services;
+using Bakabase.Modules.Property;
 using Bakabase.Modules.Property.Abstractions.Services;
+using Bakabase.Modules.Property.Components.Properties.Choice;
+using Bakabase.Modules.Property.Extensions;
+using Bakabase.Modules.StandardValue.Extensions;
 using Bakabase.TestKit.Utils;
 using Bootstrap.Components.Tasks;
 using FluentAssertions;
@@ -1763,6 +1767,102 @@ public class PathMarkSyncTests
         var bEffectsAfter = await effectService.GetPropertyEffectsByMarkIds(new[] { markB.Id });
         bEffectsAfter.Should().NotBeEmpty(
             "PATH_B's effect records must survive a sync that didn't include its mark");
+    }
+
+    #endregion
+
+    #region Reference Property Tests
+
+    /// <summary>
+    /// 属性标记提取出的是文本（目录名 / 正则捕获），不是选项 id。
+    /// 对于引用类型（多选、单选、标签、多级），同步必须把文本转成选项并写入选项 id，
+    /// 否则属性上一个选项都没有，资源筛选器里也就没有可选值。
+    ///
+    /// 注意资源详情看起来是正常的：descriptor 读到无法匹配的 db value 会返回 null，
+    /// 但 Resource.Property.PropertyValue 会回退成原始 db value，于是原始文本被当成
+    /// 标签显示了出来 —— 这也是这个 bug 看起来只影响筛选器的原因。
+    /// </summary>
+    [TestMethod]
+    public async Task PropertyMark_MultipleChoice_CreatesChoicesAndStoresChoiceIds()
+    {
+        var actionDir = Path.Combine(_testRoot, "Action", "Movie1");
+        var comedyDir = Path.Combine(_testRoot, "Comedy", "Movie2");
+        Directory.CreateDirectory(actionDir);
+        Directory.CreateDirectory(comedyDir);
+
+        var pathMarkService = _sp.GetRequiredService<IPathMarkService>();
+        var syncService = _sp.GetRequiredService<IPathMarkSyncService>();
+        var resourceService = _sp.GetRequiredService<IResourceService>();
+        var customPropertyService = _sp.GetRequiredService<ICustomPropertyService>();
+        var propertyValueService = _sp.GetRequiredService<ICustomPropertyValueService>();
+
+        var genre = await customPropertyService.Add(new CustomPropertyAddOrPutDto
+        {
+            Name = "Genre",
+            Type = PropertyType.MultipleChoice
+        });
+
+        await pathMarkService.Add(new PathMark
+        {
+            Path = _testRoot,
+            Type = PathMarkType.Resource,
+            ConfigJson = JsonConvert.SerializeObject(new ResourceMarkConfig
+            {
+                MatchMode = PathMatchMode.Layer,
+                Layer = 2,
+                FsTypeFilter = PathFilterFsType.Directory,
+                ApplyScope = PathMarkApplyScope.MatchedOnly
+            }),
+            Priority = 100
+        });
+
+        // 值取自第 1 层目录名：Action / Comedy
+        await pathMarkService.Add(new PathMark
+        {
+            Path = _testRoot,
+            Type = PathMarkType.Property,
+            ConfigJson = JsonConvert.SerializeObject(new PropertyMarkConfig
+            {
+                MatchMode = PathMatchMode.Layer,
+                Layer = 2,
+                Pool = PropertyPool.Custom,
+                PropertyId = genre.Id,
+                ValueType = PropertyValueType.Dynamic,
+                ValueLayer = 1,
+                ApplyScope = PathMarkApplyScope.MatchedOnly
+            }),
+            Priority = 50
+        });
+
+        await EnqueueAndWaitSync(syncService);
+
+        var refreshed = await customPropertyService.GetByKey(genre.Id);
+        var options = refreshed.Options as MultipleChoicePropertyOptions;
+        options.Should().NotBeNull("extracted labels must become choices on the property");
+        var choiceMap = options!.Choices!.ToDictionary(c => c.Label, c => c.Value);
+        choiceMap.Keys.Should().BeEquivalentTo(new[] {"Action", "Comedy"});
+
+        var resources = await resourceService.GetAll();
+        var expectations = new Dictionary<string, string>
+        {
+            [actionDir] = "Action",
+            [comedyDir] = "Comedy"
+        };
+
+        foreach (var (path, label) in expectations)
+        {
+            var resource = resources.Should().ContainSingle(r => r.Path == path).Subject;
+            var values = await propertyValueService.GetAllDbModels(v =>
+                v.ResourceId == resource.Id && v.PropertyId == genre.Id);
+            var value = values.Should().ContainSingle().Subject;
+
+            var dbValue = value.Value.DeserializeAsStandardValue<List<string>>(StandardValueType.ListString);
+            dbValue.Should().BeEquivalentTo(new[] {choiceMap[label]},
+                "the stored value must be the choice id, not the raw label");
+
+            var bizValue = PropertySystem.Property.ToBizValue(refreshed.ToProperty(), dbValue);
+            bizValue.Should().BeEquivalentTo(new[] {label}, "the value must read back as its label");
+        }
     }
 
     #endregion

@@ -70,6 +70,11 @@ internal class SyncContext
     // Property values to write/update (already combined)
     public List<CustomPropertyValueDbModel> FinalPropertyValuesToWrite { get; } = new();
 
+    // Custom properties whose definition changed while computing values — reference
+    // types (choice / tags / multilevel) gain an option for every new label a mark
+    // extracted. They must be written before the values that point at those options.
+    public Dictionary<int, CustomProperty> ChangedCustomProperties { get; } = new();
+
     // Property values to delete (no longer have any effects)
     public List<(int ResourceId, int PropertyId)> PropertyValuesToDelete { get; } = new();
 

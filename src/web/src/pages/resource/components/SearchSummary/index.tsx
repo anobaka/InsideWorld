@@ -10,7 +10,11 @@ import { MdOutlineFilterAltOff } from "react-icons/md";
 import { GroupCombinator } from "@/components/ResourceFilter/models";
 import { getOperationDisplay } from "@/components/ResourceFilter/components/Filter/utils";
 import { filterValueToText } from "@/pages/resource/utils/filterValueToText";
-import { groupHasContent, hasSearchSummary } from "@/pages/resource/utils/searchSummary";
+import {
+  effectiveFiltersOf,
+  groupHasContent,
+  hasSearchSummary,
+} from "@/pages/resource/utils/searchSummary";
 import { getEnumKey } from "@/i18n";
 import { resourceSearchSortableProperties, resourceTags, SearchOperation } from "@/sdk/constants";
 
@@ -30,9 +34,13 @@ type GroupChild =
   | { kind: "filter"; filter: SearchFilter }
   | { kind: "group"; group: SearchFilterGroup };
 
-/** A group's rows, in the order they read: own filters first, then subgroups. */
+/**
+ * A group's rows, in the order they read: own filters first, then subgroups.
+ * A filter the user never gave a value to is left out — it doesn't narrow the
+ * search, so naming it here would only describe a criterion that never ran.
+ */
 const childrenOf = (group: SearchFilterGroup): GroupChild[] => [
-  ...(group.filters ?? []).map((filter) => ({ kind: "filter" as const, filter })),
+  ...effectiveFiltersOf(group).map((filter) => ({ kind: "filter" as const, filter })),
   ...(group.groups ?? [])
     .filter(groupHasContent)
     .map((child) => ({ kind: "group" as const, group: child })),

@@ -4,7 +4,12 @@ import type { SearchForm } from "@/pages/resource/models";
 import { describe, expect, it } from "vitest";
 
 import { buildAutoTabName } from "../buildAutoTabName";
-import { groupHasContent, hasSearchSummary } from "../searchSummary";
+import {
+  effectiveFiltersOf,
+  filterIsEffective,
+  groupHasContent,
+  hasSearchSummary,
+} from "../searchSummary";
 
 import { GroupCombinator } from "@/components/ResourceFilter/models";
 import { PropertyPool, PropertyType, ResourceTag, SearchOperation } from "@/sdk/constants";
@@ -14,6 +19,7 @@ const filter = (bizValue?: string, disabled = false): SearchFilter => ({
   propertyPool: PropertyPool.Custom,
   operation: SearchOperation.Contains,
   bizValue,
+  dbValue: bizValue,
   disabled,
   property: {
     id: 1,
@@ -21,6 +27,12 @@ const filter = (bizValue?: string, disabled = false): SearchFilter => ({
     name: "Name",
     type: PropertyType.SingleLineText,
   } as SearchFilter["property"],
+});
+
+/** A filter the user picked a property for but never gave a value to. */
+const valuelessFilter = (operation: SearchOperation = SearchOperation.Contains): SearchFilter => ({
+  ...filter(),
+  operation,
 });
 
 const group = (partial: Partial<SearchFilterGroup> = {}): SearchFilterGroup => ({
@@ -35,10 +47,49 @@ const form = (partial: Partial<SearchForm> = {}): SearchForm => ({
   ...partial,
 });
 
+describe("filterIsEffective", () => {
+  it("is true for a filter carrying a value", () => {
+    expect(filterIsEffective(filter("a"))).toBe(true);
+  });
+
+  it("is false for a filter the user never gave a value to", () => {
+    expect(filterIsEffective(valuelessFilter())).toBe(false);
+    expect(filterIsEffective(valuelessFilter(SearchOperation.In))).toBe(false);
+    expect(filterIsEffective({ ...filter(), bizValue: "", dbValue: "" })).toBe(false);
+  });
+
+  it("is true for the operations that carry no value by design", () => {
+    expect(filterIsEffective(valuelessFilter(SearchOperation.IsNull))).toBe(true);
+    expect(filterIsEffective(valuelessFilter(SearchOperation.IsNotNull))).toBe(true);
+  });
+
+  it("is false without a property or an operation", () => {
+    expect(filterIsEffective({ ...filter("a"), propertyId: undefined })).toBe(false);
+    expect(filterIsEffective({ ...filter("a"), propertyPool: undefined })).toBe(false);
+    expect(filterIsEffective({ ...filter("a"), operation: undefined })).toBe(false);
+  });
+});
+
+describe("effectiveFiltersOf", () => {
+  it("keeps only the filters that narrow the search, in order", () => {
+    const a = filter("a");
+    const b = filter("b");
+
+    expect(effectiveFiltersOf(group({ filters: [a, valuelessFilter(), b] }))).toEqual([a, b]);
+  });
+});
+
 describe("groupHasContent", () => {
   it("is false for an empty group", () => {
     expect(groupHasContent(group())).toBe(false);
     expect(groupHasContent(group({ filters: [], groups: [] }))).toBe(false);
+  });
+
+  it("is false for a group holding only valueless filters", () => {
+    expect(groupHasContent(group({ filters: [valuelessFilter()] }))).toBe(false);
+    expect(groupHasContent(group({ groups: [group({ filters: [valuelessFilter()] })] }))).toBe(
+      false,
+    );
   });
 
   it("is true for a group holding a filter", () => {
@@ -73,6 +124,10 @@ describe("hasSearchSummary", () => {
 
   it("ignores empty collections", () => {
     expect(hasSearchSummary(form({ keyword: "", tags: [], orders: [] }))).toBe(false);
+  });
+
+  it("is false when the only filter has no value", () => {
+    expect(hasSearchSummary(form({ group: group({ filters: [valuelessFilter()] }) }))).toBe(false);
   });
 });
 
