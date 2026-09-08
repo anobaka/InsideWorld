@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Bakabase.Abstractions.Extensions;
 using Bakabase.Abstractions.Models.Db;
@@ -495,7 +496,8 @@ public class PathMarkService<TDbContext>(
         return allMarks.Count;
     }
 
-    public async Task<List<PathMarkPreviewResult>> PreviewMatchedPaths(PathMarkPreviewRequest request)
+    public async Task<List<PathMarkPreviewResult>> PreviewMatchedPaths(PathMarkPreviewRequest request,
+        CancellationToken ct = default)
     {
         var rootPath = request.Path.StandardizePath()!;
         var results = new List<PathMarkPreviewResult>();
@@ -570,7 +572,8 @@ public class PathMarkService<TDbContext>(
         }
 
         // Step 3: Get matched paths using common logic
-        var matchedPaths = GetMatchingPaths(rootPath, matchMode, layer, regex, applyScope, fsTypeFilter, extensions);
+        var matchedPaths = GetMatchingPaths(rootPath, matchMode, layer, regex, ct, applyScope, fsTypeFilter,
+            extensions);
 
         var rootSegments = rootPath.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar },
             StringSplitOptions.RemoveEmptyEntries);
@@ -624,6 +627,7 @@ public class PathMarkService<TDbContext>(
     /// Common path matching logic for all mark types
     /// </summary>
     private List<string> GetMatchingPaths(string rootPath, PathMatchMode matchMode, int? layer, string? regex,
+        CancellationToken ct,
         PathMarkApplyScope? applyScope = null, PathFilterFsType? fsTypeFilter = null, List<string>? extensions = null)
     {
         var matchedPaths = new List<string>();
@@ -637,12 +641,12 @@ public class PathMarkService<TDbContext>(
                 if (layer == -1)
                 {
                     // All layers - recursively get all directories/files
-                    matchedPaths.AddRange(GetAllEntries(rootPath, fsTypeFilter, extensions));
+                    matchedPaths.AddRange(GetAllEntries(rootPath, fsTypeFilter, extensions, ct));
                 }
                 else
                 {
                     // Specific layer
-                    matchedPaths.AddRange(GetEntriesAtLayer(rootPath, layer.Value, fsTypeFilter, extensions));
+                    matchedPaths.AddRange(GetEntriesAtLayer(rootPath, layer.Value, fsTypeFilter, extensions, ct));
                 }
             }
             else if (matchMode == PathMatchMode.Regex && !string.IsNullOrEmpty(regex))
@@ -659,7 +663,7 @@ public class PathMarkService<TDbContext>(
                 }
 
                 var regexObj = new Regex(regexPattern, RegexOptions.IgnoreCase);
-                var entries = GetAllEntries(rootPath, fsTypeFilter, extensions);
+                var entries = GetAllEntries(rootPath, fsTypeFilter, extensions, ct);
 
                 foreach (var entry in entries)
                 {
@@ -671,6 +675,12 @@ public class PathMarkService<TDbContext>(
                     }
                 }
             }
+        }
+        // Cancellation is not an access error. These catches exist to let an unreadable directory
+        // be skipped rather than fail the preview, and a broad one swallows the abort too.
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception)
         {
@@ -803,27 +813,42 @@ public class PathMarkService<TDbContext>(
     }
 
 
-    private List<string> GetAllEntries(string rootPath, PathFilterFsType? fsTypeFilter, List<string>? extensions)
+    private List<string> GetAllEntries(string rootPath, PathFilterFsType? fsTypeFilter, List<string>? extensions,
+        CancellationToken ct)
     {
         var entries = new List<string>();
 
         try
         {
+            // Enumerate lazily and check per entry rather than calling Get*: the walk itself is the
+            // long part, so materialising it first would leave nothing for the check to shorten.
             if (fsTypeFilter == null || fsTypeFilter == PathFilterFsType.Directory)
             {
-                entries.AddRange(Directory.GetDirectories(rootPath, "*", SearchOption.AllDirectories));
+                foreach (var dir in Directory.EnumerateDirectories(rootPath, "*", SearchOption.AllDirectories))
+                {
+                    ct.ThrowIfCancellationRequested();
+                    entries.Add(dir);
+                }
             }
 
             if (fsTypeFilter == null || fsTypeFilter == PathFilterFsType.File)
             {
-                var files = Directory.GetFiles(rootPath, "*", SearchOption.AllDirectories);
-                if (extensions != null && extensions.Count > 0)
+                var hasExtensionFilter = extensions is {Count: > 0};
+                foreach (var file in Directory.EnumerateFiles(rootPath, "*", SearchOption.AllDirectories))
                 {
-                    files = files.Where(f => extensions.Any(ext =>
-                        f.EndsWith(ext, StringComparison.OrdinalIgnoreCase))).ToArray();
+                    ct.ThrowIfCancellationRequested();
+
+                    if (!hasExtensionFilter ||
+                        extensions!.Any(ext => file.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        entries.Add(file);
+                    }
                 }
-                entries.AddRange(files);
             }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception)
         {
@@ -833,7 +858,8 @@ public class PathMarkService<TDbContext>(
         return entries.Select(x => x.StandardizePath()!).ToList();
     }
 
-    private List<string> GetEntriesAtLayer(string rootPath, int layer, PathFilterFsType? fsTypeFilter, List<string>? extensions)
+    private List<string> GetEntriesAtLayer(string rootPath, int layer, PathFilterFsType? fsTypeFilter,
+        List<string>? extensions, CancellationToken ct)
     {
         var entries = new List<string>();
 
@@ -846,6 +872,8 @@ public class PathMarkService<TDbContext>(
                 var nextPaths = new List<string>();
                 foreach (var path in currentPaths)
                 {
+                    ct.ThrowIfCancellationRequested();
+
                     try
                     {
                         nextPaths.AddRange(Directory.GetDirectories(path));
@@ -880,6 +908,10 @@ public class PathMarkService<TDbContext>(
             {
                 entries.AddRange(currentPaths);
             }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception)
         {

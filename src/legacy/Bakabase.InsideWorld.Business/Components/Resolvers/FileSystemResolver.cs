@@ -109,7 +109,7 @@ public class FileSystemResolver : IResourceResolver
                     config.Extensions = merged.Distinct().ToList();
                 }
 
-                var matchedPaths = GetMatchingPathsForResourceMark(mark.Path, config, regexCache);
+                var matchedPaths = GetMatchingPathsForResourceMark(mark.Path, config, regexCache, ct);
 
                 foreach (var path in matchedPaths)
                 {
@@ -132,7 +132,9 @@ public class FileSystemResolver : IResourceResolver
                     });
                 }
             }
-            catch (Exception ex)
+            // Both arms rethrow; the filter is only so a stop request does not get reported as a
+            // mark that failed to process.
+            catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
             {
                 _logger.LogWarning(ex, "[FileSystemResolver] Failed to process mark {MarkId} on path {Path}",
                     mark.Id, mark.Path);
@@ -145,10 +147,17 @@ public class FileSystemResolver : IResourceResolver
 
     #region Discovery Helpers
 
+    /// <param name="ct">
+    /// Threaded all the way down to the individual filesystem entry. A mark rooted at a large
+    /// library expands into a full recursive walk, which is by far the longest stretch of this
+    /// resolver — leaving it uncancellable meant a stop request (the app exiting included) sat
+    /// behind the whole scan before <see cref="DiscoverFromMarks"/> got to its next checkpoint.
+    /// </param>
     private List<string> GetMatchingPathsForResourceMark(
         string rootPath,
         ResourceMarkConfig config,
-        ConcurrentDictionary<string, Regex> regexCache)
+        ConcurrentDictionary<string, Regex> regexCache,
+        CancellationToken ct)
     {
         var matchedPaths = new List<string>();
         var normalizedRoot = rootPath.StandardizePath()!;
@@ -170,7 +179,8 @@ public class FileSystemResolver : IResourceResolver
                 }
                 else
                 {
-                    initialMatches = GetEntriesAtLayer(normalizedRoot, layer, config.FsTypeFilter, config.Extensions);
+                    initialMatches = GetEntriesAtLayer(normalizedRoot, layer, config.FsTypeFilter, config.Extensions,
+                        ct);
                 }
             }
             else if (config.MatchMode == PathMatchMode.Regex && !string.IsNullOrEmpty(config.Regex))
@@ -184,7 +194,7 @@ public class FileSystemResolver : IResourceResolver
                 }
 
                 var regex = GetOrCreateRegex(regexPattern, regexCache);
-                var entries = GetAllEntries(normalizedRoot, config.FsTypeFilter, config.Extensions);
+                var entries = GetAllEntries(normalizedRoot, config.FsTypeFilter, config.Extensions, ct);
                 initialMatches = new List<string>();
 
                 foreach (var entry in entries)
@@ -211,13 +221,22 @@ public class FileSystemResolver : IResourceResolver
                 matchedPaths.AddRange(initialMatches);
                 foreach (var match in initialMatches)
                 {
+                    // Each iteration is a whole recursive walk of its own.
+                    ct.ThrowIfCancellationRequested();
+
                     if (Directory.Exists(match))
                     {
-                        var subdirEntries = GetAllEntries(match, config.FsTypeFilter, config.Extensions);
+                        var subdirEntries = GetAllEntries(match, config.FsTypeFilter, config.Extensions, ct);
                         matchedPaths.AddRange(subdirEntries);
                     }
                 }
             }
+        }
+        // Cancellation is not an access error. These catches exist to let an unreadable directory
+        // be skipped rather than abort the mark, and a bare one swallows the stop request too.
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
         }
         catch
         {
@@ -228,7 +247,7 @@ public class FileSystemResolver : IResourceResolver
     }
 
     private static List<string> GetAllEntries(string rootPath, PathFilterFsType? fsTypeFilter,
-        List<string>? extensions)
+        List<string>? extensions, CancellationToken ct)
     {
         var entries = new List<string>();
 
@@ -238,6 +257,7 @@ public class FileSystemResolver : IResourceResolver
             {
                 foreach (var dir in Directory.EnumerateDirectories(rootPath, "*", SearchOption.AllDirectories))
                 {
+                    ct.ThrowIfCancellationRequested();
                     entries.Add(dir.StandardizePath()!);
                 }
             }
@@ -247,6 +267,8 @@ public class FileSystemResolver : IResourceResolver
                 var extensionSet = extensions?.ToHashSet(StringComparer.OrdinalIgnoreCase);
                 foreach (var file in Directory.EnumerateFiles(rootPath, "*", SearchOption.AllDirectories))
                 {
+                    ct.ThrowIfCancellationRequested();
+
                     if (extensionSet == null || extensionSet.Count == 0 ||
                         extensionSet.Any(ext => file.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
                     {
@@ -254,6 +276,10 @@ public class FileSystemResolver : IResourceResolver
                     }
                 }
             }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
         }
         catch
         {
@@ -264,7 +290,7 @@ public class FileSystemResolver : IResourceResolver
     }
 
     private static List<string> GetEntriesAtLayer(string rootPath, int layer, PathFilterFsType? fsTypeFilter,
-        List<string>? extensions)
+        List<string>? extensions, CancellationToken ct)
     {
         var entries = new List<string>();
 
@@ -277,6 +303,8 @@ public class FileSystemResolver : IResourceResolver
                 var nextPaths = new List<string>();
                 foreach (var path in currentPaths)
                 {
+                    ct.ThrowIfCancellationRequested();
+
                     try
                     {
                         nextPaths.AddRange(Directory.EnumerateDirectories(path));
@@ -314,6 +342,10 @@ public class FileSystemResolver : IResourceResolver
             {
                 entries.AddRange(currentPaths);
             }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
         }
         catch
         {
@@ -470,11 +502,21 @@ public class FileSystemResolver : IResourceResolver
             .Select(e => e.StartsWith('.') ? e : $".{e}")
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        var files = Directory.Exists(resource.Path)
-            ? Directory.EnumerateFiles(resource.Path, "*", SearchOption.AllDirectories)
-            : [];
+        // Per entry, for the same reason as the mark walks above: a resource directory can be
+        // arbitrarily large, and this is the only long stretch between the caller's checkpoints.
+        var result = new List<string>();
+        if (Directory.Exists(resource.Path))
+        {
+            foreach (var file in Directory.EnumerateFiles(resource.Path, "*", SearchOption.AllDirectories))
+            {
+                ct.ThrowIfCancellationRequested();
 
-        var result = files.Where(f => extensions.Contains(Path.GetExtension(f))).ToList();
+                if (extensions.Contains(Path.GetExtension(file)))
+                {
+                    result.Add(file);
+                }
+            }
+        }
 
         // Apply file name pattern filter if configured
         if (!string.IsNullOrEmpty(playableFileOptions.FileNamePattern))

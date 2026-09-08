@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Bakabase.Abstractions.Models.Domain;
 using Bakabase.Abstractions.Models.Domain.Constants;
@@ -170,9 +171,10 @@ public class PathMarkController(IPathMarkService service, IPathMarkSyncService s
 
     [HttpPost("preview")]
     [SwaggerOperation(OperationId = "PreviewPathMarkMatchedPaths")]
-    public async Task<ListResponse<PathMarkPreviewResult>> PreviewMatchedPaths([FromBody] PathMarkPreviewRequest request)
+    public async Task<ListResponse<PathMarkPreviewResult>> PreviewMatchedPaths([FromBody] PathMarkPreviewRequest request,
+        CancellationToken ct)
     {
-        var results = await service.PreviewMatchedPaths(request);
+        var results = await service.PreviewMatchedPaths(request, ct);
         return new ListResponse<PathMarkPreviewResult>(results);
     }
 
