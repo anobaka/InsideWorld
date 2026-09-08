@@ -114,6 +114,7 @@
     "react-use": "^17.4.0",
     "react-viewer": "^3.2.2",
     "react-virtualized": "^9.22.5",
+    "remark-gfm": "^4.0.1",
     "sanitize-html": "^2.13.0",
     "tailwind-variants": "1.0.0",
     "tailwindcss": "4.1.11",

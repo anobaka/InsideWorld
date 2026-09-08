@@ -482,26 +482,76 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Publishes the changelog archive the in-app "what's new" / changelog page
+  # reads. The app never calls the GitHub API itself (60 req/h per IP, and
+  # github.com is unreliable for much of the user base), so this mirrors
+  # GitHub Releases onto the same CDN the updater already uses.
   generate-readme-oss:
     runs-on: ubuntu-latest
     needs: [release]
+    env:
+      CHANGELOGS_PREFIX: oss://anobaka-public/app/bakabase/releases/changelogs
     steps:
+      # Before the artifact download: checkout cleans the workspace.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - name: Download changelog artifact
         uses: actions/download-artifact@v4
         with:
           name: changelog-md
           path: .
-      - name: Create README.md
-        run: cp "CHANGELOG_${{ inputs.version }}.md" README.md
       - name: Install ossutil
         run: |
           wget -O ossutil64 https://gosspublic.alicdn.com/ossutil/1.7.16/ossutil64
           chmod +x ossutil64
-      - name: Upload README.md to OSS
+      - name: Configure ossutil
         env:
           OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
           OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
           OSS_ENDPOINT: http://oss-accelerate.aliyuncs.com
+        run: ./ossutil64 config -e $OSS_ENDPOINT -i $OSS_ACCESS_KEY_ID -k $OSS_ACCESS_KEY_SECRET
+
+      # The very file that became this release's GitHub body, so the mirror
+      # equals GitHub by construction rather than by convention.
+      - name: Upload this release's changelog to OSS
         run: |
-          ./ossutil64 config -e $OSS_ENDPOINT -i $OSS_ACCESS_KEY_ID -k $OSS_ACCESS_KEY_SECRET
-          ./ossutil64 cp README.md oss://anobaka-public/app/bakabase/releases/changelogs/${{ inputs.version }}/README.md
+          ./ossutil64 cp "CHANGELOG_${{ inputs.version }}.md" \
+            "${CHANGELOGS_PREFIX}/${{ inputs.version }}/README.md" -f
+
+      - name: Build changelog index and bodies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 scripts/changelog/build_changelog_archive.py \
+            --owner "${{ github.repository_owner }}" \
+            --repo "$(basename '${{ github.repository }}')" \
+            --out index.json \
+            --bodies-dir bodies
+
+      # Versions released before this mirror existed have no README.md on the
+      # CDN. Upload only those: a release's own run is the authority for its
+      # own file, and re-uploading ~150 objects every release is waste.
+      - name: Backfill changelogs missing from OSS
+        run: |
+          ./ossutil64 ls "${CHANGELOGS_PREFIX}/" \
+            | grep -oE 'changelogs/[^/]+/README\.md' \
+            | cut -d/ -f2 \
+            | sort -u > existing.txt
+          echo "$(wc -l < existing.txt) version(s) already mirrored"
+
+          uploaded=0
+          for dir in bodies/*/; do
+            [ -d "$dir" ] || continue
+            version=$(basename "$dir")
+            if grep -qxF "$version" existing.txt; then
+              continue
+            fi
+            ./ossutil64 cp "${dir}README.md" "${CHANGELOGS_PREFIX}/${version}/README.md"
+            uploaded=$((uploaded + 1))
+          done
+          echo "backfilled $uploaded version(s)"
+
+      # Last: a reader that sees a version in the index must find its body.
+      - name: Upload changelog index to OSS
+        run: ./ossutil64 cp index.json "${CHANGELOGS_PREFIX}/index.json" -f

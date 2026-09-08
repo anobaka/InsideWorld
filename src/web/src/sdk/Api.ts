@@ -4861,6 +4861,29 @@ export interface BakabaseServiceModelsViewBulkModificationViewModel {
   resourceDiffCount: number;
 }
 
+export interface BakabaseServiceModelsViewChangelogIndexViewModel {
+  /** @format date-time */
+  generatedAt?: string;
+  releases: BakabaseServiceModelsViewChangelogReleaseViewModel[];
+  releasesUrl?: string;
+}
+
+export interface BakabaseServiceModelsViewChangelogReleaseViewModel {
+  version: string;
+  tag?: string;
+  name?: string;
+  prerelease: boolean;
+  /** @format date-time */
+  publishedAt?: string;
+  htmlUrl?: string;
+}
+
+export interface BakabaseServiceModelsViewChangelogViewModel {
+  version: string;
+  markdown: string;
+  htmlUrl?: string;
+}
+
 export interface BakabaseServiceModelsViewComparisonPlanViewModel {
   /** @format int32 */
   id: number;
@@ -6582,6 +6605,20 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceM
   code: number;
   message?: string;
   data?: BakabaseServiceModelsViewBulkModificationViewModel;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewChangelogIndexViewModel {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseServiceModelsViewChangelogIndexViewModel;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewChangelogViewModel {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseServiceModelsViewChangelogViewModel;
 }
 
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewComparisonPlanViewModel {
@@ -10131,6 +10168,85 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     refreshResourcesCacheUrl: () => {
       const baseUrl = this.baseUrl || "";
       let path = `/cache/resources/refresh`;
+      
+      return baseUrl + path;
+    },
+  };
+  changelog = {
+    /**
+     * No description
+     *
+     * @tags Changelog
+     * @name GetChangelogReleases
+     * @request GET:/changelog/releases
+     */
+    getChangelogReleases: (params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewChangelogIndexViewModel,
+        any
+      >({
+        path: `/changelog/releases`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getChangelogReleases
+     * @name getChangelogReleasesUrl
+     */
+    getChangelogReleasesUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/changelog/releases`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Changelog
+     * @name GetChangelog
+     * @request GET:/changelog/content
+     */
+    getChangelog: (
+      query?: {
+        version?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewChangelogViewModel,
+        any
+      >({
+        path: `/changelog/content`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getChangelog
+     * @name getChangelogUrl
+     */
+    getChangelogUrl: (query?: {
+        version?: string;
+      }) => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/changelog/content`;
+      
+      // Build query string
+      if (query) {
+        // Object.entries rather than indexing by key: the query object is a typed
+        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
+        const queryString = Object.entries(query)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+
+        return baseUrl + path + (queryString ? `?${queryString}` : "");
+      }
       
       return baseUrl + path;
     },

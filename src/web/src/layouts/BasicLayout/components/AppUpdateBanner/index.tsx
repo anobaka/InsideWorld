@@ -4,11 +4,17 @@ import type { BakabaseInfrastructuresComponentsAppUpgradeAbstractionsAppVersionI
 
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CloseOutlined, ReloadOutlined, WarningOutlined } from "@ant-design/icons";
+import {
+  CloseOutlined,
+  FileTextOutlined,
+  ReloadOutlined,
+  WarningOutlined,
+} from "@ant-design/icons";
 
 import { describeUpdateError } from "./describeUpdateError";
 
 import { Button, Progress, Spinner, Tooltip } from "@/components/bakaui";
+import { useChangelogModal } from "@/components/Changelog";
 import BApi from "@/sdk/BApi";
 import { UpdaterStatus } from "@/sdk/constants";
 import { useAppUpdaterStateStore } from "@/stores/appUpdaterState";
@@ -16,7 +22,7 @@ import { useAppUpdaterStateStore } from "@/stores/appUpdaterState";
 export type AppUpdateBannerViewState =
   | { kind: "checking" }
   | { kind: "downloading"; version?: string; percentage?: number }
-  | { kind: "pendingRestart" }
+  | { kind: "pendingRestart"; version?: string }
   | { kind: "failed"; error?: string }
   | { kind: "hidden" };
 
@@ -26,6 +32,8 @@ interface ViewProps {
   onRestart: () => void;
   onRetry: () => void;
   onDismiss: () => void;
+  /** Absent while no version is known yet — then no changelog button is offered. */
+  onShowChangelog?: () => void;
 }
 
 // Mirrors HeroUI `Button size="sm" variant="bordered"` so the checking and
@@ -39,6 +47,7 @@ export const AppUpdateBannerView: React.FC<ViewProps> = ({
   onRestart,
   onRetry,
   onDismiss,
+  onShowChangelog,
 }) => {
   const { t } = useTranslation();
 
@@ -46,6 +55,38 @@ export const AppUpdateBannerView: React.FC<ViewProps> = ({
 
   const wrapperClass = `flex flex-col gap-1.5 ${collapsed ? "px-2 py-1.5 items-center" : "px-3 py-1.5"}`;
   const labelClass = "text-xs text-foreground-500 truncate whitespace-nowrap";
+
+  // One shape for every state: the primary action fills the row beside a single
+  // trailing icon button. Collapsed, the pair stacks instead.
+  const actionRow = (primary: React.ReactNode, trailing: React.ReactNode) => (
+    <div className={`flex gap-1 ${collapsed ? "flex-col items-center" : "items-center"}`}>
+      <div className={collapsed ? "" : "flex-1 min-w-0"}>{primary}</div>
+      {trailing}
+    </div>
+  );
+
+  // Nobody should be asked to install a version they cannot read about first, so
+  // the primary action gives up the far edge of the rail to the release notes.
+  const withChangelog = (primary: React.ReactNode) => {
+    if (!onShowChangelog) return primary;
+
+    const changelogLabel = t<string>("changelog.view");
+
+    return actionRow(
+      primary,
+      <Tooltip content={changelogLabel} placement="right">
+        <Button
+          isIconOnly
+          aria-label={changelogLabel}
+          size="sm"
+          variant="light"
+          onPress={onShowChangelog}
+        >
+          <FileTextOutlined />
+        </Button>
+      </Tooltip>,
+    );
+  };
 
   if (state.kind === "checking") {
     return (
@@ -67,24 +108,27 @@ export const AppUpdateBannerView: React.FC<ViewProps> = ({
   if (state.kind === "pendingRestart") {
     return (
       <div className={wrapperClass}>
-        <Tooltip
-          content={t<string>("appUpdate.restartToUpdate")}
-          isDisabled={!collapsed}
-          placement="right"
-        >
-          <Button
-            color="primary"
-            isIconOnly={collapsed}
-            size="sm"
-            variant="flat"
-            onPress={onRestart}
+        {withChangelog(
+          <Tooltip
+            content={t<string>("appUpdate.restartToUpdate")}
+            isDisabled={!collapsed}
+            placement="right"
           >
-            <ReloadOutlined />
-            {!collapsed && (
-              <span className={labelClass}>{t<string>("appUpdate.restartToUpdate")}</span>
-            )}
-          </Button>
-        </Tooltip>
+            <Button
+              color="primary"
+              fullWidth={!collapsed}
+              isIconOnly={collapsed}
+              size="sm"
+              variant="flat"
+              onPress={onRestart}
+            >
+              <ReloadOutlined />
+              {!collapsed && (
+                <span className={labelClass}>{t<string>("appUpdate.restartToUpdate")}</span>
+              )}
+            </Button>
+          </Tooltip>,
+        )}
       </div>
     );
   }
@@ -101,11 +145,16 @@ export const AppUpdateBannerView: React.FC<ViewProps> = ({
 
     return (
       <div className={wrapperClass}>
-        <div className={`flex items-center gap-1 ${collapsed ? "flex-col" : "justify-between"}`}>
+        {/* The trailing slot is the dismiss button here rather than the changelog
+            one: retry and dismiss already fill the row, and a third button would
+            squeeze the label out. The row used to be `justify-between`, which
+            left retry at its content width while the other states spanned the rail. */}
+        {actionRow(
           <Tooltip className="max-w-[320px]" content={tooltipContent} placement="right">
             <Button
               aria-label={t<string>("appUpdate.clickToRetry")}
               color="danger"
+              fullWidth={!collapsed}
               isIconOnly={collapsed}
               size="sm"
               variant="flat"
@@ -116,7 +165,7 @@ export const AppUpdateBannerView: React.FC<ViewProps> = ({
                 <span className={labelClass}>{t<string>("appUpdate.clickToRetry")}</span>
               )}
             </Button>
-          </Tooltip>
+          </Tooltip>,
           <Tooltip content={t<string>("appUpdate.dismiss")} placement="right">
             <Button
               isIconOnly
@@ -127,8 +176,8 @@ export const AppUpdateBannerView: React.FC<ViewProps> = ({
             >
               <CloseOutlined />
             </Button>
-          </Tooltip>
-        </div>
+          </Tooltip>,
+        )}
         {/* Expanded sidebar previously showed nothing at all — the cause was only
             reachable by hovering while collapsed. */}
         {!collapsed && explanation && (
@@ -144,28 +193,30 @@ export const AppUpdateBannerView: React.FC<ViewProps> = ({
 
   return (
     <div className={wrapperClass}>
-      <Tooltip
-        content={`${t<string>("appUpdate.downloading")} ${versionLabel}`.trim()}
-        isDisabled={!collapsed}
-        placement="right"
-      >
-        <div
-          className={`${buttonLikeBase} flex-col justify-center gap-1 w-full ${collapsed ? "px-2" : "px-2.5"}`}
+      {withChangelog(
+        <Tooltip
+          content={`${t<string>("appUpdate.downloading")} ${versionLabel}`.trim()}
+          isDisabled={!collapsed}
+          placement="right"
         >
-          {!collapsed && (
-            <div className={labelClass}>
-              {t<string>("appUpdate.downloading")} {versionLabel}
-            </div>
-          )}
-          <Progress
-            aria-label="downloading"
-            className={collapsed ? "w-11" : "w-full"}
-            isIndeterminate={state.percentage === undefined}
-            size="sm"
-            value={state.percentage}
-          />
-        </div>
-      </Tooltip>
+          <div
+            className={`${buttonLikeBase} flex-col justify-center gap-1 w-full ${collapsed ? "px-2" : "px-2.5"}`}
+          >
+            {!collapsed && (
+              <div className={labelClass}>
+                {t<string>("appUpdate.downloading")} {versionLabel}
+              </div>
+            )}
+            <Progress
+              aria-label="downloading"
+              className={collapsed ? "w-11" : "w-full"}
+              isIndeterminate={state.percentage === undefined}
+              size="sm"
+              value={state.percentage}
+            />
+          </div>
+        </Tooltip>,
+      )}
     </div>
   );
 };
@@ -176,6 +227,7 @@ interface Props {
 
 const AppUpdateBanner: React.FC<Props> = ({ collapsed }) => {
   const appUpdaterState = useAppUpdaterStateStore((s) => s);
+  const showChangelog = useChangelogModal();
 
   const [checking, setChecking] = useState(true);
   const [newVersion, setNewVersion] = useState<
@@ -215,7 +267,7 @@ const AppUpdateBanner: React.FC<Props> = ({ collapsed }) => {
   if (checking) {
     viewState = { kind: "checking" };
   } else if (status === UpdaterStatus.PendingRestart) {
-    viewState = { kind: "pendingRestart" };
+    viewState = { kind: "pendingRestart", version: newVersion?.version };
   } else if (status === UpdaterStatus.Failed) {
     // Let the user dismiss the failed banner for the current run so a transient
     // network failure doesn't leave a persistent warning icon in the sidebar.
@@ -242,6 +294,7 @@ const AppUpdateBanner: React.FC<Props> = ({ collapsed }) => {
       onDismiss={() => appUpdaterState.dismissFailure()}
       onRestart={() => BApi.updater.restartAndUpdateApp()}
       onRetry={() => BApi.updater.startUpdatingApp()}
+      onShowChangelog={newVersion?.version ? () => showChangelog(newVersion.version) : undefined}
     />
   );
 };

@@ -20,7 +20,7 @@ const cases: Case[] = [
     name: "downloading (42%)",
     state: { kind: "downloading", version: "10.0.0", percentage: 42 },
   },
-  { name: "pendingRestart", state: { kind: "pendingRestart" } },
+  { name: "pendingRestart", state: { kind: "pendingRestart", version: "10.0.0" } },
   { name: "failed", state: { kind: "failed", error: undefined } },
   { name: "hidden", state: { kind: "hidden" } },
 ];
@@ -53,6 +53,7 @@ const AppUpdateBannerTest = () => {
                 onDismiss={() => console.log("dismiss")}
                 onRestart={() => console.log("restart")}
                 onRetry={() => console.log("retry")}
+                onShowChangelog={() => console.log("changelog")}
               />
             </div>
           </div>

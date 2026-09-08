@@ -6,8 +6,8 @@ import type {
 } from "@/sdk/Api";
 import type { SettingItem } from "@/pages/configuration/components/SettingsSection";
 
-import Markdown from "react-markdown";
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   CheckCircleOutlined,
@@ -22,11 +22,11 @@ import { UpdaterStatus, DataPathSource } from "@/sdk/constants";
 import ExternalLink from "@/components/ExternalLink";
 import { useAppUpdaterStateStore } from "@/stores/appUpdaterState";
 import { useAppOptionsStore } from "@/stores/options";
-import { Button, Chip, Modal, Switch } from "@/components/bakaui";
+import { Button, Chip, Switch } from "@/components/bakaui";
+import { ChangelogButton } from "@/components/Changelog";
 import FilePathValue from "@/components/FilePathValue";
 import SettingsSection from "@/pages/configuration/components/SettingsSection";
 import BApi from "@/sdk/BApi";
-import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
 import {
   RelocationButton,
   RelocationRestartGate,
@@ -45,7 +45,7 @@ interface AppInfoProps {
 
 const AppInfo: React.FC<AppInfoProps> = ({ appInfo, applyPatches, query }) => {
   const { t } = useTranslation();
-  const { createPortal } = useBakabaseContext();
+  const navigate = useNavigate();
   const [newVersion, setNewVersion] =
     useState<BakabaseInfrastructuresComponentsAppUpgradeAbstractionsAppVersionInfo>();
   const appUpdaterState = useAppUpdaterStateStore((state) => state);
@@ -161,35 +161,8 @@ const AppInfo: React.FC<AppInfoProps> = ({ appInfo, applyPatches, query }) => {
                 <Chip radius="sm" variant="light">
                   {newVersion.version}
                 </Chip>
-                {newVersion.changelog && (
-                  <>
-                    <Divider orientation="vertical" />
-                    <Button
-                      color="secondary"
-                      size="sm"
-                      variant="light"
-                      onPress={() => {
-                        createPortal(Modal, {
-                          size: "xl",
-                          title: newVersion.version,
-                          defaultVisible: true,
-                          children: (
-                            <Markdown
-                              components={{
-                                a: (props) => <ExternalLink {...props} target="_blank" />,
-                              }}
-                            >
-                              {newVersion.changelog}
-                            </Markdown>
-                          ),
-                          footer: { actions: ["cancel"] },
-                        });
-                      }}
-                    >
-                      {t("configuration.appInfo.changelog")}
-                    </Button>
-                  </>
-                )}
+                <Divider orientation="vertical" />
+                <ChangelogButton version={newVersion.version} />
                 <Divider orientation="vertical" />
                 <Button
                   color="success"
@@ -227,33 +200,43 @@ const AppInfo: React.FC<AppInfoProps> = ({ appInfo, applyPatches, query }) => {
         } else {
           return renderNoNewVersion();
         }
+      // Downloading, pending restart and failed all concern a known version, so
+      // each keeps the changelog within reach — the notes are most wanted right
+      // before the restart that applies them.
       case UpdaterStatus.Running:
         return (
-          <Progress
-            showValueLabel
-            className="w-[200px] pl-3"
-            label={`${t("configuration.appInfo.downloading")} ${newVersion?.version ?? ""}`}
-            size="sm"
-            value={appUpdaterState.percentage}
-          />
+          <div className="flex items-center gap-2">
+            <Progress
+              showValueLabel
+              className="w-[200px] pl-3"
+              label={`${t("configuration.appInfo.downloading")} ${newVersion?.version ?? ""}`}
+              size="sm"
+              value={appUpdaterState.percentage}
+            />
+            <ChangelogButton version={newVersion?.version} />
+          </div>
         );
       case UpdaterStatus.PendingRestart:
         return (
-          <Button
-            color="primary"
-            size="sm"
-            onClick={() => {
-              BApi.updater.restartAndUpdateApp();
-            }}
-          >
-            {t("configuration.appInfo.restartToUpdate")}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              color="primary"
+              size="sm"
+              onClick={() => {
+                BApi.updater.restartAndUpdateApp();
+              }}
+            >
+              {t("configuration.appInfo.restartToUpdate")}
+            </Button>
+            <ChangelogButton version={newVersion?.version} />
+          </div>
         );
       case UpdaterStatus.Failed:
         return (
-          <>
-            {t("configuration.appInfo.failedToUpdateApp")}: {t(appUpdaterState.error!)}
-            &nbsp;
+          <div className="flex items-center gap-2 flex-wrap">
+            <span>
+              {t("configuration.appInfo.failedToUpdateApp")}: {t(appUpdaterState.error!)}
+            </span>
             <Button
               color="primary"
               variant="light"
@@ -263,7 +246,8 @@ const AppInfo: React.FC<AppInfoProps> = ({ appInfo, applyPatches, query }) => {
             >
               {t("configuration.appInfo.clickToRetry")}
             </Button>
-          </>
+            {newVersion?.version && <ChangelogButton version={newVersion.version} />}
+          </div>
         );
       default:
         return <Icon type="loading" />;
@@ -389,6 +373,7 @@ const AppInfo: React.FC<AppInfoProps> = ({ appInfo, applyPatches, query }) => {
             <Chip radius="sm" variant="light">
               {appInfo.coreVersion}
             </Chip>
+            {appInfo.coreVersion && <ChangelogButton version={appInfo.coreVersion} />}
             {renderRunningVersionMismatch()}
           </div>
         ),
@@ -400,6 +385,15 @@ const AppInfo: React.FC<AppInfoProps> = ({ appInfo, applyPatches, query }) => {
         value: (
           <div className="flex items-center gap-3 flex-wrap">
             {renderNewVersion()}
+            <Divider orientation="vertical" />
+            <Button
+              color="primary"
+              size="sm"
+              variant="light"
+              onPress={() => navigate("/changelog")}
+            >
+              {t("configuration.appInfo.viewAllChangelogs")}
+            </Button>
             <Divider orientation="vertical" />
             <div className="flex items-center gap-1">
               <Tooltip
