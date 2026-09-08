@@ -38,6 +38,11 @@ pre.dia .have{color:var(--g)}pre.dia .new{color:var(--p)}pre.dia .cm{color:var(-
 .rule.warn{border-left-color:var(--r)}
 .rule.ask{border-left-color:var(--y)}
 .rule.ok{border-left-color:var(--g)}
+figure{margin:16px 0;padding:16px 14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+figure svg{display:block;margin:0 auto;color:var(--ink)}
+figure svg .acc{stroke:var(--p)}
+figure svg .accf{fill:var(--p)}
+figcaption{margin-top:12px;font-size:12.5px;color:var(--mut);text-align:center;line-height:1.5}
 .toc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:16px 0;font-size:13px}
 .toc ol{margin:4px 0;padding-left:20px;columns:2;column-gap:28px}
 .toc li{margin:3px 0;break-inside:avoid}
@@ -51,8 +56,8 @@ footer{margin-top:36px;color:var(--dim);font-size:12px;border-top:1px solid var(
 <tr><th style="width:16%">字段</th><th>值</th></tr>
 <tr><td class="e">状态</td><td>执行计划第一版。基于对 14 个子系统的逐行盘点（含两个子模块 <code class="i">Bakabase.Infrastructures</code>、<code class="i">LazyMortal</code>，已签出）。<b>发现设计文档有十余处前提与代码不符</b>，本计划以代码为准，修订清单见 <a href="#s7">§7</a></td></tr>
 <tr><td class="e">分支</td><td class="mono">claude/bakabase-client-server-split-l6dqa5</td></tr>
-<tr><td class="e">最后更新</td><td>2026-09-07</td></tr>
-<tr><td class="e">阅读建议</td><td>只想"大概了解"：读 <a href="#s1">§1</a>（要你拍板的事）、<a href="#s2">§2</a>（硬规则）、<a href="#s3">§3</a>（模块总表）、<a href="#s4">§4</a>（分阶段）。想知道"具体怎么改"：读 <a href="#s5">§5</a></td></tr>
+<tr><td class="e">最后更新</td><td>2026-09-08（新增 §9 产物与运行形态、§10 薄客户端性能账）</td></tr>
+<tr><td class="e">阅读建议</td><td>只想"大概了解"：读 <a href="#s1">§1</a>（要你拍板的事）、<a href="#s2">§2</a>（硬规则）、<a href="#s3">§3</a>（模块总表）、<a href="#s4">§4</a>（分阶段）。想知道"具体怎么改"：读 <a href="#s5">§5</a>。想知道"会构建出几个产物、谁依赖谁"：读 <a href="#s9">§9</a>；想知道"薄客户端会慢在哪"：读 <a href="#s10">§10</a></td></tr>
 </table>
 
 <div class="toc"><b>目录</b>
@@ -65,6 +70,8 @@ footer{margin-top:36px;color:var(--dim);font-size:12px;border-top:1px solid var(
 <li><a href="#s6">对一体版零影响的验证清单</a></li>
 <li><a href="#s7">设计文档需要修订的地方</a></li>
 <li><a href="#s8">明确不做与后置</a></li>
+<li><a href="#s9">产物与运行形态（会构建出几个东西，谁依赖谁）</a></li>
+<li><a href="#s10">薄客户端的性能账</a></li>
 </ol></div>
 
 <div class="rule warn"><b>三条最重要的盘点结论，它们改变了设计文档的前提：</b>
@@ -417,6 +424,251 @@ sig = HMAC-SHA256(deviceKey, 规范串)
 <tr><td>设备密钥的操作系统级保护（DPAPI / Keychain）、反向代理"信任转发头"开关、缩略图本地缓存、客户端侧 Steam 扫描、DLsite 可执行文件复制到本地再运行</td><td>第一版之后按需求评估</td></tr>
 <tr><td>删除 <code class="i">GET /file/icon</code> 与 <code class="i">IGuiAdapter.GetIcon</code>、把 <code class="i">/resource/directory</code> 收敛到 <code class="i">/tool/open</code>、让环境一致性对全部第三方平台生效</td><td>都是对一体版可见的改动，各自独立立项，不搭本设计</td></tr>
 </table>
+
+<h2 id="s9"><span class="n">§9</span>产物与运行形态（会构建出几个东西，谁依赖谁）</h2>
+
+<p>先说结论：<b>薄客户端不增加任何构建产物</b>。它是现有桌面安装包里的第二种启动模式，走同一条流水线、同一个更新通道。今天真正被分发出去的东西一共是下面这些，其中"纯服务端"这一项<b>已经存在</b>，就是容器镜像。</p>
+
+<table>
+<tr><th style="width:20%">产物</th><th style="width:22%">怎么构建</th><th>内容与去向</th></tr>
+<tr><td><b>桌面安装包</b><br><span class="tag">win-x64</span> <span class="tag">osx-x64</span> <span class="tag">osx-arm64</span></td>
+<td class="k">dotnet publish -p:RuntimeMode=WINFORMS|MACOS<br>src/apps/Bakabase/Bakabase.csproj<br>--self-contained -r {rid}<br>再 vpk pack</td>
+<td>Avalonia 外壳 + 完整服务端 + 网页前端。Windows 出安装程序与免安装压缩包，macOS 出 pkg。上传到对象存储的 <code class="i">releases/{rid}/</code>，也是应用内更新的取包地址（<code class="i">_build.yml:147,191-199</code>、<code class="i">_deploy.yml:45</code>）</td></tr>
+<tr><td><b>服务端容器镜像</b><br><span class="tag">linux-x64</span></td>
+<td class="k">dotnet publish -p:RuntimeMode=DOCKER<br>src/apps/Bakabase.Service/Bakabase.Service.csproj<br>--self-contained -r linux-x64</td>
+<td><b>这就是"纯服务端"</b>。入口直接是 <code class="i">Bakabase.Service.dll</code>，不含 Avalonia，图形适配器是空实现。同样带网页前端（<code class="i">docker/Dockerfile:3-11</code>、<code class="i">_build.yml:117-122</code>）</td></tr>
+<tr><td><b>网页前端</b><br><span class="tag">中间产物</span></td>
+<td class="k">cd src/web &amp;&amp; yarn build</td>
+<td>只构建一次，被上面每一条桌面与容器流水线下载进 <code class="i">publish/web</code>，运行时由 <code class="i">AddSpaStaticFiles(RootPath="web")</code> 提供（<code class="i">_build.yml:51-55,148-152</code>、<code class="i">AppStartup.cs:89</code>）</td></tr>
+<tr><td><b>手机 App</b><br><span class="tag">安卓 apk × 3 架构</span> <span class="tag">苹果未签名 ipa</span></td>
+<td class="k">flutter build apk --release --split-per-abi<br>flutter build ios --release --no-codesign</td>
+<td>完全独立，不含任何 C# 或网页前端产物，只通过 HTTP 与组播发现跟服务端说话（<code class="i">_mobile_build.yml:67-120</code>、<code class="i">pubspec.yaml</code>）</td></tr>
+<tr><td><b>油猴脚本</b></td><td class="k">cd src/scripts/baka-monkey &amp;&amp; pnpm build</td>
+<td>浏览器用户脚本，独立版本号，发到对象存储。也是服务端 HTTP 契约的一个消费方（<code class="i">_build.yml:57-87</code>、<code class="i">_deploy.yml:80</code>）</td></tr>
+</table>
+
+<div class="note">另外还有几个不面向用户的产物：变更日志、手机端分发用的 <code class="i">source.json</code> 与 <code class="i">manifest.json</code>。<code class="i">Bakabase.Cli</code> 只在开发期生成接口定义，不进任何安装包。仓库里<b>没有</b><code class="i">Bakabase.Updater</code> 工程，更新完全由 Velopack 承担，根目录 <code class="i">CLAUDE.md</code> 里那行描述是过时的。Linux 桌面今天没有产物。</div>
+
+<h3 id="s91">9.1 复用矩阵：哪些代码进了哪个产物</h3>
+
+<p><b>●</b> 表示进程里真正会运行；<b>○</b> 表示随安装包分发、但这个模式下不会被加载；<b>—</b> 表示根本不包含。</p>
+
+<table>
+<tr><th style="width:30%">源码</th><th>一体版</th><th>服务端容器</th><th>薄客户端</th><th>手机 App</th><th>油猴脚本</th></tr>
+<tr><td class="k">libs/LazyMortal（子模块）</td><td>●</td><td>●</td><td>●</td><td>—</td><td>—</td></tr>
+<tr><td class="k">libs/Bakabase.Infrastructures（子模块）</td><td>●</td><td>●</td><td>●</td><td>—</td><td>—</td></tr>
+<tr><td class="k">abstractions/</td><td>●</td><td>●</td><td>● 部分</td><td>—</td><td>—</td></tr>
+<tr><td class="k">modules/（18 个）</td><td>●</td><td>●</td><td>● 只有播放与远程访问两个</td><td>—</td><td>—</td></tr>
+<tr><td class="k">legacy/（业务、模型、数据库迁移）</td><td>●</td><td>●</td><td>○</td><td>—</td><td>—</td></tr>
+<tr><td class="k">apps/Bakabase.Service（接口层与组合根）</td><td>●</td><td>● 入口</td><td>○ 少数几个类型例外</td><td>—</td><td>—</td></tr>
+<tr><td class="k">apps/Bakabase（Avalonia 外壳）</td><td>● 入口</td><td>—</td><td>● 入口</td><td>—</td><td>—</td></tr>
+<tr><td class="k">web/（网页前端）</td><td>●</td><td>●</td><td>● 由服务端下发</td><td>—</td><td>—</td></tr>
+<tr><td class="k">apps/mobile（Flutter）</td><td>—</td><td>—</td><td>—</td><td>●</td><td>—</td></tr>
+<tr><td class="k">scripts/baka-monkey</td><td>—</td><td>—</td><td>—</td><td>—</td><td>●</td></tr>
+<tr><td class="k"><b>新增</b>：本地转发层 + 客户端组合根</td><td>—</td><td>—</td><td>●</td><td>—</td><td>—</td></tr>
+</table>
+
+<p>这张表回答"复用程度"：<b>一体版和服务端容器共用同一份服务端代码，复用是 100%</b>，差别只有两处——入口工程不同（<code class="i">Bakabase.csproj</code> 引用 <code class="i">Bakabase.Service.csproj</code>），以及图形适配器一个是 Avalonia、一个是空实现。<b>薄客户端复用的是外壳和前端，不复用业务层</b>；它带着业务层的文件却不加载它们，因为发行版本来就不做裁剪。</p>
+
+<h3 id="s92">9.2 运行时依赖：谁连谁</h3>
+
+<figure>
+<svg viewBox="0 0 880 512" role="img" aria-label="运行时依赖图：薄客户端、手机 App 与浏览器都只依赖服务端的 HTTP 契约，对面既可以是一体版桌面内置的服务端，也可以是独立部署的服务端容器" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+  <defs>
+    <marker id="rd_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <g fill="none" stroke="currentColor" stroke-width="1.5">
+    <rect x="230" y="14" width="420" height="122" rx="8"/>
+    <rect x="252" y="62" width="160" height="54" rx="5" stroke-opacity="0.5"/>
+    <rect x="468" y="62" width="160" height="54" rx="5" stroke-opacity="0.5"/>
+    <line x1="412" y1="89" x2="462" y2="89" marker-end="url(#rd_ar)"/>
+
+    <rect x="326" y="258" width="228" height="72" rx="8"/>
+    <rect x="628" y="258" width="228" height="72" rx="8"/>
+    <rect x="230" y="436" width="420" height="62" rx="8"/>
+
+    <line x1="138" y1="258" x2="138" y2="200"/>
+    <line x1="440" y1="258" x2="440" y2="200"/>
+    <line x1="742" y1="258" x2="742" y2="200"/>
+    <line x1="138" y1="200" x2="742" y2="200"/>
+    <line x1="440" y1="200" x2="440" y2="142" marker-end="url(#rd_ar)"/>
+
+    <line x1="138" y1="330" x2="138" y2="386"/>
+    <line x1="440" y1="330" x2="440" y2="386"/>
+    <line x1="742" y1="330" x2="742" y2="386"/>
+    <line x1="138" y1="386" x2="742" y2="386"/>
+    <line x1="440" y1="386" x2="440" y2="430" marker-end="url(#rd_ar)"/>
+  </g>
+
+  <g fill="none" class="acc" stroke-width="1.8">
+    <rect x="24" y="258" width="228" height="72" rx="8"/>
+  </g>
+
+  <g fill="currentColor" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+    <text x="248" y="40" font-size="13" font-weight="600">一体版桌面安装包</text>
+    <text x="248" y="56" font-size="11" fill-opacity="0.7">win-x64 / osx-x64 / osx-arm64</text>
+    <text x="332" y="86" font-size="12.5" text-anchor="middle">内嵌浏览器</text>
+    <text x="332" y="104" font-size="11" text-anchor="middle" fill-opacity="0.7">网页前端</text>
+    <text x="548" y="86" font-size="12.5" text-anchor="middle">服务端</text>
+    <text x="548" y="104" font-size="11" text-anchor="middle" fill-opacity="0.7">Bakabase.Service</text>
+    <text x="437" y="81" font-size="10.5" text-anchor="middle" fill-opacity="0.75">回环</text>
+
+    <text x="440" y="288" font-size="13" font-weight="600" text-anchor="middle">手机 App</text>
+    <text x="440" y="306" font-size="11" text-anchor="middle" fill-opacity="0.7">Flutter，独立产物</text>
+    <text x="440" y="322" font-size="11" text-anchor="middle" fill-opacity="0.7">安卓安装包 / 苹果安装包</text>
+
+    <text x="742" y="288" font-size="13" font-weight="600" text-anchor="middle">浏览器</text>
+    <text x="742" y="306" font-size="11" text-anchor="middle" fill-opacity="0.7">直接开服务端网页界面</text>
+    <text x="742" y="322" font-size="11" text-anchor="middle" fill-opacity="0.7">以及油猴脚本</text>
+
+    <text x="440" y="462" font-size="13" font-weight="600" text-anchor="middle">服务端容器镜像</text>
+    <text x="440" y="482" font-size="11" text-anchor="middle" fill-opacity="0.7">linux-x64，入口就是 Bakabase.Service，无图形外壳</text>
+
+    <text x="452" y="196" font-size="11" fill-opacity="0.85">连一体版内置的那个服务端</text>
+    <text x="452" y="404" font-size="11" fill-opacity="0.85">或连独立部署的服务端</text>
+  </g>
+
+  <g class="accf" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+    <text x="138" y="286" font-size="13" font-weight="600" text-anchor="middle">薄客户端</text>
+    <text x="138" y="305" font-size="11" text-anchor="middle">不是新产物，是一体版</text>
+    <text x="138" y="321" font-size="11" text-anchor="middle">安装包的另一种启动模式</text>
+  </g>
+</svg>
+<figcaption>三类客户端都只依赖服务端的 HTTP 契约，对面是一体版内置的服务端还是独立部署的服务端，它们并不关心。</figcaption>
+</figure>
+
+<p>三类客户端（薄客户端、手机 App、浏览器）与两处服务端承载（一体版内置、独立容器）之间是<b>完全的多对多</b>，没有任何一条是特殊路径。这带来一个直接结论：<b>不需要为"在 Windows 上跑纯服务端"再造一个产物</b>——装一体版、让它开着，它内置的那个服务端就是合法的连接目标，这也正是"一机双跑"那条决策成立的原因。</p>
+
+<div class="rule"><b>为什么薄客户端不做成独立产物。</b>更新通道按 <code class="i">releases/{rid}/</code> 组织、包标识写死为 <code class="i">Bakabase</code>（<code class="i">AppUpdater.cs:59-60</code>、<code class="i">_deploy.yml:45</code>），拆一个产物就要多一套包标识、多一套更新通道、构建矩阵多三条腿，而"对一体版零影响"是本设计的第一约束。代价是薄客户端的安装包不会变小——发行版本来就是自包含且不裁剪的，业务层的文件照样躺在磁盘上。运行时代价接近零，因为程序集是按需加载的，客户端模式不会碰数据库。</div>
+
+<div class="rule ask"><b>一个需要你知道的取舍：网页前端由服务端下发。</b>按 <a href="#s56">§5.6</a> 的路由，除了本机执行的端点和上下文接口，其余请求都转发给服务端，<code class="i">/</code> 也在其中。好处是前端版本永远和服务端一致，版本不匹配只剩客户端本机端点这一小块。代价是冷启动要过网取一次页面：入口文件被设成每次都回源校验（<code class="i">AppStartup.cs:176-187</code>），带哈希的资源文件由内嵌浏览器缓存。局域网下这部分是几十毫秒量级，可以接受；如果以后要支持广域网，这里要重新算账。备选方案是前端改由本地 <code class="i">publish/web</code> 提供，代价是把前端也拖进版本不匹配的范围。</div>
+
+<h2 id="s10"><span class="n">§10</span>薄客户端的性能账</h2>
+
+<div class="rule ok"><b>前提：一体版今天就已经是客户端-服务端结构。</b>桌面外壳里的内嵌浏览器加载的是 <code class="i">http://localhost:{port}</code>（<code class="i">AppHost.cs:200-201,383</code>），前端与后端之间本来就走明文 HTTP，接口地址还是同源相对路径（<code class="i">env.ts:6</code> 里基地址为空）。所以薄客户端<b>不改变架构，只改变那一跳的距离</b>。</div>
+
+<figure>
+<svg viewBox="0 0 900 372" role="img" aria-label="请求路径对比：一体版是内嵌浏览器经回环到同进程服务端，薄客户端在同一位置换成本地转发层，再多一次局域网往返到远程服务端；命中用户侧端点的请求在本机执行，不出网" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+  <defs>
+    <marker id="p_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+    </marker>
+    <marker id="p_arA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="accf"/>
+    </marker>
+  </defs>
+
+  <g fill="none" stroke="currentColor" stroke-width="1.5">
+    <rect x="24" y="52" width="150" height="54" rx="6"/>
+    <rect x="254" y="52" width="180" height="54" rx="6"/>
+    <rect x="514" y="52" width="160" height="54" rx="6"/>
+    <line x1="174" y1="79" x2="248" y2="79" marker-end="url(#p_ar)"/>
+    <line x1="434" y1="79" x2="508" y2="79" marker-end="url(#p_ar)"/>
+
+    <rect x="24" y="196" width="150" height="54" rx="6"/>
+    <rect x="514" y="196" width="160" height="54" rx="6"/>
+    <rect x="716" y="196" width="166" height="54" rx="6"/>
+    <line x1="174" y1="223" x2="248" y2="223" marker-end="url(#p_ar)"/>
+    <line x1="674" y1="223" x2="710" y2="223" marker-end="url(#p_ar)"/>
+  </g>
+
+  <g fill="none" class="acc" stroke-width="1.8">
+    <rect x="254" y="196" width="180" height="54" rx="6"/>
+    <line x1="434" y1="223" x2="508" y2="223" marker-end="url(#p_arA)"/>
+    <path d="M344 250 L344 292" marker-end="url(#p_arA)"/>
+    <rect x="214" y="296" width="260" height="46" rx="6" stroke-dasharray="5 4"/>
+  </g>
+
+  <g fill="currentColor" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+    <text x="24" y="34" font-size="13" font-weight="600">一体版</text>
+    <text x="99" y="84" font-size="12.5" text-anchor="middle">内嵌浏览器</text>
+    <text x="344" y="77" font-size="12.5" text-anchor="middle">服务端 Kestrel</text>
+    <text x="344" y="95" font-size="11" text-anchor="middle" fill-opacity="0.7">同一进程</text>
+    <text x="594" y="84" font-size="12.5" text-anchor="middle">数据库与本地磁盘</text>
+    <text x="211" y="70" font-size="10.5" text-anchor="middle" fill-opacity="0.75">回环</text>
+    <text x="471" y="70" font-size="10.5" text-anchor="middle" fill-opacity="0.75">进程内</text>
+
+    <text x="24" y="178" font-size="13" font-weight="600">薄客户端</text>
+    <text x="99" y="228" font-size="12.5" text-anchor="middle">内嵌浏览器</text>
+    <text x="594" y="221" font-size="12.5" text-anchor="middle">服务端 Kestrel</text>
+    <text x="594" y="239" font-size="11" text-anchor="middle" fill-opacity="0.7">另一台机器</text>
+    <text x="799" y="228" font-size="12.5" text-anchor="middle">数据库与服务端磁盘</text>
+    <text x="211" y="214" font-size="10.5" text-anchor="middle" fill-opacity="0.75">回环</text>
+  </g>
+
+  <g class="accf" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+    <text x="344" y="221" font-size="12.5" text-anchor="middle" font-weight="600">本地转发层</text>
+    <text x="344" y="239" font-size="11" text-anchor="middle">同一进程，代签请求</text>
+    <text x="471" y="214" font-size="10.5" text-anchor="middle">局域网</text>
+    <text x="344" y="325" font-size="12" text-anchor="middle">命中用户侧端点：本机执行，不出网</text>
+  </g>
+</svg>
+<figcaption>薄客户端在一体版原有的回环之后插入一层同进程转发，再多一次真实网络往返；命中本机执行的端点则根本不出网。</figcaption>
+</figure>
+
+<h3 id="s101">10.1 逐项对账</h3>
+
+<table>
+<tr><th style="width:20%">场景</th><th style="width:20%">一体版</th><th style="width:22%">薄客户端</th><th>差值与是否可感知</th></tr>
+<tr><td>单次接口调用<br><span class="tag">列表 / 搜索 / 详情</span></td><td>回环往返，零点几毫秒</td><td>回环 + 同进程转发 + 一次真实网络往返</td><td>有线局域网约 0.5–2 毫秒，无线 2–10 毫秒且抖动大。<b>单次不可感知</b></td></tr>
+<tr><td><b>资源列表首屏</b><br><span class="tag">每页约 54 张封面</span></td><td>分摊到 3 个回环端口，约 18 路并发，全部落本地磁盘</td><td>只剩 1 个来源、6 路并发，且每张都过网</td><td><b>并发从约 18 掉到 6</b>。这是唯一一处结构性损耗，详见 <a href="#s102">10.2</a></td></tr>
+<tr><td>封面<b>重复</b>浏览</td><td>本地磁盘，近乎免费</td><td>命中内嵌浏览器缓存</td><td><code class="i">/tool/thumbnail</code> 带 30 分钟缓存头（<code class="i">ToolController.cs:121</code>），是整个后端<b>唯一</b>一个设了缓存头的端点。<b>不是问题</b></td></tr>
+<tr><td><b>封面首次加载的体积</b></td><td>本地磁盘读，多大都无所谓</td><td>全部过网</td><td>前端取封面不带宽高参数，服务端就原样返回原图（<code class="i">ResourceCover/index.tsx:129</code> 对 <code class="i">ToolController.cs:159-163</code>）。<b>可感知，且是纯浪费</b></td></tr>
+<tr><td><b>资源详情弹窗的文件网格</b></td><td>36 张原图，本地磁盘</td><td>36 张原图全部过网</td><td>走 <code class="i">/file/play</code>：没有缩略图、没有缓存头、没有懒加载（<code class="i">FileSystemEntries/index.tsx:20</code>）。<b>绝对字节数最大的一处</b></td></tr>
+<tr><td>悬停预览</td><td>悬停 1 秒后每秒一张原图</td><td>同样的节奏，每张过网</td><td>在网格里扫视很容易误触发，且不设上限（<code class="i">MediaPreviewer/index.tsx:247</code>）。<b>可感知</b></td></tr>
+<tr><td><b>文件浏览器展开目录</b></td><td>目录清单一次拿全，然后<b>每行再发一个</b>请求</td><td>请求数不变，每个都过网</td><td>500 项的目录就是 500 次往返（<code class="i">Entry.ts:229-232</code> 的 <code class="i">/file/iwfs-info</code>）。<b>可感知</b>，需要批量接口</td></tr>
+<tr><td>视频播放<br><span class="tag">未做路径映射时</span></td><td>播放器直接读本地文件</td><td>播放器 → 本机转发层 → 局域网 → 服务端磁盘</td><td>千兆有线基本不可感知，无线看码率。<b>阶段三的路径映射就是为绕开这条</b></td></tr>
+<tr><td><b>实时推送</b></td><td>回环长连接，不会断</td><td>局域网长连接，<b>会断</b></td><td>不是变慢，是多了一个真实状态。<b>交互上唯一真正的变化</b>，见 <a href="#s103">10.3</a></td></tr>
+<tr><td>启动到列表出现</td><td>6 跳串行依赖，回环上几毫秒</td><td>同样 6 跳，每跳一次真实往返</td><td>局域网几十毫秒，可接受；广域网就是 1 秒以上</td></tr>
+<tr><td>界面渲染、滚动、动画</td><td colspan="2">同一个内嵌浏览器，同一份前端</td><td><b>无差异</b></td></tr>
+<tr><td>搜索与筛选的计算</td><td colspan="2">本来就在服务端做</td><td><b>无差异</b></td></tr>
+<tr><td>启动到窗口出现</td><td>要建库、跑迁移、排后台任务</td><td>都不做</td><td><b>变快</b></td></tr>
+<tr><td>内存占用</td><td>完整后端常驻</td><td>数据库与业务模块不加载</td><td><b>变小</b></td></tr>
+</table>
+
+<h3 id="s102">10.2 一体版有两处专门为"服务端在本机"做的优化，薄客户端会失去</h3>
+
+<p>这是"除了服务端读写慢一点，还有没有别的损耗"的正面回答。有，而且第一条是结构性的。</p>
+
+<h4>其一：三端口分片</h4>
+
+<p>桌面版<b>故意</b>开三个监听端口（<code class="i">BakabaseHost.cs:38</code> 的 <code class="i">DefaultAutoListeningPortCount =&gt; 3</code>），封面从第二、第三个端口里随机挑一个去取（<code class="i">ResourceCover/index.tsx:105-114</code>）。目的是绕开浏览器"同一个来源最多 6 条并发连接"的限制，把一页几十张封面的并发从 6 提到约 18。仓库里没有任何 HTTP/2 或加密传输配置，所以这个连接数限制是实打实的。</p>
+
+<p>那段代码自己带着注释说明了为什么远程不行：服务端下发的地址被改写成 <code class="i">localhost</code>，在别的设备上会指回设备自己，所以远程客户端必须退回单一来源。今天的手机端和远程浏览器就是这样，并发掉到 6。</p>
+
+<div class="rule ok"><b>薄客户端可以把它拿回来，而且几乎免费。</b>转发层本来就跑在本机：让它监听三个回环端口、把这三个都报给前端即可，对上游服务端仍然只用一个连接池。前端那段判断需要区分"远程浏览器"和"薄客户端"——薄客户端不该走远程分支。<b>建议并入阶段二</b>，否则薄客户端的列表首屏会明显慢于一体版，而这正是用户第一眼会看到的画面。</div>
+
+<h4>其二：封面不带尺寸参数</h4>
+
+<p>前端取封面时不传宽高，服务端在没有宽高时就直接原样返回文件。自动生成的封面上限是 600×600，但手动设置或增强器抓来的封面是<b>原始分辨率</b>。在回环上这是零成本的偷懒；过网之后，它会成为首屏的主要字节开销。缩略图端点本来就支持宽高参数，前端传上就行。</p>
+
+<p class="note">这一项改完，一体版、手机端、远程浏览器同样受益，且不改变任何行为，属于可以在阶段零就做掉的清理。</p>
+
+<h3 id="s103">10.3 交互体验上的变化</h3>
+
+<ol>
+<li><b>断线是真的会发生，而现在界面对此毫无表示。</b>实时推送连接没有启用自动重连，关闭回调只写日志，靠一个 5 秒轮询的守护循环重连（<code class="i">UIHubConnection.ts:246-271</code>）。断开期间界面不给任何提示，各个数据仓库静默保留旧值。一体版的回环连接永远不断，所以这个缺陷今天暴露不出来；薄客户端会天天遇到。<b>这是用户唯一会"感觉不一样"的地方，也是必须补的。</b></li>
+<li><b>每次重连都会重放一次全量状态。</b>初始数据是逐条 await 发出的约 34 条消息，其中 24 条是按选项类型一条条发的（<code class="i">WebGuiHub.cs:108-146</code>）。回环上是几毫秒；局域网上是 34 次往返，而且每次重连都要重来。合并成一条消息是个独立的小改进，对一体版也只有好处。</li>
+<li><b>启动到资源列表出现是 6 跳串行依赖</b>：推送握手 → 已存搜索 → 搜索 → 取详情 → 发现订阅 → 封面。第 5 跳的门槛是"资源选项必须由推送送达"，也就是说列表在那 34 条消息发完之前根本不会开始加载（<code class="i">ResourceTabContent.tsx:155-168</code>）。局域网下是几十毫秒，可接受；记下来即可，不构成阻塞。</li>
+</ol>
+
+<h3 id="s104">10.4 结论与要做的事</h3>
+
+<div class="rule"><b>一句话回答：</b>除了每次请求多一跳网络，只有<b>一处结构性损耗</b>——三端口分片失效，封面并发从约 18 掉到 6，而它在薄客户端里可以还回来。其余可感知的地方，都是既有的浪费在过网之后被放大，修它们对所有形态都有好处。交互体验上真正会变的只有一件事：<b>断线</b>。</div>
+
+<table>
+<tr><th style="width:34%">要做的事</th><th style="width:14%">放在哪</th><th>为什么</th></tr>
+<tr><td>转发层监听三个回环端口并报给前端；前端区分远程浏览器与薄客户端</td><td><span class="tag t-add">阶段二</span></td><td>补回唯一一处结构性损耗，代价接近零</td></tr>
+<tr><td>把断线做成看得见的界面状态，接进前端第三态（<a href="#s57">§5.7</a>）</td><td><span class="tag t-add">阶段二</span></td><td>用户唯一会感觉到的差别；顺带修掉一体版也存在的静默陈旧</td></tr>
+<tr><td>封面请求带上宽高参数</td><td><span class="tag t-mod">阶段零</span></td><td>纯清理，不改行为，所有形态受益</td></tr>
+<tr><td>播放走路径映射</td><td><span class="tag t-add">阶段三</span></td><td>命中后码流完全不经转发层；未命中退回流地址，能播但吃带宽</td></tr>
+<tr><td>详情弹窗的 36 张图改用缩略图端点并加缓存头；文件浏览器逐行请求改批量接口；初始数据合并成一条消息</td><td><span class="tag t-none">独立立项</span></td><td>都是既有问题，不搭本设计，但会决定薄客户端"顺不顺手"</td></tr>
+</table>
+
+<div class="rule warn"><b>本设计只对局域网负责。</b>服务端<b>没有启用响应压缩</b>（<code class="i">AppStartup.cs</code> 里只有 <code class="i">UseResponseCaching</code>），传输也没有加密与 HTTP/2。局域网下这些都无所谓；广域网下每次往返 50 毫秒以上、JSON 还不压缩，上面这张表的结论要全部重算。广域网是另一个立项。</div>
 
 <footer>
 本计划由对 14 个子系统的逐行盘点汇总而来，每条结论附有文件与行号。分歧处的裁决与推荐是本文作者的判断，需要所有者在 §1 逐条确认后才进入实现。
