@@ -39,7 +39,7 @@
   "configuration.appInfo.runningVersionMismatch": "已安装版本为 {{installed}}",
   "configuration.appInfo.runningVersionMismatch.tip": "正在运行的程序是 {{running}}，但安装记录里的版本是 {{installed}}——把本地构建的产物放进安装目录运行时就会这样。更新检查始终以安装记录中的 {{installed}} 为准，与界面显示的版本无关。",
   "configuration.appInfo.failedToGetLatestVersion": "获取最新版本失败",
-  "configuration.appInfo.changelog": "更新日志",
+  "configuration.appInfo.viewAllChangelogs": "历史版本",
   "configuration.appInfo.clickToAutoUpdate": "点击自动更新",
   "configuration.appInfo.autoUpdateFails": "自动更新失败？点击下载完整安装包",
   "configuration.appInfo.restartToUpdate": "重启以更新",

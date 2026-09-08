@@ -1076,6 +1076,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/changelog/releases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetChangelogReleases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/changelog/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetChangelog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chat/conversations": {
         parameters: {
             query?: never;
@@ -10462,6 +10494,26 @@ export interface components {
             /** Format: int32 */
             resourceDiffCount: number;
         };
+        "Bakabase.Service.Models.View.ChangelogIndexViewModel": {
+            /** Format: date-time */
+            generatedAt?: string;
+            releases: components["schemas"]["Bakabase.Service.Models.View.ChangelogReleaseViewModel"][];
+            releasesUrl?: string;
+        };
+        "Bakabase.Service.Models.View.ChangelogReleaseViewModel": {
+            version: string;
+            tag?: string;
+            name?: string;
+            prerelease: boolean;
+            /** Format: date-time */
+            publishedAt?: string;
+            htmlUrl?: string;
+        };
+        "Bakabase.Service.Models.View.ChangelogViewModel": {
+            version: string;
+            markdown: string;
+            htmlUrl?: string;
+        };
         "Bakabase.Service.Models.View.ComparisonPlanViewModel": {
             /** Format: int32 */
             id: number;
@@ -11945,6 +11997,18 @@ export interface components {
             code: number;
             message?: string;
             data?: components["schemas"]["Bakabase.Service.Models.View.BulkModificationViewModel"];
+        };
+        "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.ChangelogIndexViewModel]": {
+            /** Format: int32 */
+            code: number;
+            message?: string;
+            data?: components["schemas"]["Bakabase.Service.Models.View.ChangelogIndexViewModel"];
+        };
+        "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.ChangelogViewModel]": {
+            /** Format: int32 */
+            code: number;
+            message?: string;
+            data?: components["schemas"]["Bakabase.Service.Models.View.ChangelogViewModel"];
         };
         "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.ComparisonPlanViewModel]": {
             /** Format: int32 */
@@ -14893,6 +14957,52 @@ export interface operations {
                     "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
                     "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
                     "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                };
+            };
+        };
+    };
+    GetChangelogReleases: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.ChangelogIndexViewModel]"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.ChangelogIndexViewModel]"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.ChangelogIndexViewModel]"];
+                };
+            };
+        };
+    };
+    GetChangelog: {
+        parameters: {
+            query?: {
+                version?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.ChangelogViewModel]"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.ChangelogViewModel]"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.ChangelogViewModel]"];
                 };
             };
         };

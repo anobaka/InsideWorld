@@ -49,6 +49,7 @@ import TextPage from "@/pages/text";
 import Configuration from "@/pages/configuration";
 import ThirdPartyConfiguration from "@/pages/third-party-configuration";
 import BackgroundTaskPage from "@/pages/background-task";
+import ChangelogPage from "@/pages/changelog";
 import Log from "@/pages/log";
 import FileProcessorPage from "@/pages/file-processor";
 import DownloaderPage from "@/pages/downloader";
@@ -453,6 +454,14 @@ export const routesMenuConfig: RouteMenuItem[] = [
         path: "/log",
         component: Log,
         icon: AiOutlineFileText,
+        layout: "basic",
+        menu: true,
+      },
+      {
+        name: "menu.changelog",
+        path: "/changelog",
+        component: ChangelogPage,
+        icon: AiOutlineHistory,
         layout: "basic",
         menu: true,
       },
