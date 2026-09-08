@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,10 +42,29 @@ public class CoverDiscoverer(ILoggerFactory loggerFactory, FfMpegService ffMpegS
             FileInfo[] files;
             using (MiniProfiler.Current.Step("EnumerateFiles"))
             {
+                ct.ThrowIfCancellationRequested();
+
                 var attr = File.GetAttributes(path);
-                files = attr.HasFlag(FileAttributes.Directory)
-                    ? new DirectoryInfo(path).GetFiles("*.*", SearchOption.AllDirectories)
-                    : new[] { new FileInfo(path) };
+                if (attr.HasFlag(FileAttributes.Directory))
+                {
+                    // Enumerate lazily and check per entry rather than calling GetFiles: a
+                    // recursive walk of a large resource folder is the longest uninterruptible
+                    // stretch on this path, and a stop request — the app exiting included — used
+                    // to have to wait the whole of it out before anything could observe it.
+                    var found = new List<FileInfo>();
+                    foreach (var file in new DirectoryInfo(path)
+                                 .EnumerateFiles("*.*", SearchOption.AllDirectories))
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        found.Add(file);
+                    }
+
+                    files = found.ToArray();
+                }
+                else
+                {
+                    files = [new FileInfo(path)];
+                }
             }
 
             using (MiniProfiler.Current.Step($"SortFiles ({files.Length} files)"))

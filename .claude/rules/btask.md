@@ -412,6 +412,25 @@ Tasks are pushed to the frontend via SignalR:
 
 Updates are batched every 500ms to reduce UI thrashing.
 
+## App Shutdown
+
+Two steps, and the order matters:
+
+| Step | Who calls it | What it does |
+|------|--------------|--------------|
+| `PrepareForShutdown()` | `ExitCoordinator`, as soon as the user commits to quitting | Stops the daemon promoting new tasks, then asks every **non-Critical** active task to stop |
+| `DisposeAsync()` | Container teardown, i.e. after the web host has stopped | Cancels the daemon, runs `PrepareForShutdown()` again (idempotent), then waits for **Critical** tasks |
+
+`PrepareForShutdown` exists because disposal happens far too late to be the
+first time anything asks a task to stop: the host stop in between can take
+many seconds, during which the exit window would show tasks still working and
+still ticking up. Critical tasks are deliberately left alone — the exit flow
+waits for those, and offers the user "Quit now" if the wait drags on.
+
+A task only stops as fast as its body cooperates, so this is only half the
+story — see the yield-point rules above, and keep long synchronous stretches
+(recursive directory walks especially) cancellable.
+
 ## Known Limitations
 
 1. **No priority queue** - All eligible tasks compete equally

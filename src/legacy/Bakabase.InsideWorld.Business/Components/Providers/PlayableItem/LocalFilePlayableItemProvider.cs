@@ -123,7 +123,17 @@ public class LocalFilePlayableItemProvider : IPlayableItemProvider
                 {
                     try
                     {
-                        files = Directory.EnumerateFiles(resource.Path, "*", SearchOption.AllDirectories).ToList();
+                        // Checked per file, not once around the walk: a recursive enumeration of
+                        // a large resource folder is the longest uninterruptible stretch in the
+                        // "prepare resource data" task, and until this existed a stop request
+                        // (app exit included) had to wait the whole scan out.
+                        files = [];
+                        foreach (var file in Directory.EnumerateFiles(resource.Path, "*",
+                                     SearchOption.AllDirectories))
+                        {
+                            ct.ThrowIfCancellationRequested();
+                            files.Add(file);
+                        }
                     }
                     catch (DirectoryNotFoundException)
                     {
@@ -149,6 +159,13 @@ public class LocalFilePlayableItemProvider : IPlayableItemProvider
 
                 playableFiles = result.Select(f => f.StandardizePath()!).ToArray();
             }
+        }
+        // An interrupted scan discovered nothing; it did not find nothing. Falling through to the
+        // cache write below would persist "this resource has no playable files" — a valid cached
+        // result that stops it ever being scanned again.
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception e)
         {

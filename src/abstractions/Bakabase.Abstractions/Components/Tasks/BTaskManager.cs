@@ -270,12 +270,24 @@ public class BTaskManager : IAsyncDisposable
         return (blockers.ToArray(), shouldFail);
     }
 
+    /// <summary>
+    /// Set once the app has committed to quitting. Keeps the daemon from promoting a task while
+    /// everything else is being wound down — a recurring task started at that moment would come
+    /// up against a container that is about to be disposed.
+    /// </summary>
+    private volatile bool _shuttingDown;
+
     private Task Daemon()
     {
         _daemonTask = Task.Run(async () =>
         {
             while (!_daemonCts.IsCancellationRequested)
             {
+                if (_shuttingDown)
+                {
+                    break;
+                }
+
                 try
                 {
                     var now = DateTime.Now;
@@ -404,6 +416,41 @@ public class BTaskManager : IAsyncDisposable
     public BTaskViewModel? GetTaskViewModel(string id) =>
         _taskMap.TryGetValue(id, out var bt) ? BuildTaskViewModel(bt) : null;
 
+    /// <summary>
+    /// Asks every non-Critical task to stop, and stops the daemon from starting new ones.
+    ///
+    /// Split out of <see cref="DisposeAsync"/> so a shutdown can ask the moment the user commits
+    /// to quitting. Disposal only runs once the host has stopped, which can take many seconds —
+    /// and until this call existed nothing had asked the running tasks to wind down, so they kept
+    /// working (and kept ticking up in the exit window) for that whole wait.
+    ///
+    /// Idempotent, and safe to call before <see cref="DisposeAsync"/>: stopping an
+    /// already-cancelled task is a no-op.
+    /// </summary>
+    public async Task PrepareForShutdown()
+    {
+        _shuttingDown = true;
+
+        var nonCriticalTasks = _taskMap.Values
+            .Where(t => t.Task.Level != BTaskLevel.Critical && t.Task.Status.IsActive())
+            .ToList();
+
+        foreach (var task in nonCriticalTasks)
+        {
+            _logger.LogInformation($"Stopping non-critical task: {task.Id}");
+            try
+            {
+                await task.Stop();
+            }
+            catch (Exception e)
+            {
+                // One uncooperative task must not stop us asking the rest; disposal cancels it
+                // regardless.
+                _logger.LogWarning(e, $"Failed to stop task [{task.Id}] while shutting down");
+            }
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         _optionsChangeHandler.Dispose();
@@ -423,16 +470,8 @@ public class BTaskManager : IAsyncDisposable
         }
         _daemonCts.Dispose();
 
-        // 2. Stop non-Critical tasks
-        var nonCriticalTasks = _taskMap.Values
-            .Where(t => t.Task.Level != BTaskLevel.Critical && t.Task.Status.IsActive())
-            .ToList();
-
-        foreach (var task in nonCriticalTasks)
-        {
-            _logger.LogInformation($"Stopping non-critical task: {task.Id}");
-            await task.Stop();
-        }
+        // 2. Stop non-Critical tasks (usually already asked, see PrepareForShutdown)
+        await PrepareForShutdown();
 
         // 3. Wait for Critical tasks to complete
         var criticalTasks = _taskMap.Values

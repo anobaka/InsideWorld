@@ -96,6 +96,13 @@ public class LocalFileCoverProvider : ICoverProvider
                 coverPath = await image.SaveAsThumbnail(pathWithoutExt, ct);
             }
         }
+        // An interrupted discovery found nothing yet; it did not establish that there is nothing.
+        // Falling through would mark the cache ready with no cover, so the resource would never be
+        // looked at again.
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (Exception e)
         {
             _logger.LogWarning(e, "Failed to discover/save cover for resource {ResourceId}", resource.Id);
