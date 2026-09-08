@@ -56,29 +56,35 @@ export const AppUpdateBannerView: React.FC<ViewProps> = ({
   const wrapperClass = `flex flex-col gap-1.5 ${collapsed ? "px-2 py-1.5 items-center" : "px-3 py-1.5"}`;
   const labelClass = "text-xs text-foreground-500 truncate whitespace-nowrap";
 
-  // Nobody should be asked to install a version they cannot read about first,
-  // so the primary action stops spanning the whole sidebar and shares the row
-  // with a way into the release notes. Collapsed, the pair stacks instead.
+  // One shape for every state: the primary action fills the row beside a single
+  // trailing icon button. Collapsed, the pair stacks instead.
+  const actionRow = (primary: React.ReactNode, trailing: React.ReactNode) => (
+    <div className={`flex gap-1 ${collapsed ? "flex-col items-center" : "items-center"}`}>
+      <div className={collapsed ? "" : "flex-1 min-w-0"}>{primary}</div>
+      {trailing}
+    </div>
+  );
+
+  // Nobody should be asked to install a version they cannot read about first, so
+  // the primary action gives up the far edge of the rail to the release notes.
   const withChangelog = (primary: React.ReactNode) => {
     if (!onShowChangelog) return primary;
 
     const changelogLabel = t<string>("changelog.view");
 
-    return (
-      <div className={`flex gap-1 ${collapsed ? "flex-col items-center" : "items-center"}`}>
-        <div className={collapsed ? "" : "flex-1 min-w-0"}>{primary}</div>
-        <Tooltip content={changelogLabel} placement="right">
-          <Button
-            isIconOnly
-            aria-label={changelogLabel}
-            size="sm"
-            variant="light"
-            onPress={onShowChangelog}
-          >
-            <FileTextOutlined />
-          </Button>
-        </Tooltip>
-      </div>
+    return actionRow(
+      primary,
+      <Tooltip content={changelogLabel} placement="right">
+        <Button
+          isIconOnly
+          aria-label={changelogLabel}
+          size="sm"
+          variant="light"
+          onPress={onShowChangelog}
+        >
+          <FileTextOutlined />
+        </Button>
+      </Tooltip>,
     );
   };
 
@@ -139,11 +145,16 @@ export const AppUpdateBannerView: React.FC<ViewProps> = ({
 
     return (
       <div className={wrapperClass}>
-        <div className={`flex items-center gap-1 ${collapsed ? "flex-col" : "justify-between"}`}>
+        {/* The trailing slot is the dismiss button here rather than the changelog
+            one: retry and dismiss already fill the row, and a third button would
+            squeeze the label out. The row used to be `justify-between`, which
+            left retry at its content width while the other states spanned the rail. */}
+        {actionRow(
           <Tooltip className="max-w-[320px]" content={tooltipContent} placement="right">
             <Button
               aria-label={t<string>("appUpdate.clickToRetry")}
               color="danger"
+              fullWidth={!collapsed}
               isIconOnly={collapsed}
               size="sm"
               variant="flat"
@@ -154,7 +165,7 @@ export const AppUpdateBannerView: React.FC<ViewProps> = ({
                 <span className={labelClass}>{t<string>("appUpdate.clickToRetry")}</span>
               )}
             </Button>
-          </Tooltip>
+          </Tooltip>,
           <Tooltip content={t<string>("appUpdate.dismiss")} placement="right">
             <Button
               isIconOnly
@@ -165,8 +176,8 @@ export const AppUpdateBannerView: React.FC<ViewProps> = ({
             >
               <CloseOutlined />
             </Button>
-          </Tooltip>
-        </div>
+          </Tooltip>,
+        )}
         {/* Expanded sidebar previously showed nothing at all — the cause was only
             reachable by hovering while collapsed. */}
         {!collapsed && explanation && (
