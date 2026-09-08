@@ -412,6 +412,38 @@ Tasks are pushed to the frontend via SignalR:
 
 Updates are batched every 500ms to reduce UI thrashing.
 
+## App Shutdown
+
+`ExitCoordinator` (desktop app) drives it, in this order — the order is the point:
+
+1. **`BTaskManager.PrepareForShutdown()`** — the moment the user commits to
+   quitting. Stops the daemon promoting new tasks, then asks every
+   **non-Critical** active task to stop. Critical tasks are deliberately not
+   asked: interrupting them is what loses data.
+2. **Wait for everything to go quiet** — cancelled tasks get a bounded grace
+   (`CancelledTaskDrainTimeout`, 10s) to reach their next checkpoint and release
+   their DB and file handles; Critical tasks are waited for without a bound,
+   with "Quit now" offered to the user after 6s.
+3. **`host.StopAsync()` + container disposal** — only now, because this is what
+   tears down the services a task body is still holding between checkpoints.
+   `DisposeAsync` re-runs `PrepareForShutdown()` (idempotent) and waits for
+   Critical tasks again, so a headless host still winds down correctly on its own.
+
+Both waits are bounded from the app's side, but a task only stops as fast as
+its body cooperates — see the yield-point rules above, and keep long
+synchronous stretches (recursive directory walks especially) cancellable, or
+step 2 just burns its grace period and gives up.
+
+### Levels in practice
+
+`BTaskLevel.Critical` currently has **no members** — every task in the app is
+`Default`, i.e. stoppable. That is a deliberate reading of each task, not an
+oversight: the index/cache tasks rebuild from scratch next launch, the sync and
+download tasks resume, `ResourceMove` marks itself interrupted on startup, and
+`MoveFiles` checks cancellation between independent file sets. Before marking
+anything Critical, be sure interruption genuinely loses data — the level makes
+exit wait on it indefinitely.
+
 ## Known Limitations
 
 1. **No priority queue** - All eligible tasks compete equally

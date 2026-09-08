@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using Bakabase.Abstractions.Components.Tasks;
 using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Abstractions.Models.View;
@@ -45,6 +46,10 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
     /// <summary>
     /// How long a shutdown may look instantaneous before we put a window on screen. Below
     /// this a progress window would be a flash of chrome; above it, silence reads as a hang.
+    ///
+    /// Only applies when there is nothing to report. If work is still in flight the window goes up
+    /// immediately: that is precisely the case where the user has just been told tasks are running
+    /// and would otherwise be left staring at an empty desktop wondering whether anything happened.
     /// </summary>
     private static readonly TimeSpan ProgressWindowDelay = TimeSpan.FromMilliseconds(400);
 
@@ -61,6 +66,18 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
     /// broken-display session could never quit.
     /// </summary>
     private static readonly TimeSpan NoUiCriticalTaskTimeout = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// How long a task that has been *asked* to stop gets to actually stop before the shutdown
+    /// moves on without it.
+    ///
+    /// Unlike the critical wait this is bounded: the task has already been told to go, so what is
+    /// left is only letting it reach its next checkpoint and release the DB and file handles it
+    /// holds before the container that owns them is disposed. A body that ignores cancellation
+    /// must not be able to make the app unquittable. Matches
+    /// <c>BTaskHandler.StopGraceTimeout</c>, which is where such a body already gets logged.
+    /// </summary>
+    private static readonly TimeSpan CancelledTaskDrainTimeout = TimeSpan.FromSeconds(10);
 
     /// <summary>
     /// Ceiling on stopping the web host itself. Unlike background tasks this should always be
@@ -250,6 +267,29 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
             active.Count(t => t.Level == BTaskLevel.Critical));
     }
 
+    /// <summary>
+    /// Everything running right now — or nothing, if the task manager cannot be reached. Used
+    /// before the wind-down starts, to decide whether the progress window is worth showing at all.
+    /// </summary>
+    private ActiveTasks TryCollectActiveTasks()
+    {
+        var taskManager = TryGetService<BTaskManager>();
+        if (taskManager == null)
+        {
+            return default;
+        }
+
+        try
+        {
+            return CollectActiveTasks(taskManager);
+        }
+        catch (Exception e)
+        {
+            Serilog.Log.Warning(e, "Failed to enumerate running tasks while exiting");
+            return default;
+        }
+    }
+
     /// <param name="Lines">The ones worth naming on screen.</param>
     /// <param name="Total">How many are running in total, which is what the count must report.</param>
     /// <param name="Critical">How many of those the shutdown is actually waiting for.</param>
@@ -299,44 +339,49 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
 
     private async Task RunWindDownAsync()
     {
+        using var forceQuit = new CancellationTokenSource();
+        var progress = new ExitProgress(() =>
+        {
+            // ReSharper disable once AccessToDisposedClosure
+            try { forceQuit.Cancel(); } catch (ObjectDisposedException) { /* already gone */ }
+        });
+
+        // Whether anything is running decides how the window should be timed, and the answer is
+        // already available here — waiting ProgressWindowDelay to find out only delays the one
+        // case that needs the window.
+        progress.SetTasks(TryCollectActiveTasks());
+
+        if (progress.HasWorkToReport)
+        {
+            progress.TryShow();
+        }
+
+        // After the window, not before. Both of these are shell calls that can block the UI
+        // thread — deregistering the tray icon talks to Explorer — and anything that happens
+        // first is time the user spends looking at a desktop with nothing on it.
         app.SetTrayIconVisible(false);
         gui.Hide();
 
-        using var forceQuit = new CancellationTokenSource();
-        ExitProgressWindow? progress = null;
-
-        // The window only appears once the shutdown has proven slow, by which time the phase has
-        // usually already moved on. Remembering the latest report lets the window open showing where
-        // the shutdown actually is, rather than the heading it was built with.
-        var latestPhase = ExitStrings.ClosingStoppingTasks;
-        var latestTasks = default(ActiveTasks);
-
         try
         {
-            var windDown = WindDownAsync(
-                phase =>
-                {
-                    latestPhase = phase;
-                    progress?.SetPhase(phase);
-                },
-                tasks =>
-                {
-                    latestTasks = tasks;
-                    progress?.SetRemainingTasks(tasks.Lines, tasks.Total);
-                },
-                () =>
-                {
-                    progress?.ShowForceQuit();
-                    return progress != null;
-                },
-                forceQuit.Token);
+            // On the thread pool, deliberately. An async method runs inline on its caller until
+            // its first pending await, and IHost.StopAsync opens by firing ApplicationStopping —
+            // whose callbacks run synchronously on that thread, SignalR's connection manager
+            // (tearing down the WebView's hub socket) among them. Run inline on the UI thread,
+            // that froze the dispatcher for seconds at a time, so the progress window could not be
+            // put on screen until the work it exists to narrate was already over. Everything below
+            // reports through ExitProgress, which marshals to the UI thread itself.
+            var windDown = Task.Run(() => WindDownAsync(
+                progress.SetPhase,
+                progress.SetTasks,
+                progress.OfferForceQuit,
+                forceQuit.Token));
 
-            // Only put a window on screen if the shutdown is slow enough to need one.
-            if (await Task.WhenAny(windDown, Task.Delay(ProgressWindowDelay)) != windDown)
+            // Nothing to report, so only put a window on screen if the shutdown proves slow.
+            if (!progress.ShowAttempted &&
+                await Task.WhenAny(windDown, Task.Delay(ProgressWindowDelay)) != windDown)
             {
-                progress = TryShowProgressWindow(forceQuit);
-                progress?.SetPhase(latestPhase);
-                progress?.SetRemainingTasks(latestTasks.Lines ?? [], latestTasks.Total);
+                progress.TryShow();
             }
 
             await windDown;
@@ -347,42 +392,172 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
         }
         finally
         {
-            if (progress != null)
-            {
-                try
-                {
-                    progress.AllowClose();
-                    progress.Close();
-                }
-                catch (Exception e)
-                {
-                    Serilog.Log.Warning(e, "Failed to close the shutdown progress window");
-                }
-            }
+            progress.Close();
         }
     }
 
     /// <summary>
-    /// A display that has gone away (headless session, X11 dropped, compositor restart) must
-    /// not abort the wind-down — the user just does not get to watch it or force it along.
+    /// Owns the shutdown progress window and the last thing the wind-down had to say.
+    ///
+    /// The two live on different threads — the wind-down reports from the thread pool, the window
+    /// may only be created and closed on the UI thread, and either can come first — so what has
+    /// been reported is kept here and replayed into the window if and when one appears.
     /// </summary>
-    private static ExitProgressWindow? TryShowProgressWindow(CancellationTokenSource forceQuit)
+    private sealed class ExitProgress(Action onForceQuitRequested)
     {
-        try
+        private readonly object _lock = new();
+        private ExitProgressWindow? _window;
+        private bool _showAttempted;
+        private string _phase = ExitStrings.ClosingStoppingTasks;
+        private ActiveTasks _tasks;
+        private bool _forceQuitOffered;
+
+        /// <summary>Whether a window has been asked for — successfully or not.</summary>
+        public bool ShowAttempted
         {
-            var window = new ExitProgressWindow();
-            window.ForceQuitRequested += () =>
+            get
             {
-                // ReSharper disable once AccessToDisposedClosure
-                try { forceQuit.Cancel(); } catch (ObjectDisposedException) { /* already gone */ }
-            };
-            window.Show();
-            return window;
+                lock (_lock)
+                {
+                    return _showAttempted;
+                }
+            }
         }
-        catch (Exception e)
+
+        public bool HasWorkToReport
         {
-            Serilog.Log.Warning(e, "Could not show the shutdown progress window");
-            return null;
+            get
+            {
+                lock (_lock)
+                {
+                    return _tasks.Total > 0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates the window and replays whatever has been reported so far. Must be called on the
+        /// UI thread, and only ever tries once: a display that has gone away (headless session,
+        /// X11 dropped, compositor restart) must not abort the wind-down — the user just does not
+        /// get to watch it or force it along.
+        /// </summary>
+        public void TryShow()
+        {
+            lock (_lock)
+            {
+                if (_showAttempted)
+                {
+                    return;
+                }
+
+                _showAttempted = true;
+            }
+
+            ExitProgressWindow window;
+
+            try
+            {
+                window = new ExitProgressWindow();
+                window.ForceQuitRequested += onForceQuitRequested;
+                window.Show();
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Warning(e, "Could not show the shutdown progress window");
+                return;
+            }
+
+            // Adopt and replay under the same lock: a report landing from the wind-down in between
+            // would reach the window first and then be overwritten by this (older) replay.
+            lock (_lock)
+            {
+                _window = window;
+
+                window.SetPhase(_phase);
+                window.SetRemainingTasks(_tasks.Lines ?? [], _tasks.Total);
+
+                if (_forceQuitOffered)
+                {
+                    window.ShowForceQuit();
+                }
+            }
+        }
+
+        // Recording and forwarding stay under the lock throughout, so what the window is told can
+        // never get out of order with what is remembered for a later replay. The window's own
+        // setters only marshal to the UI thread, so nothing here waits on it.
+
+        public void SetPhase(string phase)
+        {
+            lock (_lock)
+            {
+                _phase = phase;
+                _window?.SetPhase(phase);
+            }
+        }
+
+        public void SetTasks(ActiveTasks tasks)
+        {
+            lock (_lock)
+            {
+                _tasks = tasks;
+                _window?.SetRemainingTasks(tasks.Lines ?? [], tasks.Total);
+            }
+        }
+
+        /// <returns>Whether there is a window to offer it on.</returns>
+        public bool OfferForceQuit()
+        {
+            lock (_lock)
+            {
+                _forceQuitOffered = true;
+                _window?.ShowForceQuit();
+                return _window != null;
+            }
+        }
+
+        /// <summary>Takes the window down. A no-op when none was ever shown.</summary>
+        public void Close()
+        {
+            ExitProgressWindow? window;
+
+            lock (_lock)
+            {
+                window = _window;
+                _window = null;
+            }
+
+            if (window == null)
+            {
+                return;
+            }
+
+            void CloseIt()
+            {
+                window.AllowClose();
+                window.Close();
+            }
+
+            try
+            {
+                // Synchronously, not posted: the caller ends the Avalonia lifetime straight after
+                // this, and a window that has not been told closing is allowed cancels its own
+                // Closing event — which would cancel the app's shutdown along with it. Bounded,
+                // because a dispatcher that has already gone must not make the app unquittable.
+                if (Dispatcher.UIThread.CheckAccess())
+                {
+                    CloseIt();
+                }
+                else
+                {
+                    Dispatcher.UIThread.Invoke(CloseIt, DispatcherPriority.Send,
+                        CancellationToken.None, TimeSpan.FromSeconds(2));
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Warning(e, "Failed to close the shutdown progress window");
+            }
         }
     }
 
@@ -410,7 +585,26 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
         if (taskManager != null)
         {
             setPhase(ExitStrings.ClosingStoppingTasks);
-            await WaitForCriticalTasksAsync(taskManager, setTasks, offerForceQuit, ct);
+
+            // Ask first, wait second. Non-critical tasks used to be cancelled only by
+            // BTaskManager.DisposeAsync — which runs *after* the host has stopped, so for the
+            // whole of that wait (up to HostStopTimeout) nothing had told them to stop and the
+            // window showed them still working: "Preparing resource data (17%)" ticking over to
+            // 18% ten seconds later, as if the shutdown were waiting for the task to finish.
+            try
+            {
+                await taskManager.PrepareForShutdown();
+            }
+            catch (Exception e)
+            {
+                // Best-effort: whatever refuses to be asked is still cancelled by disposal.
+                Serilog.Log.Warning(e, "Failed to ask background tasks to stop while exiting");
+            }
+
+            // Then let them finish stopping before anything they depend on is taken away. Stopping
+            // the host is what disposes the DB contexts, HTTP clients and file handles a task body
+            // is still holding between its last checkpoint and its next one.
+            await WaitForTasksToWindDownAsync(taskManager, setTasks, offerForceQuit, ct);
         }
 
         ct.ThrowIfCancellationRequested();
@@ -425,9 +619,10 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
         using var stopCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         stopCts.CancelAfter(HostStopTimeout);
 
-        // This is where the non-critical tasks are actually stopped, and it can take the whole
-        // fifteen seconds. Keep naming what is still running instead of clearing the list and
-        // leaving the user with a bare spinner for the longest part of the shutdown.
+        // Background work has normally gone quiet by now, but this can still take the whole fifteen
+        // seconds, and anything that outstayed its grace above is still listed. Keep naming what is
+        // running rather than clearing the list and leaving a bare spinner over the longest part of
+        // the shutdown.
         using var reporting = StartReportingActiveTasks(taskManager, setTasks);
 
         try
@@ -544,7 +739,23 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
         await dispose;
     }
 
-    private static async Task WaitForCriticalTasksAsync(
+    /// <summary>
+    /// Waits for background work to actually go quiet, having just asked all of it to stop.
+    ///
+    /// Two waits in one loop, because the two kinds of task mean different things here:
+    /// <list type="bullet">
+    /// <item>Tasks that were cancelled were told to stop, so all that is left is letting them
+    /// reach their next checkpoint and release their DB and file handles before the container
+    /// holding those is disposed. Bounded by <see cref="CancelledTaskDrainTimeout"/>.</item>
+    /// <item>Critical tasks were deliberately <em>not</em> asked to stop — interrupting them is
+    /// what loses data — so that wait stays unbounded and the user gets "Quit now" rather than a
+    /// timer deciding for them.</item>
+    /// </list>
+    ///
+    /// Waiting here rather than letting the cancelled tasks unwind alongside the host stop is the
+    /// point: the host stop is what tears down the services they are still using.
+    /// </summary>
+    private static async Task WaitForTasksToWindDownAsync(
         BTaskManager taskManager,
         Action<ActiveTasks> setTasks,
         Func<bool> offerForceQuit,
@@ -558,8 +769,6 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
             ActiveTasks active;
             try
             {
-                // Report everything that is running, but keep waiting only for the critical ones —
-                // those are the ones whose interruption loses data.
                 active = CollectActiveTasks(taskManager);
             }
             catch (Exception e)
@@ -570,10 +779,18 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
 
             setTasks(active);
 
-            var remaining = active.Critical;
-
-            if (remaining == 0)
+            if (active.Total == 0)
             {
+                return;
+            }
+
+            // Nothing left but tasks that have had their grace and not taken it. Whatever they are
+            // doing between checkpoints, it is not worth holding the exit open for.
+            if (active.Critical == 0 && waited >= CancelledTaskDrainTimeout)
+            {
+                Serilog.Log.Warning(
+                    "Proceeding with shutdown after {Timeout} with {Count} task(s) still winding down",
+                    CancelledTaskDrainTimeout, active.Total);
                 return;
             }
 
@@ -581,14 +798,14 @@ public sealed class ExitCoordinator(App app, AvaloniaGuiAdapter gui)
             {
                 forceQuitOffered = offerForceQuit();
 
-                if (!forceQuitOffered && waited >= NoUiCriticalTaskTimeout)
+                if (!forceQuitOffered && active.Critical > 0 && waited >= NoUiCriticalTaskTimeout)
                 {
                     // No window came up, so there is nobody to ask and no button to press.
                     // Waiting on unbounded critical work would leave a process that cannot be
                     // quit; a bounded grace period is the lesser evil.
                     Serilog.Log.Warning(
                         "Proceeding with shutdown after {Timeout} with {Count} critical task(s) still active and no UI to ask",
-                        NoUiCriticalTaskTimeout, remaining);
+                        NoUiCriticalTaskTimeout, active.Critical);
                     return;
                 }
             }

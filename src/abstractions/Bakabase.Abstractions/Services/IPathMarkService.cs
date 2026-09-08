@@ -111,7 +111,13 @@ public interface IPathMarkService
     /// <summary>
     /// Preview matched paths for a path mark (without saving) with detailed information (resource layer, property values)
     /// </summary>
-    Task<List<PathMarkPreviewResult>> PreviewMatchedPaths(PathMarkPreviewRequest request);
+    /// <param name="ct">
+    /// Honoured down to the individual filesystem entry: previewing a mark rooted at a large
+    /// library is a full recursive walk, and without this it runs to completion even after the
+    /// caller has gone away.
+    /// </param>
+    Task<List<PathMarkPreviewResult>> PreviewMatchedPaths(PathMarkPreviewRequest request,
+        CancellationToken ct = default);
 
     /// <summary>
     /// Migrate all marks from old path to new path.

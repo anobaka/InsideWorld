@@ -81,6 +81,14 @@ public class ResourceDataTask : AbstractPredefinedBTaskBuilder
                     await coverProviderService.ResolveCoversAsync(resource, ct);
                 }
             }
+            // A cancelled phase is not a failed one. Swallowing it here turned a stop request
+            // into a warning and carried straight on to the next phase — and then to the next
+            // resource's phases — so the task only really stopped at the following yield point,
+            // several seconds of directory scanning and HTTP later.
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 logger.LogWarning(ex, "Failed to resolve covers for resource {ResourceId}", resource.Id);
@@ -102,6 +110,10 @@ public class ResourceDataTask : AbstractPredefinedBTaskBuilder
                     await playableItemProviderService.GetPlayableItemsAsync(resource, ct);
                 }
             }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 logger.LogWarning(ex, "Failed to resolve playable items for resource {ResourceId}", resource.Id);
@@ -112,6 +124,11 @@ public class ResourceDataTask : AbstractPredefinedBTaskBuilder
             {
                 foreach (var link in resource.SourceLinks.Where(l => l.MetadataFetchedAt == null))
                 {
+                    // Each link is a network round trip, so a resource with several of them is
+                    // the longest stretch in the loop — check in between rather than only once
+                    // per resource.
+                    await args.YieldAsync();
+
                     var origin = link.Source switch
                     {
                         ResourceSource.Steam => DataOrigin.Steam,
@@ -172,6 +189,10 @@ public class ResourceDataTask : AbstractPredefinedBTaskBuilder
                             link.MetadataFetchedAt = DateTime.Now;
                             await sourceLinkService.Update(link);
                         }
+                    }
+                    catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                    {
+                        throw;
                     }
                     catch (Exception ex)
                     {
