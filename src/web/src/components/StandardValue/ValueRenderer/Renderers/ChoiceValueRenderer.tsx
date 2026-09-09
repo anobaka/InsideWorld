@@ -2,7 +2,6 @@
 "use strict";
 
 import type { ResourceCountsSource } from "@/hooks/useResourceCountsSource";
-
 import type { ValueRendererProps } from "../models";
 
 import { useEffect, useState, useMemo, useRef } from "react";
@@ -14,6 +13,10 @@ import { buildVisibleOptions, hasMoreOptions, getRemainingCount } from "../utils
 import NotSet, { LightText } from "./components/LightText";
 import NoChoicesAvailable from "./components/NoChoicesAvailable";
 
+import {
+  useDisabledChoiceKeys,
+  type DisabledChoiceKeysSource,
+} from "@/hooks/useDisabledChoiceKeys";
 import SelectableChip from "@/components/StandardValue/ValueRenderer/Renderers/components/SelectableChip";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
 import { Button } from "@/components/bakaui";
@@ -36,6 +39,8 @@ type ChoiceValueRendererProps = ValueRendererProps<string[], string[]> & {
   size?: "sm" | "md" | "lg";
   resourceCounts?: Record<string, number>;
   resourceCountsSource?: ResourceCountsSource;
+  disabledKeys?: ReadonlySet<string>;
+  disabledKeysSource?: DisabledChoiceKeysSource;
 };
 
 const log = buildLogger("ChoiceValueRenderer");
@@ -49,6 +54,8 @@ const ChoiceValueRenderer = (props: ChoiceValueRendererProps) => {
     valueAttributes,
     resourceCounts,
     resourceCountsSource,
+    disabledKeys: initialDisabledKeys,
+    disabledKeysSource,
     size,
     isReadonly: propsIsReadonly,
     isEditing: controlledIsEditing,
@@ -59,6 +66,7 @@ const ChoiceValueRenderer = (props: ChoiceValueRendererProps) => {
   const [dataSource, setDataSource] = useState<Data[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [optionsThreshold] = useFilterOptionsThreshold();
+  const disabledKeys = useDisabledChoiceKeys(disabledKeysSource, initialDisabledKeys);
 
   // Internal editing state for uncontrolled mode
   const [internalIsEditing, setInternalIsEditing] = useState(defaultEditing);
@@ -109,6 +117,8 @@ const ChoiceValueRenderer = (props: ChoiceValueRendererProps) => {
         createPortal(ChoiceValueEditor, {
           resourceCounts,
           resourceCountsSource,
+          disabledKeys,
+          disabledKeysSource,
           value: editor?.value,
           getDataSource: getDataSource ?? (async () => []),
           onValueChange: editor?.onValueChange,
@@ -127,6 +137,7 @@ const ChoiceValueRenderer = (props: ChoiceValueRendererProps) => {
 
   const toggleValue = (itemValue: string) => {
     if (isReadonly || !editor?.onValueChange) return;
+    if (disabledKeys?.has(itemValue) && !selectedValues.includes(itemValue)) return;
 
     if (multiple) {
       const newDbValues = selectedValues.includes(itemValue)
@@ -182,6 +193,7 @@ const ChoiceValueRenderer = (props: ChoiceValueRendererProps) => {
           <SelectableChip
             key={item.value}
             color={item.color}
+            isDisabled={disabledKeys?.has(item.value) && !selectedValues.includes(item.value)}
             isSelected={selectedValues.includes(item.value)}
             itemKey={item.value}
             label={

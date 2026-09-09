@@ -1,10 +1,5 @@
 "use client";
 
-import {
-  useResourceCountsSource,
-  type ResourceCountsSource,
-} from "@/hooks/useResourceCountsSource";
-
 import type { ValueEditorProps } from "../models";
 import type { DestroyableProps } from "@/components/bakaui/types";
 
@@ -12,6 +7,14 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { SearchOutlined } from "@ant-design/icons";
 
+import {
+  useResourceCountsSource,
+  type ResourceCountsSource,
+} from "@/hooks/useResourceCountsSource";
+import {
+  useDisabledChoiceKeys,
+  type DisabledChoiceKeysSource,
+} from "@/hooks/useDisabledChoiceKeys";
 import ReferenceValueCount from "@/components/Property/components/ReferenceValueCount";
 import { Button, Input, Modal } from "@/components/bakaui";
 import { buildLogger } from "@/components/utils";
@@ -23,6 +26,8 @@ type ChoiceValueEditorProps = ValueEditorProps<string[] | undefined> &
   DestroyableProps & {
     resourceCounts?: Record<string, number>;
     resourceCountsSource?: ResourceCountsSource;
+    disabledKeys?: ReadonlySet<string>;
+    disabledKeysSource?: DisabledChoiceKeysSource;
     multiple: boolean;
     getDataSource: () => Promise<Data[] | undefined>;
   };
@@ -34,6 +39,8 @@ const ChoiceValueEditor = (props: ChoiceValueEditorProps) => {
   const {
     resourceCounts: initialResourceCounts,
     resourceCountsSource,
+    disabledKeys: initialDisabledKeys,
+    disabledKeysSource,
     multiple,
     getDataSource,
     value: propsValue,
@@ -41,6 +48,7 @@ const ChoiceValueEditor = (props: ChoiceValueEditorProps) => {
   } = props;
 
   const resourceCounts = useResourceCountsSource(resourceCountsSource, initialResourceCounts);
+  const disabledKeys = useDisabledChoiceKeys(disabledKeysSource, initialDisabledKeys);
 
   const [dataSource, setDataSource] = useState<Data[]>([]);
   const [keyword, setKeyword] = useState("");
@@ -101,8 +109,11 @@ const ChoiceValueEditor = (props: ChoiceValueEditorProps) => {
                   <Button
                     key={d.value}
                     color={value.includes(d.value) ? "primary" : "default"}
+                    isDisabled={disabledKeys?.has(d.value) && !value.includes(d.value)}
                     size={"sm"}
                     onClick={() => {
+                      if (disabledKeys?.has(d.value) && !value.includes(d.value)) return;
+
                       if (multiple) {
                         log("value", value, "select", d.value, "includes", value.includes(d.value));
                         if (value.includes(d.value)) {
@@ -111,7 +122,7 @@ const ChoiceValueEditor = (props: ChoiceValueEditorProps) => {
                           setValue([...(value || []), d.value]);
                         }
                       } else {
-                        setValue([d.value]);
+                        setValue(value.includes(d.value) ? [] : [d.value]);
                       }
                     }}
                   >

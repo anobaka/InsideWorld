@@ -81,23 +81,29 @@ export default function ReferenceValueUsage({ value, label }: { value: string; l
 
   return (
     <div className="flex shrink-0 items-center gap-1">
-      <span
-        className="text-xs text-default-500 tabular-nums"
-        title={
-          count === undefined
-            ? t("property.reference.countUnavailable")
-            : t("property.reference.resourceCount", { count })
-        }
-      >
-        {count?.toLocaleString() ?? "—"}
-      </span>
+      {count !== 0 && (
+        <span
+          className="text-xs text-default-500 tabular-nums"
+          title={
+            count === undefined
+              ? t("property.reference.countUnavailable")
+              : t("property.reference.resourceCount", { count })
+          }
+        >
+          {count?.toLocaleString() ?? "—"}
+        </span>
+      )}
       <Button
         isIconOnly
         aria-label={t("property.reference.searchResources")}
-        isDisabled={!exists}
+        isDisabled={!exists || count === 0}
         size="sm"
         title={t(
-          exists ? "property.reference.searchResources" : "property.reference.saveBeforeSearch",
+          !exists
+            ? "property.reference.saveBeforeSearch"
+            : count === 0
+              ? "property.reference.noResources"
+              : "property.reference.searchResources",
         )}
         variant="light"
         onPress={() =>

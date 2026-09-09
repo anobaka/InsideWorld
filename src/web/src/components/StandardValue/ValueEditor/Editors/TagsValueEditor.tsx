@@ -1,10 +1,5 @@
 "use client";
 
-import {
-  useResourceCountsSource,
-  type ResourceCountsSource,
-} from "@/hooks/useResourceCountsSource";
-
 import type { CSSProperties } from "react";
 import type { ValueEditorProps } from "../models";
 import type { TagValue } from "@/components/StandardValue/models";
@@ -14,6 +9,14 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { SearchOutlined } from "@ant-design/icons";
 
+import {
+  useResourceCountsSource,
+  type ResourceCountsSource,
+} from "@/hooks/useResourceCountsSource";
+import {
+  useDisabledChoiceKeys,
+  type DisabledChoiceKeysSource,
+} from "@/hooks/useDisabledChoiceKeys";
 import ReferenceValueCount from "@/components/Property/components/ReferenceValueCount";
 import { Button, Input, Modal } from "@/components/bakaui";
 import { autoBackgroundColor, buildLogger } from "@/components/utils";
@@ -24,6 +27,8 @@ type TagsValueEditorProps = ValueEditorProps<string[], TagValue[]> &
   DestroyableProps & {
     resourceCounts?: Record<string, number>;
     resourceCountsSource?: ResourceCountsSource;
+    disabledKeys?: ReadonlySet<string>;
+    disabledKeysSource?: DisabledChoiceKeysSource;
     getDataSource: () => Promise<TagData[] | undefined>;
   };
 
@@ -34,6 +39,8 @@ const TagsValueEditor = (props: TagsValueEditorProps) => {
   const {
     resourceCounts: initialResourceCounts,
     resourceCountsSource,
+    disabledKeys: initialDisabledKeys,
+    disabledKeysSource,
     getDataSource,
     value: propsValue,
     onValueChange,
@@ -41,6 +48,7 @@ const TagsValueEditor = (props: TagsValueEditorProps) => {
   } = props;
 
   const resourceCounts = useResourceCountsSource(resourceCountsSource, initialResourceCounts);
+  const disabledKeys = useDisabledChoiceKeys(disabledKeysSource, initialDisabledKeys);
 
   const [dataSource, setDataSource] = useState<TagData[]>([]);
   const [keyword, setKeyword] = useState("");
@@ -89,6 +97,8 @@ const TagsValueEditor = (props: TagsValueEditorProps) => {
   }, [dataSource, keyword]);
 
   const toggleTag = (tagValue: string) => {
+    if (disabledKeys?.has(tagValue) && !value.includes(tagValue)) return;
+
     if (value.includes(tagValue)) {
       setValue(value.filter((v) => v !== tagValue));
     } else {
@@ -111,6 +121,7 @@ const TagsValueEditor = (props: TagsValueEditorProps) => {
       <Button
         key={tag.value}
         color={isSelected ? "primary" : "default"}
+        isDisabled={disabledKeys?.has(tag.value) && !isSelected}
         size={"sm"}
         style={style}
         onPress={() => toggleTag(tag.value)}

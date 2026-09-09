@@ -1,7 +1,6 @@
 "use client";
 
 import type { ResourceCountsSource } from "@/hooks/useResourceCountsSource";
-
 import type { ValueRendererProps } from "../models";
 import type { TagValue } from "../../models";
 
@@ -14,6 +13,10 @@ import { buildVisibleOptions, hasMoreOptions, getRemainingCount } from "../utils
 import NotSet, { LightText } from "./components/LightText";
 import NoChoicesAvailable from "./components/NoChoicesAvailable";
 
+import {
+  useDisabledChoiceKeys,
+  type DisabledChoiceKeysSource,
+} from "@/hooks/useDisabledChoiceKeys";
 import SelectableChip from "@/components/StandardValue/ValueRenderer/Renderers/components/SelectableChip";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
 import { Button } from "@/components/bakaui";
@@ -29,6 +32,8 @@ type TagsValueRendererProps = ValueRendererProps<TagValue[], string[]> & {
   size?: "sm" | "md" | "lg";
   resourceCounts?: Record<string, number>;
   resourceCountsSource?: ResourceCountsSource;
+  disabledKeys?: ReadonlySet<string>;
+  disabledKeysSource?: DisabledChoiceKeysSource;
 };
 
 const log = buildLogger("TagsValueRenderer");
@@ -44,6 +49,8 @@ const TagsValueRenderer = (props: TagsValueRendererProps) => {
     valueAttributes,
     resourceCounts,
     resourceCountsSource,
+    disabledKeys: initialDisabledKeys,
+    disabledKeysSource,
     size,
     isReadonly: propsIsReadonly,
     isEditing: controlledIsEditing,
@@ -52,6 +59,7 @@ const TagsValueRenderer = (props: TagsValueRendererProps) => {
   const [dataSource, setDataSource] = useState<TagData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [optionsThreshold] = useFilterOptionsThreshold();
+  const disabledKeys = useDisabledChoiceKeys(disabledKeysSource, initialDisabledKeys);
 
   // Internal editing state for uncontrolled mode
   const [internalIsEditing, setInternalIsEditing] = useState(defaultEditing);
@@ -110,6 +118,8 @@ const TagsValueRenderer = (props: TagsValueRendererProps) => {
         createPortal(TagsValueEditor, {
           resourceCounts,
           resourceCountsSource,
+          disabledKeys,
+          disabledKeysSource,
           value: editor?.value,
           getDataSource: async () => {
             return (await getDataSource?.()) || [];
@@ -125,6 +135,7 @@ const TagsValueRenderer = (props: TagsValueRendererProps) => {
 
   const toggleValue = (tagValue: string) => {
     if (isReadonly || !editor?.onValueChange) return;
+    if (disabledKeys?.has(tagValue) && !selectedValues.includes(tagValue)) return;
 
     const tag = dataSource.find((t) => t.value === tagValue);
 
@@ -171,6 +182,7 @@ const TagsValueRenderer = (props: TagsValueRendererProps) => {
           <SelectableChip
             key={item.value}
             color={item.color}
+            isDisabled={disabledKeys?.has(item.value) && !selectedValues.includes(item.value)}
             isSelected={selectedValues.includes(item.value)}
             itemKey={item.value}
             label={
