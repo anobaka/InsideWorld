@@ -8,6 +8,7 @@ using Bootstrap.Models.ResponseModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Swashbuckle.AspNetCore.Annotations;
+using Bakabase.Modules.RemoteAccess.Abstractions.Components;
 
 namespace Bakabase.Service.Controllers
 {
@@ -23,6 +24,7 @@ namespace Bakabase.Service.Controllers
             _hubContext = hubContext;
         }
 
+        [RunsOnUserMachine(Reason = "用默认浏览器打开链接，只能在你面前的这台机器上进行")]
         [HttpGet("url")]
         [SwaggerOperation(OperationId = "OpenUrlInDefaultBrowser")]
         public async Task<BaseResponse> OpenUrlInDefaultBrowser(string url)

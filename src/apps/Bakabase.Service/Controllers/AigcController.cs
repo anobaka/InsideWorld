@@ -10,6 +10,7 @@ using Bootstrap.Models.Constants;
 using Bootstrap.Models.ResponseModels;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
+using Bakabase.Modules.RemoteAccess.Abstractions.Components;
 
 namespace Bakabase.Service.Controllers;
 
@@ -129,6 +130,7 @@ public class AigcController(
         return BaseResponseBuilder.Ok;
     }
 
+    [RunsOnUserMachine(Reason = "打开生成的文件，只能在你面前的这台机器上进行")]
     [HttpPost("artifacts/{id:int}/open")]
     [SwaggerOperation(OperationId = "OpenAigcArtifact")]
     public async Task<BaseResponse> OpenArtifact(int id, [FromQuery] bool openInDirectory, CancellationToken ct)

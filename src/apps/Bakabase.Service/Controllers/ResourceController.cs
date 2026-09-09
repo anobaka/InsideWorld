@@ -41,6 +41,7 @@ using Microsoft.Extensions.Logging;
 using StackExchange.Profiling;
 using Swashbuckle.AspNetCore.Annotations;
 using Bakabase.Service.Components.RemoteAccess;
+using Bakabase.Modules.RemoteAccess.Abstractions.Components;
 
 namespace Bakabase.Service.Controllers;
 
@@ -311,6 +312,7 @@ public class ResourceController(
     // 	return await _service.Patch(id, model);
     // }
 
+    [RunsOnUserMachine(Reason = "打开资源目录，只能在你面前的这台机器上进行")]
     [HttpGet("directory")]
     [SwaggerOperation(OperationId = "OpenResourceDirectory")]
     public async Task<BaseResponse> Open(int id)
@@ -520,6 +522,7 @@ public class ResourceController(
         return await service.BulkPutPropertyValue(model.ResourceIds.ToArray(), propertyValueModel);
     }
 
+    [RunsOnUserMachine(Reason = "拉起播放器，只能在你面前的这台机器上进行")]
     [HttpGet("{resourceId}/play")]
     [SwaggerOperation(OperationId = "PlayResourceFile")]
     public async Task<BaseResponse> Play(int resourceId, string? file)
@@ -544,6 +547,7 @@ public class ResourceController(
         return await service.PlayItem(resourceId, DataOrigin.FileSystem, file);
     }
 
+    [RunsOnUserMachine(Reason = "拉起播放器，只能在你面前的这台机器上进行")]
     [HttpGet("{resourceId}/play-item")]
     [SwaggerOperation(OperationId = "PlayResourceItem")]
     public async Task<BaseResponse> PlayItem(int resourceId, DataOrigin origin, string key)
@@ -560,6 +564,7 @@ public class ResourceController(
         return new ListResponse<PlayableItem>(items);
     }
 
+    [RunsOnUserMachine(Reason = "拉起播放器，只能在你面前的这台机器上进行")]
     [HttpGet("play/random")]
     [SwaggerOperation(OperationId = "PlayRandomResource")]
     public async Task<BaseResponse> PlayRandom()

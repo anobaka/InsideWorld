@@ -56,6 +56,7 @@ using Microsoft.Extensions.Logging;
 using MimeKit;
 using Swashbuckle.AspNetCore.Annotations;
 using Bakabase.Abstractions.Components.Text;
+using Bakabase.Modules.RemoteAccess.Abstractions.Components;
 
 namespace Bakabase.Service.Controllers
 {
@@ -854,6 +855,7 @@ namespace Bakabase.Service.Controllers
             }
         }
 
+        [RunsOnUserMachine(Reason = "被删除的文件在服务端的回收站里，客户端打开的是自己的回收站")]
         [HttpGet("recycle-bin")]
         [SwaggerOperation(OperationId = "OpenRecycleBin")]
         public async Task<BaseResponse> OpenRecycleBin()
@@ -1988,6 +1990,7 @@ namespace Bakabase.Service.Controllers
             "alac"                           // Apple Lossless
         };
 
+        [RunsOnUserMachine(Reason = "文件图标由运行它的那台机器的系统提供")]
         [HttpGet("icon")]
         [SwaggerOperation(OperationId = "GetIconData")]
         public Task<SingletonResponse<string>> GetIcon(IconType type, string? path)

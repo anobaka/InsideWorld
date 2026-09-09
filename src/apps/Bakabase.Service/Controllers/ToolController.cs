@@ -37,12 +37,14 @@ using SixLabors.ImageSharp.Processing;
 using Bakabase.Service.Components.RemoteAccess;
 using Swashbuckle.AspNetCore.Annotations;
 using Image = SixLabors.ImageSharp.Image;
+using Bakabase.Modules.RemoteAccess.Abstractions.Components;
 
 namespace Bakabase.Service.Controllers
 {
     [Route("~/tool")]
     public class ToolController(IResourceService resourceService, CompressedFileService compressedFileService) : Controller
     {
+        [RunsOnUserMachine(Reason = "打开文件或目录，只能在你面前的这台机器上进行")]
         [HttpGet("open")]
         [SwaggerOperation(OperationId = "OpenFileOrDirectory")]
         public BaseResponse Open(string path, bool openInDirectory)
@@ -51,6 +53,7 @@ namespace Bakabase.Service.Controllers
             return BaseResponseBuilder.Ok;
         }
 
+        [RunsOnUserMachine(Reason = "登录窗口必须开在你面前的这台机器上")]
         [HttpPost("cookie-capture")]
         [SwaggerOperation(OperationId = "CaptureCookie")]
         public async Task<SingletonResponse<CookieCaptureResult>> CaptureCookie(
@@ -318,6 +321,7 @@ namespace Bakabase.Service.Controllers
             return new SingletonResponse<Dictionary<string, List<string>>>(groupValues);
         }
 
+        [RunsOnUserMachine(Reason = "打开文件，只能在你面前的这台机器上进行")]
         [HttpGet("open-file")]
         [SwaggerOperation(OperationId = "OpenFile")]
         public async Task<BaseResponse> OpenFile(string path)

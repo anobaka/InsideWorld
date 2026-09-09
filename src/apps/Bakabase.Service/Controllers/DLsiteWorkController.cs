@@ -11,6 +11,7 @@ using Bootstrap.Models.ResponseModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Swashbuckle.AspNetCore.Annotations;
+using Bakabase.Modules.RemoteAccess.Abstractions.Components;
 
 namespace Bakabase.Service.Controllers;
 
@@ -123,6 +124,7 @@ public class DLsiteWorkController(IDLsiteWorkService service, BTaskManager btm, 
         return new SingletonResponse<string>(key);
     }
 
+    [RunsOnUserMachine(Reason = "运行本地程序，只能在你面前的这台机器上进行")]
     [HttpPost("{workId}/launch")]
     [SwaggerOperation(OperationId = "LaunchDLsiteWork")]
     public async Task<BaseResponse> Launch(string workId)

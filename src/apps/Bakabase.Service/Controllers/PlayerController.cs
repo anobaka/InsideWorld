@@ -8,6 +8,7 @@ using Bootstrap.Components.Miscellaneous.ResponseBuilders;
 using Bootstrap.Models.ResponseModels;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
+using Bakabase.Modules.RemoteAccess.Abstractions.Components;
 
 namespace Bakabase.Service.Controllers
 {
@@ -15,6 +16,7 @@ namespace Bakabase.Service.Controllers
     public class PlayerController(IBatchPlayService batchPlayService) : Controller
     {
         [SwaggerOperation(OperationId = "GetBatchPlayCandidates")]
+        [RunsOnUserMachine(Reason = "候选项取决于你这台机器上装了哪些播放器")]
         [HttpPost("batch-play/candidates")]
         public async Task<ListResponse<BatchPlayCandidate>> GetBatchPlayCandidates(
             [FromBody] BatchPlayCandidatesInputModel model)
@@ -25,6 +27,7 @@ namespace Bakabase.Service.Controllers
         }
 
         [SwaggerOperation(OperationId = "BatchPlayResources")]
+        [RunsOnUserMachine(Reason = "拉起播放器，只能在你面前的这台机器上进行")]
         [HttpPost("batch-play")]
         public async Task<SingletonResponse<BatchPlayResult>> BatchPlay([FromBody] BatchPlayInputModel model)
         {
@@ -42,6 +45,7 @@ namespace Bakabase.Service.Controllers
         }
 
         [SwaggerOperation(OperationId = "GetPlaylistBatchPlayCandidates")]
+        [RunsOnUserMachine(Reason = "候选项取决于你这台机器上装了哪些播放器")]
         [HttpGet("playlist/{playlistId:int}/batch-play/candidates")]
         public async Task<ListResponse<BatchPlayCandidate>> GetPlaylistBatchPlayCandidates(int playlistId)
         {
@@ -58,6 +62,7 @@ namespace Bakabase.Service.Controllers
         }
 
         [SwaggerOperation(OperationId = "BatchPlayPlaylist")]
+        [RunsOnUserMachine(Reason = "拉起播放器，只能在你面前的这台机器上进行")]
         [HttpPost("playlist/{playlistId:int}/batch-play")]
         public async Task<SingletonResponse<BatchPlayResult>> BatchPlayPlaylist(int playlistId,
             [FromBody] PlaylistBatchPlayInputModel model)
