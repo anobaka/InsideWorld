@@ -22,6 +22,8 @@ internal class SyncContext
     public Dictionary<string, Resource> PathToResource { get; } = new(StringComparer.OrdinalIgnoreCase);
     public HashSet<string> ExistingPathSet { get; } = new(StringComparer.OrdinalIgnoreCase);
     public Dictionary<int, Resource> IdToResource { get; } = new();
+    public Dictionary<int, PathMark> PathMarksById { get; } = new();
+    public Dictionary<int, PropertyMarkConfig?> PropertyMarkConfigsByMarkId { get; } = new();
 
     // Caches for standardized paths
     public Dictionary<string, string> StandardizedPaths { get; } = new(StringComparer.OrdinalIgnoreCase);
@@ -53,7 +55,9 @@ internal class SyncContext
 
     // Old effects of already-synced marks loaded purely for context — used to
     // recompute combined property values and to protect media library mappings
-    // contributed by other marks. NEVER deleted, never re-keyed.
+    // contributed by other marks. They are never deleted or re-keyed by this run,
+    // but a legacy DB-valued reference effect may be normalized in place to the
+    // canonical serialized business value.
     public Dictionary<int, List<PropertyMarkEffect>> ContextOldEffectsByMarkId { get; } = new();
 
     // ===== Phase 2: Compute Final State =====
@@ -61,6 +65,11 @@ internal class SyncContext
     // Key: (ResourceId, PropertyPool, PropertyId), Value: serialized combined value
     public Dictionary<(int ResourceId, PropertyPool Pool, int PropertyId), string?> FinalPropertyValues { get; } =
         new();
+
+    // A persisted reference effect that cannot be re-extracted or decoded safely may
+    // be a legacy DB value. Preserve the current combined property value for the key
+    // until that mark is fully re-collected rather than recomputing from partial data.
+    public HashSet<(int ResourceId, PropertyPool Pool, int PropertyId)> PropertyValueKeysToPreserve { get; } = new();
 
     // Final computed media library mappings
     // Key: ResourceId, Value: list of MediaLibraryIds
@@ -86,6 +95,7 @@ internal class SyncContext
 
     // ===== Phase 4: Persist Effects =====
     public List<PropertyMarkEffect> PropertyEffectsToAdd { get; } = new();
+    public Dictionary<int, PropertyMarkEffect> PropertyEffectsToUpdate { get; } = new();
     public List<int> PropertyEffectIdsToDelete { get; } = new();
 
     // ===== Tracking =====

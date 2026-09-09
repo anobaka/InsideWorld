@@ -32,9 +32,8 @@ public record PropertyMarkEffectDbModel
     public int ResourceId { get; set; }
 
     /// <summary>
-    /// The value that was set (serialized).
-    /// For multi-select: comma-separated values.
-    /// For MediaLibrary: media library ID as string.
+    /// For custom properties, the value serialized with the property's BizValueType.
+    /// For MediaLibrary effects, the media library ID as a string.
     /// </summary>
     public string? Value { get; set; }
 

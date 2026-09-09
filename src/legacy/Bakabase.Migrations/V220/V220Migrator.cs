@@ -9,7 +9,11 @@ using Bakabase.InsideWorld.Business.Components.Configurations;
 using Bakabase.InsideWorld.Business.Components.Configurations.Models.Domain;
 using Bakabase.InsideWorld.Models.Constants;
 using Bakabase.Modules.Property;
+using Bakabase.Modules.Property.Abstractions.Components;
+using Bakabase.Modules.Property.Extensions;
 using Bakabase.Modules.Search.Models.Db;
+using Bakabase.Modules.StandardValue;
+using Bakabase.Modules.StandardValue.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -761,6 +765,26 @@ public class V220Migrator : AbstractMigrator
             .GroupBy(m => m.ResourceId)
             .ToDictionary(g => g.Key, g => g.Select(m => m.MediaLibraryId).ToHashSet());
 
+        // PropertyMarkEffect.Value uses the property's serialized BizValueType. The
+        // source CustomPropertyValue rows below contain serialized DB values, so load
+        // definitions/options once and cross that boundary explicitly while seeding.
+        var customProperties = new Dictionary<int, CustomProperty>();
+        foreach (var dbProperty in await dbCtx.CustomProperties.AsNoTracking().ToListAsync())
+        {
+            try
+            {
+                customProperties[dbProperty.Id] = dbProperty.ToDomainModel();
+            }
+            catch (Exception ex)
+            {
+                // One malformed legacy options payload must not strand the entire V220
+                // migration after its PathMarks have already been inserted.
+                Logger.LogWarning(ex,
+                    "Could not load custom property {PropertyId} while creating PathMark effects; skipping it.",
+                    dbProperty.Id);
+            }
+        }
+
         var resourceMarkEffects = new List<ResourceMarkEffectDbModel>();
         var propertyMarkEffects = new List<PropertyMarkEffectDbModel>();
 
@@ -840,6 +864,7 @@ public class V220Migrator : AbstractMigrator
 
                     // Only handle Custom properties for now
                     if (config.Pool != PropertyPool.Custom) continue;
+                    if (!customProperties.TryGetValue(config.PropertyId, out var customProperty)) continue;
 
                     // Get existing property values for these resources
                     var resourceIds = resourcesUnderPath.Select(r => r.Id).ToList();
@@ -858,13 +883,27 @@ public class V220Migrator : AbstractMigrator
                     {
                         if (pvByResourceId.TryGetValue(resource.Id, out var pv) && !string.IsNullOrEmpty(pv.Value))
                         {
+                            if (!TryConvertDbValueToCanonicalEffectValue(customProperty, pv.Value,
+                                    out var effectValue))
+                            {
+                                // A malformed value or dangling reference cannot be converted
+                                // losslessly. Keep the existing property value, but do not seed
+                                // a mixed/ambiguous effect that a later sync could turn into a
+                                // UUID-labelled option.
+                                Logger.LogWarning(
+                                    "Could not convert property value of resource {ResourceId}, property {PropertyId} " +
+                                    "to a business value while creating PathMark effects; the effect was skipped.",
+                                    resource.Id, config.PropertyId);
+                                continue;
+                            }
+
                             propertyMarkEffects.Add(new PropertyMarkEffectDbModel
                             {
                                 MarkId = pathMark.Id,
                                 PropertyPool = (int)config.Pool,
                                 PropertyId = config.PropertyId,
                                 ResourceId = resource.Id,
-                                Value = pv.Value,
+                                Value = effectValue,
                                 Priority = pathMark.Priority,
                                 CreatedAt = now,
                                 UpdatedAt = now
@@ -889,6 +928,36 @@ public class V220Migrator : AbstractMigrator
             await dbCtx.PropertyMarkEffects.AddRangeAsync(propertyMarkEffects);
             await dbCtx.SaveChangesAsync();
             Logger.LogInformation("Created {Count} PropertyMarkEffects from PathMarks.", propertyMarkEffects.Count);
+        }
+    }
+
+    private static bool TryConvertDbValueToCanonicalEffectValue(
+        CustomProperty customProperty,
+        string serializedDbValue,
+        out string? serializedBizValue)
+    {
+        serializedBizValue = null;
+        try
+        {
+            var property = customProperty.ToProperty();
+            var dbValueType = PropertySystem.Property.GetDbValueType(customProperty.Type);
+            var dbValue = serializedDbValue.DeserializeAsStandardValue(dbValueType);
+            var bizValue = PropertySystem.Property.ToBizValue(property, dbValue);
+            if (dbValue == null || bizValue == null) return false;
+
+            // GetBizValue can drop dangling entries for collection reference types. Only
+            // seed the effect when no information was lost in the conversion.
+            var (roundTrippedDbValue, _) = PropertySystem.Property.ToDbValue(
+                property, bizValue, PropertyValueMatchPolicy.MatchOnly);
+            if (!StandardValueSystem.GetHandler(dbValueType).Compare(dbValue, roundTrippedDbValue)) return false;
+
+            serializedBizValue = bizValue.SerializeAsStandardValue(
+                PropertySystem.Property.GetBizValueType(customProperty.Type));
+            return !string.IsNullOrEmpty(serializedBizValue);
+        }
+        catch
+        {
+            return false;
         }
     }
 

@@ -114,6 +114,25 @@ public class PathMarkSyncService : ScopedService
 
             // Load all pending Property and MediaLibrary marks
             var allMarks = await _pathMarkService.GetAll();
+            foreach (var mark in allMarks)
+            {
+                ctx.PathMarksById[mark.Id] = mark;
+                if (mark.Type == PathMarkType.Property)
+                {
+                    try
+                    {
+                        ctx.PropertyMarkConfigsByMarkId[mark.Id] =
+                            JsonConvert.DeserializeObject<PropertyMarkConfig>(mark.ConfigJson);
+                    }
+                    catch
+                    {
+                        // The mark's normal collection path will report malformed config
+                        // if it is pending. For a context mark, it simply cannot help
+                        // disambiguate a historical reference value.
+                        ctx.PropertyMarkConfigsByMarkId[mark.Id] = null;
+                    }
+                }
+            }
             var pendingMarks = allMarks
                 .Where(m => m.SyncStatus is PathMarkSyncStatus.Pending or PathMarkSyncStatus.PendingDelete)
                 .Where(m => m.Type is PathMarkType.Property or PathMarkType.MediaLibrary)
@@ -158,7 +177,9 @@ public class PathMarkSyncService : ScopedService
 
             // Load old effects from already-synced Property/MediaLibrary marks as
             // *context only* — used to recompute combined values and to protect
-            // mappings contributed by other marks. Never written or deleted.
+            // mappings contributed by other marks. They are never deleted here;
+            // legacy DB-valued reference effects can be normalized to the canonical
+            // business-value representation during final-state computation.
             var contextMarkIds = allMarks
                 .Where(m => m.SyncStatus == PathMarkSyncStatus.Synced
                             && m.Type is PathMarkType.Property or PathMarkType.MediaLibrary)
@@ -361,7 +382,7 @@ public class PathMarkSyncService : ScopedService
                 value = sharedValue!;
             }
 
-            var valueString = value is string s ? s : System.Text.Json.JsonSerializer.Serialize(value, System.Text.Json.JsonSerializerOptions.Web);
+            var valueString = SerializePropertyMarkEffectValue(value);
 
             // Record the effect
             ctx.CollectedPropertyEffects.Add(new PropertyMarkEffect
@@ -489,21 +510,30 @@ public class PathMarkSyncService : ScopedService
             effectiveEffects.AddRange(oldEffects);
         }
 
-        // Group effects by (ResourceId, PropertyPool, PropertyId)
-        var groupedEffects = effectiveEffects
-            .GroupBy(e => (e.ResourceId, e.PropertyPool, e.PropertyId))
-            .ToList();
-
         // Pre-load custom property definitions for type lookup
-        var customPropertyIds = groupedEffects
-            .Where(g => g.Key.PropertyPool == PropertyPool.Custom)
-            .Select(g => g.Key.PropertyId)
+        var customPropertyIds = effectiveEffects
+            .Where(e => e.PropertyPool == PropertyPool.Custom)
+            .Select(e => e.PropertyId)
             .Distinct()
             .ToList();
 
         var customProperties = customPropertyIds.Count > 0
             ? (await _customPropertyService.GetByKeys(customPropertyIds)).ToDictionary(p => p.Id)
             : new Dictionary<int, CustomProperty>();
+
+        // Property-mark effects have one canonical contract: Value is serialized with
+        // the property's BizValueType. V220 seeded effects by copying CustomPropertyValue.Value,
+        // so those rows contain serialized DB ids instead. Normalize persisted reference
+        // effects lazily before combining them. Only deterministic re-extraction from
+        // the mark/config/resource can prove what the business value was; if that is
+        // unavailable, preserve the existing property value instead of guessing.
+        NormalizePersistedReferenceEffects(effectiveEffects, customProperties, ctx);
+
+        // Group effects by (ResourceId, PropertyPool, PropertyId) after normalization;
+        // unresolved legacy references are excluded rather than auto-created as labels.
+        var groupedEffects = effectiveEffects
+            .GroupBy(e => (e.ResourceId, e.PropertyPool, e.PropertyId))
+            .ToList();
 
         // Pre-load existing property values for comparison. Include resources that previously
         // had effects from run marks too so we can correctly upsert / leave-alone.
@@ -528,6 +558,12 @@ public class PathMarkSyncService : ScopedService
             // Skip Internal pool (handled separately for media library)
             if (pool == PropertyPool.Internal) continue;
 
+            // An unresolved legacy id means this group's current combined DB value is
+            // the only lossless representation left. Do not overwrite it from an
+            // incomplete subset of effects; a full re-sync of that mark will replace
+            // the ambiguous row with a freshly extracted business value.
+            if (ctx.PropertyValueKeysToPreserve.Contains(group.Key)) continue;
+
             // Order by priority (descending) - for single-value properties, first wins
             var effects = group.OrderByDescending(e => e.Priority).ThenByDescending(e => e.MarkId).ToList();
             if (effects.Count == 0) continue;
@@ -545,11 +581,7 @@ public class PathMarkSyncService : ScopedService
             // A mark always yields human-readable text (a directory name, a regex capture),
             // never an option id. For reference types (choice / tags / multilevel) that text
             // is a biz value: combine it as one, then convert it into the db value so the
-            // option is created on the property. Skipping that step leaves the property with
-            // no options at all, so the resource filter has nothing to offer — while the
-            // resource itself still reads fine, because Resource.Property.PropertyValue
-            // falls back to the raw db value once the descriptor returns a null biz value.
-            // That fallback is what makes this failure look like a filter-only problem.
+            // option is created on the property.
             string? combinedValue;
             if (pool == PropertyPool.Custom &&
                 PropertySystem.Property.IsReferenceValueType(propertyType.Value) &&
@@ -597,7 +629,8 @@ public class PathMarkSyncService : ScopedService
             {
                 if (effect.PropertyPool == PropertyPool.Internal) continue;
                 var key = (effect.ResourceId, effect.PropertyPool, effect.PropertyId);
-                if (!ctx.FinalPropertyValues.ContainsKey(key))
+                if (!ctx.FinalPropertyValues.ContainsKey(key) &&
+                    !ctx.PropertyValueKeysToPreserve.Contains(key))
                 {
                     ctx.PropertyValuesToDelete.Add((effect.ResourceId, effect.PropertyId));
                 }
@@ -637,6 +670,143 @@ public class PathMarkSyncService : ScopedService
 
         return dbValue?.SerializeAsStandardValue(PropertySystem.Property.GetDbValueType(customProperty.Type));
     }
+
+    /// <summary>
+    /// Converts V220's persisted DB-valued reference effects to the canonical serialized
+    /// business value. Only persisted effects are considered; freshly collected effects
+    /// already contain business values.
+    ///
+    /// The current mark configuration and resource path are the strongest source of truth,
+    /// so they are used first to re-extract the business value. This makes the repair
+    /// deterministic even for a legitimate UUID label or an old id whose option was deleted.
+    /// If re-extraction is impossible, the representation is ambiguous: reference DB and
+    /// business values can have the same lexical shape, so even a DB -> Biz -> DB round-trip
+    /// is not independent proof. Such an effect is omitted and its combined property value
+    /// is preserved until the mark can be fully re-collected.
+    /// </summary>
+    private void NormalizePersistedReferenceEffects(
+        List<PropertyMarkEffect> effectiveEffects,
+        IReadOnlyDictionary<int, CustomProperty> customProperties,
+        SyncContext ctx)
+    {
+        var unresolvedEffectIds = new HashSet<int>();
+        var unresolvedCounts = new Dictionary<(int MarkId, int PropertyId), int>();
+
+        foreach (var effect in effectiveEffects.Where(e => e.Id > 0 && e.PropertyPool == PropertyPool.Custom))
+        {
+            if (!customProperties.TryGetValue(effect.PropertyId, out var customProperty) ||
+                !PropertySystem.Property.IsReferenceValueType(customProperty.Type) ||
+                string.IsNullOrEmpty(effect.Value))
+            {
+                continue;
+            }
+
+            // This is the same applicability/extraction path used by CollectPropertyEffects.
+            // If it succeeds there is no representation guess: persist exactly what a fresh
+            // collection would have produced.
+            if (TryExtractCurrentBusinessValue(effect, ctx, out var extractedBizValue))
+            {
+                if (effect.Value != extractedBizValue)
+                {
+                    effect.Value = extractedBizValue;
+                    ctx.PropertyEffectsToUpdate[effect.Id] = effect;
+                }
+
+                continue;
+            }
+
+            // Never feed an unverified persisted reference value into AutoCreateOptions:
+            // it may be a dangling legacy DB id, while a value that happens to match an
+            // option id may instead be a perfectly legitimate business label.
+            unresolvedEffectIds.Add(effect.Id);
+            ctx.PropertyValueKeysToPreserve.Add(
+                (effect.ResourceId, effect.PropertyPool, effect.PropertyId));
+            var warningKey = (effect.MarkId, effect.PropertyId);
+            unresolvedCounts[warningKey] = unresolvedCounts.GetValueOrDefault(warningKey) + 1;
+        }
+
+        foreach (var ((markId, propertyId), count) in unresolvedCounts)
+        {
+            _logger.LogWarning(
+                "[Sync] Skipped {Count} unresolved legacy reference effects from mark {MarkId} for custom " +
+                "property {PropertyId}; a full mark re-sync is required to recover their business labels",
+                count, markId, propertyId);
+        }
+
+        if (unresolvedEffectIds.Count > 0)
+        {
+            effectiveEffects.RemoveAll(e => unresolvedEffectIds.Contains(e.Id));
+        }
+    }
+
+    /// <summary>
+    /// Rebuilds the effect through the same resource applicability and value extraction
+    /// rules as <see cref="CollectPropertyEffects"/>. Returning false means the current
+    /// mark/resource cannot prove what the persisted representation is.
+    /// </summary>
+    private bool TryExtractCurrentBusinessValue(
+        PropertyMarkEffect effect,
+        SyncContext ctx,
+        out string businessValue)
+    {
+        businessValue = null!;
+
+        if (!ctx.PathMarksById.TryGetValue(effect.MarkId, out var mark) ||
+            mark.Type != PathMarkType.Property ||
+            !ctx.IdToResource.TryGetValue(effect.ResourceId, out var resource) ||
+            string.IsNullOrEmpty(resource.Path))
+        {
+            return false;
+        }
+
+        if (!ctx.PropertyMarkConfigsByMarkId.TryGetValue(mark.Id, out var config) ||
+            config == null || config.Pool != effect.PropertyPool || config.PropertyId != effect.PropertyId)
+        {
+            return false;
+        }
+
+        try
+        {
+            if (!ctx.IsPathUnderParent(resource.Path, mark.Path) ||
+                !FilterResourcesByMarkConfig([resource], mark.Path, config, ctx)
+                    .Any(r => r.Id == resource.Id))
+            {
+                return false;
+            }
+
+            object? extractedValue;
+            if (config.ValueType == PropertyValueType.Fixed)
+            {
+                extractedValue = config.FixedValue;
+            }
+            else
+            {
+                var resourcePath = config.ValueLayer is > 0 ? resource.Path : null;
+                extractedValue = ExtractDynamicValue(mark.Path, resourcePath, config.MatchMode,
+                    config.ValueLayer, config.ValueRegex, ctx);
+            }
+
+            if (extractedValue == null)
+            {
+                return false;
+            }
+
+            businessValue = SerializePropertyMarkEffectValue(extractedValue);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            // Historical context must never turn a malformed/stale mark config into
+            // a failure of an otherwise unrelated partial sync.
+            _logger.LogDebug(ex,
+                "[Sync] Could not re-extract business value for legacy effect {EffectId}", effect.Id);
+            return false;
+        }
+    }
+
+    private static string SerializePropertyMarkEffectValue(object value) => value is string s
+        ? s
+        : System.Text.Json.JsonSerializer.Serialize(value, System.Text.Json.JsonSerializerOptions.Web);
 
     /// <summary>
     /// Computes final media library mappings from effective effects.
@@ -849,16 +1019,19 @@ public class PathMarkSyncService : ScopedService
     #region Phase 4: Persist Effects
 
     /// <summary>
-    /// Computes which effects to add and delete by comparing collected vs old.
+    /// Computes which effects to add, update and delete by comparing collected vs old.
     /// </summary>
     private Task ComputeEffectDiff(SyncContext ctx)
     {
-        // Property effects to add: in collected but not already known for the same key.
-        // Effect records for context marks are NEVER touched here (they belong to
-        // marks that weren't synced this run).
-        var runOldKeys = ctx.RunOldEffectsByMarkId
-            .SelectMany(kvp => kvp.Value.Select(e => (e.MarkId, e.PropertyPool, e.PropertyId, e.ResourceId)))
-            .ToHashSet();
+        // Collected effects either insert a new key or refresh the existing row's value
+        // and priority. Reusing the old row preserves its id/CreatedAt and avoids the
+        // unique-key race of delete-then-add. Context rows are touched only when Phase 2
+        // already queued a legacy representation normalization.
+        var runOldByKey = ctx.RunOldEffectsByMarkId
+            .SelectMany(kvp => kvp.Value)
+            .ToDictionary(
+                e => (e.MarkId, e.PropertyPool, e.PropertyId, e.ResourceId),
+                e => e);
 
         var addedPropertyKeys =
             new HashSet<(int MarkId, PropertyPool Pool, int PropertyId, int ResourceId)>();
@@ -866,7 +1039,21 @@ public class PathMarkSyncService : ScopedService
         foreach (var effect in ctx.CollectedPropertyEffects)
         {
             var key = (effect.MarkId, effect.PropertyPool, effect.PropertyId, effect.ResourceId);
-            if (!runOldKeys.Contains(key) && addedPropertyKeys.Add(key))
+            if (!addedPropertyKeys.Add(key))
+            {
+                continue;
+            }
+
+            if (runOldByKey.TryGetValue(key, out var oldEffect))
+            {
+                if (oldEffect.Value != effect.Value || oldEffect.Priority != effect.Priority)
+                {
+                    oldEffect.Value = effect.Value;
+                    oldEffect.Priority = effect.Priority;
+                    ctx.PropertyEffectsToUpdate[oldEffect.Id] = oldEffect;
+                }
+            }
+            else
             {
                 ctx.PropertyEffectsToAdd.Add(effect);
             }
@@ -890,8 +1077,9 @@ public class PathMarkSyncService : ScopedService
         }
 
         _logger.LogInformation(
-            "[Sync] Effect diff: PropertyEffects +{AddProp}/-{DelProp}",
-            ctx.PropertyEffectsToAdd.Count, ctx.PropertyEffectIdsToDelete.Count);
+            "[Sync] Effect diff: PropertyEffects +{AddProp}/~{UpdateProp}/-{DelProp}",
+            ctx.PropertyEffectsToAdd.Count, ctx.PropertyEffectsToUpdate.Count,
+            ctx.PropertyEffectIdsToDelete.Count);
 
         return Task.CompletedTask;
     }
@@ -910,6 +1098,17 @@ public class PathMarkSyncService : ScopedService
             for (var i = 0; i < batches.Count; i++)
             {
                 await _effectService.AddPropertyEffects(batches[i]);
+                if (i < batches.Count - 1) await Task.Delay(5);
+            }
+        }
+
+        // Update same-key effects and lazily normalized V220 effects.
+        if (ctx.PropertyEffectsToUpdate.Count > 0)
+        {
+            var batches = ctx.PropertyEffectsToUpdate.Values.Chunk(BatchSize).ToList();
+            for (var i = 0; i < batches.Count; i++)
+            {
+                await _effectService.UpdatePropertyEffects(batches[i]);
                 if (i < batches.Count - 1) await Task.Delay(5);
             }
         }

@@ -12,6 +12,11 @@ public class PropertyMarkEffect
     public PropertyPool PropertyPool { get; set; }
     public int PropertyId { get; set; }
     public int ResourceId { get; set; }
+
+    /// <summary>
+    /// For custom properties, the value serialized with the property's BizValueType.
+    /// Internal media-library effects store the media library id as a string.
+    /// </summary>
     public string? Value { get; set; }
     public int Priority { get; set; }
     public DateTime CreatedAt { get; set; }
