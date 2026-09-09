@@ -74,6 +74,10 @@ S1–S4 已按 §6 落地于 `Bakabase.Modules.RemoteAccess/Components/Discovery
 
 **安全前置**：当前沿用"内网即可信"（无认证），T2 的写操作面因此刻意收窄（单条属性写入级别）。若未来扩权到批量写入/删除/配置级别，先做远程认证再扩。
 
+> **补充（2026-09-09）**：桌面纯客户端设计引入设备配对之后，移动端也会切换过去（决策已定）。落地时有一条必须写进 UI：**配对之后的能力天花板等于 `Unrestricted`**——也就是除标记了「必须在用户机器上执行」的端点之外全部可用。配对不是在现有权限上再加一层限制，而是把今天那 52 个端点的天花板抬到全量。
+>
+> 反过来也有一条约束：在服务端已经是 `Unrestricted` 的部署里（Docker 默认就是），未配对本来就已经是全量，**此时不要提示用户配对**——那是一个没有任何收益的步骤。
+
 ### 目标
 
 - **纯展示层瘦客户端**：浏览资源、播放资源、少量轻操作（标记已播放、评分等）。所有状态、索引、元数据、转码能力都在主服务端。
@@ -199,7 +203,14 @@ App 与服务端唯一的通道是 HTTP（外加发现期的 mDNS/UDP）。不�
 
 ### 4.4 安全立场
 
-跟随主项目：**不发明配对/认证**，LAN 即边界，与 #1262 的决策一致。但 App 的 HTTP 客户端统一走一个拦截器管道，未来服务端若加 token/TLS，只改一处。文档与 UI 明示："任何能连上你网络的设备都能访问媒体库"。
+跟随主项目：**不发明配对/认证**，LAN 即边界，与 #1262 的决策一致。文档与 UI 明示："任何能连上你网络的设备都能访问媒体库"。
+
+> **更正（2026-09-09）**：本节原写"App 的 HTTP 客户端统一走一个拦截器管道，未来服务端若加 token/TLS，只改一处"。核对代码后不成立，§7.1 也有同样的说法：
+>
+> - `core/api_client.dart` 里的 Dio 实例**没有注册任何拦截器**，`baseUrl` 与拒绝原因解析是写在私有 `_request` 方法里的，不是管道。
+> - 四个媒体地址构造器（缩略图、原始文件、播放、流）**完全绕过 Dio**——地址被直接交给 `CachedNetworkImage` 与 media_kit，请求由它们自己发出。libmpv 甚至会自行发起 Range 子请求，App 既看不到也拦不到。
+>
+> 所以桌面纯客户端设计里的设备配对要落到移动端时，**不是"只改一处"**：JSON 调用可以补一个签名拦截器，但媒体地址那条路必须改用签名地址（见 `pc-client-design.html` §7.5），两条路要分别处理。
 
 ---
 
@@ -256,7 +267,7 @@ src/apps/mobile/                  # 与 apps/Bakabase 并列，monorepo 内
   app/                            # Flutter 应用本体
     lib/
       features/                   # discovery / library / search / detail / player / settings
-      core/                       # 服务器档案、HTTP 管道（拦截器：baseUrl、denial-reason 解析、未来 token 位）
+      core/                       # 服务器档案、HTTP 客户端（baseUrl 与 denial-reason 解析写在 _request 里，**不是**拦截器管道——见 §4.4 更正）
   packages/
     bakabase_api/                 # openapi-generator 从 swagger.json 生成（提交，不手改）
     bakabase_discovery/           # 发现抽象 + bonsoir 实现 + UDP 实现（平台可替换 ← 鸿蒙留口）
