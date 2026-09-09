@@ -7,7 +7,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { SaveOutlined, SyncOutlined, DownOutlined } from "@ant-design/icons";
 
-import { parseMarkConfig, buildConfigJson } from "./utils";
+import { parseMarkConfig, buildConfigJson, hasValidPropertyValueExtractor } from "./utils";
 import ResourceMarkConfig from "./components/ResourceMarkConfig";
 import PropertyMarkConfig from "./components/PropertyMarkConfig";
 import MediaLibraryMarkConfig from "./components/MediaLibraryMarkConfig";
@@ -31,7 +31,7 @@ const MarkConfigModal = ({
 }: MarkConfigModalProps) => {
   const { t } = useTranslation();
 
-  const initialConfig = parseMarkConfig(mark?.configJson);
+  const initialConfig = parseMarkConfig(mark?.configJson, markType);
 
   // For new MediaLibrary marks, default applyScope to MatchedAndSubdirectories
   if (!mark && markType === PathMarkType.MediaLibrary) {
@@ -50,6 +50,7 @@ const MarkConfigModal = ({
   const contentRef = useRef<HTMLDivElement>(null);
 
   const preview = usePreview(rootPath, markType, config, 500, rootPaths);
+  const hasValidValueExtractor = hasValidPropertyValueExtractor(config, markType);
 
   // Check if content is scrollable and update scroll indicator
   useEffect(() => {
@@ -83,6 +84,8 @@ const MarkConfigModal = ({
   }, [config, enableExpiration]);
 
   const handleSave = useCallback(async () => {
+    if (!hasValidValueExtractor) return false;
+
     const newMark: Partial<BakabaseAbstractionsModelsDomainPathMark> = {
       type: markType,
       priority,
@@ -93,7 +96,15 @@ const MarkConfigModal = ({
     await onSave?.(newMark as BakabaseAbstractionsModelsDomainPathMark);
 
     return true;
-  }, [markType, priority, config, enableExpiration, expiresInSeconds, onSave]);
+  }, [
+    markType,
+    priority,
+    config,
+    enableExpiration,
+    expiresInSeconds,
+    onSave,
+    hasValidValueExtractor,
+  ]);
 
   const handleSyncNow = useCallback(async () => {
     if (!mark?.id) return;
@@ -139,6 +150,7 @@ const MarkConfigModal = ({
         actions: ["cancel", "ok"],
         okProps: {
           children: t("common.action.save"),
+          isDisabled: !hasValidValueExtractor,
           startContent: <SaveOutlined />,
         },
         startContent: mark?.id ? (

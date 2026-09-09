@@ -560,8 +560,7 @@ public class ResourceMoveService(
                             continue;
                         }
 
-                        effect.WillApply = PathMarkMatchEvaluator.Matches(config.MatchMode, config.Layer,
-                            config.Regex, config.ApplyScope, mark.Path, destPath);
+                        effect.WillApply = PathMarkMatchEvaluator.Matches(config, mark.Path, destPath);
                         effect.PropertyName = mark.Property?.Name;
                         effect.IsDynamic = config.ValueType == PropertyValueType.Dynamic;
                         effect.FixedValue =

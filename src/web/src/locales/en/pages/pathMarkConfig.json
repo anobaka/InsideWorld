@@ -102,6 +102,8 @@
   "pathMarkConfig.tip.zeroEqualsMatchedItem": "0 = matched item",
   "pathMarkConfig.label.valueRegex": "Value Regex",
   "pathMarkConfig.tip.regexExample": "e.g., \\\\[(.+?)\\\\]",
+  "pathMarkConfig.error.valueLayerRequired": "Select a layer to extract the property value from",
+  "pathMarkConfig.error.valueRegexRequired": "Enter a regular expression to extract the property value",
   "pathMarkConfig.label.mediaLibrarySettings": "Media Library Settings",
   "pathMarkConfig.label.targetMediaLibrary": "Target Media Library",
   "pathMarkConfig.empty.noMediaLibrarySelected": "No media library selected",

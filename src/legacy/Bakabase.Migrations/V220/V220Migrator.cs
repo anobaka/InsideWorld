@@ -514,8 +514,7 @@ public class V220Migrator : AbstractMigrator
                     // - BasePathType.Resource: CANNOT migrate (was purely resource-based)
 
                     int? valueLayer = null;
-                    string? valueRegex = locator.Regex;
-                    var matchMode = PathMatchMode.Regex;
+                    string? valueRegex = null;
 
                     if (locator.Positioner == PathPositioner.Layer && locator.Layer.HasValue)
                     {
@@ -526,7 +525,6 @@ public class V220Migrator : AbstractMigrator
                             // Layer < 0: go UP (parent directories)
                             // Layer > 0: go DOWN (child directories, extracted using resource path)
                             valueLayer = locator.Layer.Value;
-                            matchMode = PathMatchMode.Layer;
                         }
                         else // Resource base
                         {
@@ -541,8 +539,9 @@ public class V220Migrator : AbstractMigrator
                     }
                     else if (locator.Positioner == PathPositioner.Regex && !string.IsNullOrEmpty(locator.Regex))
                     {
-                        // Regex mode: apply regex on mark path's directory name
-                        matchMode = PathMatchMode.Regex;
+                        // Legacy template regexes matched every resource's path relative to the
+                        // media-library root, not the mark directory name.
+                        valueRegex = locator.Regex;
                     }
                     else
                     {
@@ -555,12 +554,16 @@ public class V220Migrator : AbstractMigrator
                         Pool = prop.Pool,
                         PropertyId = prop.Id,
                         ValueType = PropertyValueType.Dynamic,
-                        MatchMode = matchMode,
-                        Layer = null,
-                        Regex = null, // Null regex matches all paths
+                        // Template properties applied to every resource in the media library path.
+                        // Persist that applicability explicitly; value extraction is configured
+                        // independently through ValueLayer / ValueRegex below.
+                        MatchMode = PathMatchMode.Layer,
+                        Layer = 0,
+                        Regex = null,
                         ValueLayer = valueLayer,
                         ValueRegex = valueRegex,
-                        ApplyScope = PathMarkApplyScope.MatchedOnly
+                        ValueRegexMatchesResourcePath = !string.IsNullOrEmpty(valueRegex),
+                        ApplyScope = PathMarkApplyScope.MatchedAndSubdirectories
                     };
                     marks.Add(new PathMark
                     {

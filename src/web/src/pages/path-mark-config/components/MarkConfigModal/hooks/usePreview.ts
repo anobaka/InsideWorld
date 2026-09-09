@@ -113,18 +113,7 @@ export const usePreview = (
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [
-    effectivePaths,
-    markType,
-    config.matchMode,
-    config.layer,
-    config.regex,
-    config.fsTypeFilter,
-    config.extensions,
-    config.extensionGroupIds,
-    config.applyScope,
-    debounceMs,
-  ]);
+  }, [effectivePaths, markType, config, debounceMs]);
 
   return {
     loading,

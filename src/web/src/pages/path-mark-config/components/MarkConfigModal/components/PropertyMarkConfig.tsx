@@ -43,6 +43,8 @@ const PropertyMarkConfig = ({
 }: Props) => {
   const { createPortal } = useBakabaseContext();
   const [selectedProperty, setSelectedProperty] = useState<IProperty | null>(null);
+  const hasValidValueLayer =
+    typeof config.valueLayer === "number" && Number.isFinite(config.valueLayer);
 
   // Load selected property info on mount if we have propertyId
   useEffect(() => {
@@ -164,7 +166,18 @@ const PropertyMarkConfig = ({
           orientation="horizontal"
           size="sm"
           value={String(config.valueType ?? PropertyValueType.Fixed)}
-          onValueChange={(value) => updateConfig({ valueType: Number(value) })}
+          onValueChange={(value) => {
+            const valueType = Number(value) as PropertyValueType;
+
+            updateConfig({
+              valueType,
+              ...(valueType === PropertyValueType.Dynamic &&
+              !hasValidValueLayer &&
+              !config.valueRegex
+                ? { valueLayer: 0 }
+                : {}),
+            });
+          }}
         >
           <Radio value={String(PropertyValueType.Fixed)}>{t("pathMarkConfig.label.fixed")}</Radio>
           <Radio value={String(PropertyValueType.Dynamic)}>
@@ -191,7 +204,19 @@ const PropertyMarkConfig = ({
               orientation="horizontal"
               size="sm"
               value={String(config.valueMatchMode ?? PathMatchMode.Layer)}
-              onValueChange={(value) => updateConfig({ valueMatchMode: Number(value) })}
+              onValueChange={(value) => {
+                const valueMatchMode = Number(value) as PathMatchMode;
+
+                updateConfig({
+                  valueMatchMode,
+                  ...(valueMatchMode === PathMatchMode.Layer && !hasValidValueLayer
+                    ? { valueLayer: 0 }
+                    : {}),
+                  ...(valueMatchMode === PathMatchMode.Layer
+                    ? { valueRegexMatchesResourcePath: undefined }
+                    : {}),
+                });
+              }}
             >
               <Radio value={String(PathMatchMode.Layer)}>{t("pathMarkConfig.label.layer")}</Radio>
               <Radio value={String(PathMatchMode.Regex)}>{t("pathMarkConfig.label.regex")}</Radio>
@@ -201,13 +226,25 @@ const PropertyMarkConfig = ({
           {config.valueMatchMode === PathMatchMode.Layer ? (
             <NumberInput
               description={t("pathMarkConfig.tip.zeroEqualsMatchedItem")}
+              errorMessage={
+                !hasValidValueLayer ? t("pathMarkConfig.error.valueLayerRequired") : undefined
+              }
+              isInvalid={!hasValidValueLayer}
               label={t("pathMarkConfig.label.valueLayer")}
               size="sm"
-              value={config.valueLayer ?? 0}
-              onValueChange={(v) => updateConfig({ valueLayer: v })}
+              value={hasValidValueLayer ? config.valueLayer : undefined}
+              onValueChange={(v) =>
+                updateConfig({ valueLayer: Number.isFinite(v) ? v : undefined })
+              }
             />
           ) : (
             <Input
+              errorMessage={
+                !config.valueRegex?.trim()
+                  ? t("pathMarkConfig.error.valueRegexRequired")
+                  : undefined
+              }
+              isInvalid={!config.valueRegex?.trim()}
               label={t("pathMarkConfig.label.valueRegex")}
               placeholder={t("pathMarkConfig.tip.regexExample")}
               size="sm"

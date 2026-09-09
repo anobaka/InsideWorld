@@ -32,6 +32,7 @@ export interface MarkConfig {
   valueMatchMode?: PathMatchMode;
   valueLayer?: number;
   valueRegex?: string;
+  valueRegexMatchesResourcePath?: boolean;
   // For Resource type
   fsTypeFilter?: PathFilterFsType;
   extensions?: string[];
