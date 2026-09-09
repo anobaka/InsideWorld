@@ -1154,6 +1154,12 @@ export interface BakabaseAbstractionsModelsViewMediaLibraryTemplateImportConfigu
   uniqueExtensionGroups?: BakabaseAbstractionsModelsDomainExtensionGroup[];
 }
 
+export interface BakabaseAbstractionsModelsViewResourceMoveBatchViewModel {
+  batchId: string;
+  /** @format int32 */
+  skippedResourceCount: number;
+}
+
 export interface BakabaseAbstractionsModelsViewResourceMovePreviewViewModel {
   items: BakabaseAbstractionsModelsViewResourceMovePreviewViewModelItem[];
 }
@@ -4900,7 +4906,7 @@ export interface BakabaseServiceModelsViewBulkModificationDiffViewModel {
   id: number;
   /** @format int32 */
   bulkModificationId: number;
-  resourcePath: string;
+  resourcePath?: string;
   /** @format int32 */
   resourceId: number;
   diffs: BakabaseServiceModelsViewResourceDiffViewModel[];
@@ -6323,6 +6329,13 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstract
   code: number;
   message?: string;
   data?: BakabaseAbstractionsModelsViewMediaLibraryTemplateImportConfigurationViewModel;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsViewResourceMoveBatchViewModel {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseAbstractionsModelsViewResourceMoveBatchViewModel;
 }
 
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsViewResourceMovePreviewViewModel {
@@ -21983,7 +21996,10 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       data: BakabaseServiceModelsInputResourceMoveInputModel,
       params: RequestParams = {},
     ) =>
-      this.request<BootstrapModelsResponseModelsSingletonResponse1SystemString, any>({
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsViewResourceMoveBatchViewModel,
+        any
+      >({
         path: `/resource-move`,
         method: "POST",
         body: data,
