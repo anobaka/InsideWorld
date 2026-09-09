@@ -19,7 +19,7 @@ public class TampermonkeyController(TampermonkeyService service) : ControllerBas
         return BaseResponseBuilder.Ok;
     }
 
-    [RunsOnUserMachine(Reason = "安装脚本要打开你这台机器上的浏览器")]
+    [RunsOnUserMachine(Reason = "Installing the userscript opens the browser on your machine.")]
     [HttpGet("install")]
     [SwaggerOperation(OperationId = "InstallTampermonkeyScript")]
     public async Task<BaseResponse> Install()

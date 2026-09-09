@@ -855,7 +855,7 @@ namespace Bakabase.Service.Controllers
             }
         }
 
-        [RunsOnUserMachine(Reason = "被删除的文件在服务端的回收站里，客户端打开的是自己的回收站")]
+        [RunsOnUserMachine(Reason = "The recycle bin that opens belongs to the machine you are sitting at, not to the server.")]
         [HttpGet("recycle-bin")]
         [SwaggerOperation(OperationId = "OpenRecycleBin")]
         public async Task<BaseResponse> OpenRecycleBin()
@@ -1990,7 +1990,7 @@ namespace Bakabase.Service.Controllers
             "alac"                           // Apple Lossless
         };
 
-        [RunsOnUserMachine(Reason = "文件图标由运行它的那台机器的系统提供")]
+        [RunsOnUserMachine(Reason = "File icons come from the operating system of the machine that renders them.")]
         [HttpGet("icon")]
         [SwaggerOperation(OperationId = "GetIconData")]
         public Task<SingletonResponse<string>> GetIcon(IconType type, string? path)

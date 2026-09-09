@@ -124,7 +124,7 @@ public class DLsiteWorkController(IDLsiteWorkService service, BTaskManager btm, 
         return new SingletonResponse<string>(key);
     }
 
-    [RunsOnUserMachine(Reason = "运行本地程序，只能在你面前的这台机器上进行")]
+    [RunsOnUserMachine(Reason = "Running the work launches a program on the machine you are sitting at.")]
     [HttpPost("{workId}/launch")]
     [SwaggerOperation(OperationId = "LaunchDLsiteWork")]
     public async Task<BaseResponse> Launch(string workId)

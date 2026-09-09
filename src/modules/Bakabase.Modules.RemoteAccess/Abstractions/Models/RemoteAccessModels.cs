@@ -27,7 +27,17 @@ public enum RemoteAccessDenialReason
     /// callers to start one. The client should hand the stream to a native player
     /// instead.
     /// </summary>
-    TranscodeDisabled = 4
+    TranscodeDisabled = 4,
+
+    /// <summary>
+    /// The action's effect lands on whatever machine runs it — launching a player,
+    /// opening a folder, showing a window — so running it here would put something on
+    /// a screen the caller cannot see. Unlike <see cref="HostOnly"/> this is refused
+    /// even in <see cref="RemoteAccessMode.Unrestricted"/> and even for a paired
+    /// device: it is not a permission, it is a statement about where the action means
+    /// anything.
+    /// </summary>
+    RunsOnUserMachine = 5
 }
 
 /// <summary>

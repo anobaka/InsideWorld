@@ -24,7 +24,7 @@ namespace Bakabase.Service.Controllers
             _hubContext = hubContext;
         }
 
-        [RunsOnUserMachine(Reason = "用默认浏览器打开链接，只能在你面前的这台机器上进行")]
+        [RunsOnUserMachine(Reason = "Opening a link uses the browser on the machine you are sitting at.")]
         [HttpGet("url")]
         [SwaggerOperation(OperationId = "OpenUrlInDefaultBrowser")]
         public async Task<BaseResponse> OpenUrlInDefaultBrowser(string url)

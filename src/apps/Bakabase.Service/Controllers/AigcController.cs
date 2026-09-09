@@ -130,7 +130,7 @@ public class AigcController(
         return BaseResponseBuilder.Ok;
     }
 
-    [RunsOnUserMachine(Reason = "打开生成的文件，只能在你面前的这台机器上进行")]
+    [RunsOnUserMachine(Reason = "Opening the generated file happens on the machine you are sitting at.")]
     [HttpPost("artifacts/{id:int}/open")]
     [SwaggerOperation(OperationId = "OpenAigcArtifact")]
     public async Task<BaseResponse> OpenArtifact(int id, [FromQuery] bool openInDirectory, CancellationToken ct)

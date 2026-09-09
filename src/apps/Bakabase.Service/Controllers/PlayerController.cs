@@ -16,7 +16,7 @@ namespace Bakabase.Service.Controllers
     public class PlayerController(IBatchPlayService batchPlayService) : Controller
     {
         [SwaggerOperation(OperationId = "GetBatchPlayCandidates")]
-        [RunsOnUserMachine(Reason = "候选项取决于你这台机器上装了哪些播放器")]
+        [RunsOnUserMachine(Reason = "The candidates depend on which players are installed on your machine.")]
         [HttpPost("batch-play/candidates")]
         public async Task<ListResponse<BatchPlayCandidate>> GetBatchPlayCandidates(
             [FromBody] BatchPlayCandidatesInputModel model)
@@ -27,7 +27,7 @@ namespace Bakabase.Service.Controllers
         }
 
         [SwaggerOperation(OperationId = "BatchPlayResources")]
-        [RunsOnUserMachine(Reason = "拉起播放器，只能在你面前的这台机器上进行")]
+        [RunsOnUserMachine(Reason = "A player starts on the machine you are sitting at.")]
         [HttpPost("batch-play")]
         public async Task<SingletonResponse<BatchPlayResult>> BatchPlay([FromBody] BatchPlayInputModel model)
         {
@@ -45,7 +45,7 @@ namespace Bakabase.Service.Controllers
         }
 
         [SwaggerOperation(OperationId = "GetPlaylistBatchPlayCandidates")]
-        [RunsOnUserMachine(Reason = "候选项取决于你这台机器上装了哪些播放器")]
+        [RunsOnUserMachine(Reason = "The candidates depend on which players are installed on your machine.")]
         [HttpGet("playlist/{playlistId:int}/batch-play/candidates")]
         public async Task<ListResponse<BatchPlayCandidate>> GetPlaylistBatchPlayCandidates(int playlistId)
         {
@@ -62,7 +62,7 @@ namespace Bakabase.Service.Controllers
         }
 
         [SwaggerOperation(OperationId = "BatchPlayPlaylist")]
-        [RunsOnUserMachine(Reason = "拉起播放器，只能在你面前的这台机器上进行")]
+        [RunsOnUserMachine(Reason = "A player starts on the machine you are sitting at.")]
         [HttpPost("playlist/{playlistId:int}/batch-play")]
         public async Task<SingletonResponse<BatchPlayResult>> BatchPlayPlaylist(int playlistId,
             [FromBody] PlaylistBatchPlayInputModel model)
