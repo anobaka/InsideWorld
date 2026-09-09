@@ -108,4 +108,67 @@ public sealed class RemoteDeviceAuthenticator(
 
         return new DeviceAuthResult(DeviceAuthOutcome.Authenticated, device);
     }
+
+    /// <summary>
+    /// Verifies a token carried in the URL instead of a header, for a caller that cannot
+    /// set one — a native player handed a link.
+    /// </summary>
+    /// <remarks>
+    /// No nonce is consumed here, deliberately: one media URL is fetched many times over
+    /// (every range request during playback is the same URL), so treating a repeat as a
+    /// replay would break playback. What bounds the token instead is that it covers a
+    /// single URL and carries its own expiry.
+    /// </remarks>
+    public DeviceAuthResult AuthenticateSignedUrl(string? token, string method, string path, string rawQuery)
+    {
+        var parsed = SignedMediaUrl.TryParse(token);
+        if (parsed == null)
+        {
+            return DeviceAuthResult.Anonymous;
+        }
+
+        // These links only ever fetch. A HEAD is a GET without a body, so it verifies
+        // against the same canonical string; anything else is refused outright rather
+        // than letting a link become a write.
+        if (!string.Equals(method, "GET", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(method, "HEAD", StringComparison.OrdinalIgnoreCase))
+        {
+            return new DeviceAuthResult(DeviceAuthOutcome.BadSignature, null);
+        }
+
+        var device = devices.Find(parsed.DeviceId);
+        if (device == null)
+        {
+            // Revoking a device kills every link it ever produced, including ones
+            // already sitting in a player's playlist.
+            return new DeviceAuthResult(DeviceAuthOutcome.UnknownDevice, null);
+        }
+
+        var now = _now();
+        var expiresAt = DateTimeOffset.FromUnixTimeSeconds(parsed.ExpiresAtSeconds).UtcDateTime;
+
+        // Capped in both directions: lapsed, or minted with an expiry so far out that
+        // the device was effectively handing out a permanent key.
+        if (expiresAt <= now || expiresAt - now > SignedMediaUrl.MaxLifetime)
+        {
+            return new DeviceAuthResult(DeviceAuthOutcome.Expired, device);
+        }
+
+        byte[] key;
+        try
+        {
+            key = RemoteRequestSignature.FromBase64Url(device.Key);
+        }
+        catch (FormatException)
+        {
+            return new DeviceAuthResult(DeviceAuthOutcome.BadSignature, device);
+        }
+
+        var canonical = SignedMediaUrl.BuildCanonicalString(parsed.DeviceId, "GET", path,
+            SignedMediaUrl.StripToken(rawQuery), parsed.ExpiresAtSeconds);
+
+        return RemoteRequestSignature.Verify(key, canonical, parsed.Signature)
+            ? new DeviceAuthResult(DeviceAuthOutcome.Authenticated, device)
+            : new DeviceAuthResult(DeviceAuthOutcome.BadSignature, device);
+    }
 }

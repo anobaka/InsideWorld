@@ -75,7 +75,7 @@ public class RemoteDeviceStoreTests
         await Build().MutateAsync(d =>
         {
             d.Devices.Add(NewDevice("dev-1"));
-            d.SigningSecret = "secret";
+            d.PairingCode = new PairingCodeState {CodeHash = "hash", ExpiresAt = new DateTime(2026, 1, 1)};
         });
 
         var reloaded = Build().Read();
@@ -83,7 +83,7 @@ public class RemoteDeviceStoreTests
         Assert.AreEqual(1, reloaded.Devices.Count);
         Assert.AreEqual("dev-1", reloaded.Devices[0].Id);
         Assert.AreEqual(RemoteDevicePlatform.Windows, reloaded.Devices[0].Platform);
-        Assert.AreEqual("secret", reloaded.SigningSecret);
+        Assert.AreEqual("hash", reloaded.PairingCode!.CodeHash);
     }
 
     [TestMethod]

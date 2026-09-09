@@ -38,6 +38,7 @@ using Bakabase.Service.Components.RemoteAccess;
 using Swashbuckle.AspNetCore.Annotations;
 using Image = SixLabors.ImageSharp.Image;
 using Bakabase.Modules.RemoteAccess.Abstractions.Components;
+using Bakabase.Modules.RemoteAccess.Components.Pairing;
 
 namespace Bakabase.Service.Controllers
 {
@@ -126,7 +127,13 @@ namespace Bakabase.Service.Controllers
 
         [HttpGet("thumbnail")]
         [SwaggerOperation(OperationId = "GetThumbnail")]
-        [ResponseCache(VaryByQueryKeys = [nameof(path), nameof(w), nameof(h)], Duration = 30 * 60)]
+        // The token is part of the cache key even though the action ignores it. A signed
+        // URL carries no Authorization header, so unlike a header-signed request it does
+        // read and write this cache — and without varying on the token, a thumbnail a
+        // paired device pulled would afterwards be served to an anonymous caller asking
+        // for the same path.
+        [ResponseCache(VaryByQueryKeys = [nameof(path), nameof(w), nameof(h), SignedMediaUrl.QueryKey],
+            Duration = 30 * 60)]
         [RemoteAccessible(PathParameters = [nameof(path)])]
         public async Task<IActionResult> GetThumbnail(string path, int? w, int? h)
         {

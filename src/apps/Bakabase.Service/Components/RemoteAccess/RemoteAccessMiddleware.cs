@@ -161,13 +161,21 @@ namespace Bakabase.Service.Components.RemoteAccess
         private static async Task<DeviceAuthResult> AuthenticateAsync(HttpContext context,
             RemoteDeviceAuthenticator authenticator)
         {
-            var header = context.Request.Headers.Authorization.ToString();
+            var request = context.Request;
+            var rawQuery = request.QueryString.HasValue ? request.QueryString.Value![1..] : string.Empty;
+
+            var header = request.Headers.Authorization.ToString();
             if (RemoteRequestSignature.TryParseHeader(header) == null)
             {
-                return DeviceAuthResult.Anonymous;
+                // No header. A URL token is the other way in, for a caller that cannot
+                // set one at all — a native player handed a link.
+                var token = request.Query[SignedMediaUrl.QueryKey].ToString();
+                return string.IsNullOrEmpty(token)
+                    ? DeviceAuthResult.Anonymous
+                    : authenticator.AuthenticateSignedUrl(token, request.Method, request.Path.Value ?? string.Empty,
+                        rawQuery);
             }
 
-            var request = context.Request;
             var bodyDigest = string.Empty;
 
             var hashable = !HttpMethods.IsGet(request.Method) &&
@@ -184,7 +192,7 @@ namespace Bakabase.Service.Components.RemoteAccess
             }
 
             return authenticator.Authenticate(header, request.Method, request.Path.Value ?? string.Empty,
-                request.QueryString.HasValue ? request.QueryString.Value![1..] : string.Empty, bodyDigest);
+                rawQuery, bodyDigest);
         }
 
         private static (RemoteAccessDenialReason Reason, string Message) Describe(DeviceAuthOutcome outcome) =>

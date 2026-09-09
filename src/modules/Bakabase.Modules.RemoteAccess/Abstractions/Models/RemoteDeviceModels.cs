@@ -115,8 +115,7 @@ public class PairingCodeState
 
 /// <summary>
 /// Everything <c>devices.json</c> holds. Deliberately not an <c>[Options]</c> type: it
-/// carries device keys and the signing secret, and options are broadcast to every UI
-/// hub client.
+/// carries device keys, and options are broadcast to every UI hub client.
 /// </summary>
 public class RemoteDeviceStoreData
 {
@@ -125,10 +124,4 @@ public class RemoteDeviceStoreData
     public List<PendingPairingRequest> PendingRequests { get; set; } = [];
 
     public PairingCodeState? PairingCode { get; set; }
-
-    /// <summary>
-    /// base64url secret used to sign media URLs, which are handed to players that
-    /// cannot carry a header. Rotating it invalidates every outstanding URL.
-    /// </summary>
-    public string? SigningSecret { get; set; }
 }
