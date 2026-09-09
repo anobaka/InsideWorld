@@ -113,6 +113,7 @@ namespace Bakabase.Service.Components
                     : RemoteAccessMode.Disabled,
                 AppService.CoreVersion.ToString());
             services.AddSingleton<IListeningAddressProvider, AppContextListeningAddressProvider>();
+            services.AddSingleton<IRemoteAccessDataDirectory, AppServiceRemoteAccessDataDirectory>();
 
             // Configured rather than passed to AddMvc because the base AppStartup owns
             // that call; MvcOptions configuration is order-independent.

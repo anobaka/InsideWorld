@@ -156,7 +156,8 @@ footer{margin-top:36px;color:var(--dim);font-size:12px;border-top:1px solid var(
 <h3>3.4 明确不改</h3>
 <table>
 <tr><th style="width:36%">位置</th><th>理由</th></tr>
-<tr><td class="k"><span class="tag t-none">不改</span> BakabaseHost.cs、BakabaseStartup.cs、Bakabase.Service/Program.cs</td><td>一体版与 Docker 共用的组合根。阶段一的全部服务端注册走 <code class="i">AddRemoteAccess</code>，逻辑写进已挂载的中间件与两个过滤器内部。验收用差异比对</td></tr>
+<tr><td class="k"><span class="tag t-none">不改</span> BakabaseHost.cs、Bakabase.Service/Program.cs</td><td>一体版与 Docker 共用的组合根。逻辑写进已挂载的中间件与两个过滤器内部</td></tr>
+<tr><td class="k"><span class="tag t-mod">修改</span> BakabaseStartup.cs<br><span class="tag t-dec">仅一行</span></td><td><b>更正：这条原写"零改动"，做不到。</b><code class="i">IRemoteAccessDataDirectory</code> 的实现需要 <code class="i">AppService</code>，而 RemoteAccess 模块只引用 abstractions，够不到它。所以按已有的 <code class="i">IListeningAddressProvider</code>（<code class="i">BakabaseStartup.cs:115</code>）同款方式，在它旁边加<b>一行</b>单例注册，没有条件分支、没有模式判断。其余服务端注册仍全部走 <code class="i">AddRemoteAccess</code>。验收改为"差异比对只有这一行"</td><td>一</td><td>小</td></tr>
 <tr><td class="k"><span class="tag t-none">不改</span> src/web/src/config/env.ts、sdk/BApi.tsx、SignalR 两条连接的地址</td><td>全部同源相对地址，页面从转发层加载后请求自然发到转发层。这是候选二的收益</td></tr>
 <tr><td class="k"><span class="tag t-none">不改</span> Player 模块的 PlayerDiscoveryService、KnownPlayerDefinitions、M3u8Playlist、BatchPlayArguments、ProcessBatchPlayLauncher</td><td>已是纯本机逻辑，客户端组合根原样注册</td></tr>
 <tr><td class="k"><span class="tag t-none">不改</span> RemoteAccessMode 三个取值与默认值、docker/</td><td>Docker 镜像不含客户端程序集（R1）。<b>构建与发布流水线现在要改</b>——决策 06 之后客户端是独立产物，见 3.2</td></tr>
