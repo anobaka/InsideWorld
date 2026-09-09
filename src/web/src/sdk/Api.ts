@@ -4200,6 +4200,15 @@ export interface BakabaseModulesStandardValueModelsViewStandardValueConversionRu
   description?: string;
 }
 
+/**
+ * [1: PlatformHolding, 2: Catalog, 3: SharingChannel]
+ * @format int32
+ */
+export type BakabaseModulesSubscriptionAbstractionsModelsDomainConstantsSubscriptionSourceKind =
+  | 1
+  | 2
+  | 3;
+
 export interface BakabaseModulesSubscriptionAbstractionsModelsInputSubscriptionCreationInputModel {
   kind: string;
   displayName: string;
@@ -4207,6 +4216,8 @@ export interface BakabaseModulesSubscriptionAbstractionsModelsInputSubscriptionC
   enabled: boolean;
   /** @format int32 */
   intervalMinutes?: number;
+  /** @format int32 */
+  collectionId?: number;
 }
 
 export interface BakabaseModulesSubscriptionAbstractionsModelsInputSubscriptionUpdateInputModel {
@@ -4215,6 +4226,8 @@ export interface BakabaseModulesSubscriptionAbstractionsModelsInputSubscriptionU
   enabled?: boolean;
   /** @format int32 */
   intervalMinutes?: number;
+  /** @format int32 */
+  collectionId?: number;
 }
 
 export interface BakabaseModulesSubscriptionAbstractionsModelsViewSubscriptionCheckSummaryViewModel {
@@ -4230,6 +4243,10 @@ export interface BakabaseModulesSubscriptionAbstractionsModelsViewSubscriptionPr
   kind: string;
   displayName: string;
   icon?: string;
+  /** [1: PlatformHolding, 2: Catalog, 3: SharingChannel] */
+  sourceKind: BakabaseModulesSubscriptionAbstractionsModelsDomainConstantsSubscriptionSourceKind;
+  /** [1: PathMark, 2: Steam, 3: DLsite, 4: ExHentai, 5: Aigc, 6: Bangumi, 7: Pixiv] */
+  resourceSource?: BakabaseAbstractionsModelsDomainConstantsResourceSource;
 }
 
 export interface BakabaseModulesSubscriptionAbstractionsModelsViewSubscriptionViewModel {
@@ -4248,6 +4265,8 @@ export interface BakabaseModulesSubscriptionAbstractionsModelsViewSubscriptionVi
   lastError?: string;
   /** @format int32 */
   intervalMinutes?: number;
+  /** @format int32 */
+  collectionId?: number;
   targetSummary?: string;
 }
 
