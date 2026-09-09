@@ -41,6 +41,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IRemoteDeviceService>(sp =>
             new RemoteDeviceService(sp.GetRequiredService<IRemoteDeviceStore>()));
         services.TryAddSingleton<RemoteDeviceAuthenticator>();
+        services.TryAddSingleton<PairingRequestRateLimiter>();
 
         services.AddSingleton<IServableRootProvider, MediaLibraryServableRootProvider>();
         services.AddSingleton<IServableRootProvider, PathMarkServableRootProvider>();

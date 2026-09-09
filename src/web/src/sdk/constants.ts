@@ -3883,6 +3883,117 @@ export const NullValueBehaviorLabel: Record<NullValueBehavior, string> = {
   [NullValueBehavior.Pass]: 'Pass'
 };
 
+export enum DeviceAuthOutcome {
+  Anonymous = 0,
+  Authenticated = 1,
+  UnknownDevice = 2,
+  BadSignature = 3,
+  Expired = 4,
+  Replayed = 5
+}
+
+export const deviceAuthOutcomes = [
+  { label: 'Anonymous', value: DeviceAuthOutcome.Anonymous },
+  { label: 'Authenticated', value: DeviceAuthOutcome.Authenticated },
+  { label: 'UnknownDevice', value: DeviceAuthOutcome.UnknownDevice },
+  { label: 'BadSignature', value: DeviceAuthOutcome.BadSignature },
+  { label: 'Expired', value: DeviceAuthOutcome.Expired },
+  { label: 'Replayed', value: DeviceAuthOutcome.Replayed }
+] as const;
+
+export const DeviceAuthOutcomeLabel: Record<DeviceAuthOutcome, string> = {
+  [DeviceAuthOutcome.Anonymous]: 'Anonymous',
+  [DeviceAuthOutcome.Authenticated]: 'Authenticated',
+  [DeviceAuthOutcome.UnknownDevice]: 'UnknownDevice',
+  [DeviceAuthOutcome.BadSignature]: 'BadSignature',
+  [DeviceAuthOutcome.Expired]: 'Expired',
+  [DeviceAuthOutcome.Replayed]: 'Replayed'
+};
+
+export enum PairingFailure {
+  None = 0,
+  CodeRejected = 1,
+  RequestRejected = 2,
+  NotYetApproved = 3
+}
+
+export const pairingFailures = [
+  { label: 'None', value: PairingFailure.None },
+  { label: 'CodeRejected', value: PairingFailure.CodeRejected },
+  { label: 'RequestRejected', value: PairingFailure.RequestRejected },
+  { label: 'NotYetApproved', value: PairingFailure.NotYetApproved }
+] as const;
+
+export const PairingFailureLabel: Record<PairingFailure, string> = {
+  [PairingFailure.None]: 'None',
+  [PairingFailure.CodeRejected]: 'CodeRejected',
+  [PairingFailure.RequestRejected]: 'RequestRejected',
+  [PairingFailure.NotYetApproved]: 'NotYetApproved'
+};
+
+export enum RemoteAccessDenialReason {
+  None = 0,
+  Disabled = 1,
+  HostOnly = 2,
+  PathNotServable = 3,
+  TranscodeDisabled = 4,
+  RunsOnUserMachine = 5,
+  Unauthenticated = 6,
+  SignatureExpired = 7,
+  DeviceRevoked = 8
+}
+
+export const remoteAccessDenialReasons = [
+  { label: 'None', value: RemoteAccessDenialReason.None },
+  { label: 'Disabled', value: RemoteAccessDenialReason.Disabled },
+  { label: 'HostOnly', value: RemoteAccessDenialReason.HostOnly },
+  { label: 'PathNotServable', value: RemoteAccessDenialReason.PathNotServable },
+  { label: 'TranscodeDisabled', value: RemoteAccessDenialReason.TranscodeDisabled },
+  { label: 'RunsOnUserMachine', value: RemoteAccessDenialReason.RunsOnUserMachine },
+  { label: 'Unauthenticated', value: RemoteAccessDenialReason.Unauthenticated },
+  { label: 'SignatureExpired', value: RemoteAccessDenialReason.SignatureExpired },
+  { label: 'DeviceRevoked', value: RemoteAccessDenialReason.DeviceRevoked }
+] as const;
+
+export const RemoteAccessDenialReasonLabel: Record<RemoteAccessDenialReason, string> = {
+  [RemoteAccessDenialReason.None]: 'None',
+  [RemoteAccessDenialReason.Disabled]: 'Disabled',
+  [RemoteAccessDenialReason.HostOnly]: 'HostOnly',
+  [RemoteAccessDenialReason.PathNotServable]: 'PathNotServable',
+  [RemoteAccessDenialReason.TranscodeDisabled]: 'TranscodeDisabled',
+  [RemoteAccessDenialReason.RunsOnUserMachine]: 'RunsOnUserMachine',
+  [RemoteAccessDenialReason.Unauthenticated]: 'Unauthenticated',
+  [RemoteAccessDenialReason.SignatureExpired]: 'SignatureExpired',
+  [RemoteAccessDenialReason.DeviceRevoked]: 'DeviceRevoked'
+};
+
+export enum RemoteDevicePlatform {
+  Unknown = 0,
+  Windows = 1,
+  MacOS = 2,
+  Linux = 3,
+  Android = 4,
+  IOS = 5
+}
+
+export const remoteDevicePlatforms = [
+  { label: 'Unknown', value: RemoteDevicePlatform.Unknown },
+  { label: 'Windows', value: RemoteDevicePlatform.Windows },
+  { label: 'MacOS', value: RemoteDevicePlatform.MacOS },
+  { label: 'Linux', value: RemoteDevicePlatform.Linux },
+  { label: 'Android', value: RemoteDevicePlatform.Android },
+  { label: 'IOS', value: RemoteDevicePlatform.IOS }
+] as const;
+
+export const RemoteDevicePlatformLabel: Record<RemoteDevicePlatform, string> = {
+  [RemoteDevicePlatform.Unknown]: 'Unknown',
+  [RemoteDevicePlatform.Windows]: 'Windows',
+  [RemoteDevicePlatform.MacOS]: 'MacOS',
+  [RemoteDevicePlatform.Linux]: 'Linux',
+  [RemoteDevicePlatform.Android]: 'Android',
+  [RemoteDevicePlatform.IOS]: 'IOS'
+};
+
 export enum FileOperationType {
   Rename = 1,
   Move = 2,
@@ -4547,30 +4658,6 @@ export const dataCardMatchModes = [
 export const DataCardMatchModeLabel: Record<DataCardMatchMode, string> = {
   [DataCardMatchMode.Any]: 'Any',
   [DataCardMatchMode.All]: 'All'
-};
-
-export enum RemoteAccessDenialReason {
-  None = 0,
-  Disabled = 1,
-  HostOnly = 2,
-  PathNotServable = 3,
-  TranscodeDisabled = 4
-}
-
-export const remoteAccessDenialReasons = [
-  { label: 'None', value: RemoteAccessDenialReason.None },
-  { label: 'Disabled', value: RemoteAccessDenialReason.Disabled },
-  { label: 'HostOnly', value: RemoteAccessDenialReason.HostOnly },
-  { label: 'PathNotServable', value: RemoteAccessDenialReason.PathNotServable },
-  { label: 'TranscodeDisabled', value: RemoteAccessDenialReason.TranscodeDisabled }
-] as const;
-
-export const RemoteAccessDenialReasonLabel: Record<RemoteAccessDenialReason, string> = {
-  [RemoteAccessDenialReason.None]: 'None',
-  [RemoteAccessDenialReason.Disabled]: 'Disabled',
-  [RemoteAccessDenialReason.HostOnly]: 'HostOnly',
-  [RemoteAccessDenialReason.PathNotServable]: 'PathNotServable',
-  [RemoteAccessDenialReason.TranscodeDisabled]: 'TranscodeDisabled'
 };
 
 export enum ResourceMatcherLeafKind {

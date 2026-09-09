@@ -5024,6 +5024,166 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/remote-access/require-pairing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["SetRemoteAccessRequirePairing"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/remote-access/pair/code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PairRemoteDeviceWithCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/remote-access/pair/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RequestRemoteDevicePairing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/remote-access/pair/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ClaimRemoteDevicePairing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/remote-access/pairing/code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["IssueRemoteAccessPairingCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/remote-access/pairing/requests/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ApproveRemoteDevicePairingRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/remote-access/pairing/requests/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RejectRemoteDevicePairingRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/remote-access/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetRemoteAccessDevices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/remote-access/devices/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["RevokeRemoteAccessDevice"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/remote-access/devices/{id}/name": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["RenameRemoteAccessDevice"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/resource/search-operation": {
         parameters: {
             query?: never;
@@ -9895,6 +10055,18 @@ export interface components {
             /** Format: int32 */
             order: number;
         };
+        /**
+         * Format: int32
+         * @description [0: None, 1: CodeRejected, 2: RequestRejected, 3: NotYetApproved]
+         * @enum {integer}
+         */
+        "Bakabase.Modules.RemoteAccess.Abstractions.Models.PairingFailure": 0 | 1 | 2 | 3;
+        /**
+         * Format: int32
+         * @description [0: Unknown, 1: Windows, 2: MacOS, 3: Linux, 4: Android, 5: IOS]
+         * @enum {integer}
+         */
+        "Bakabase.Modules.RemoteAccess.Abstractions.Models.RemoteDevicePlatform": 0 | 1 | 2 | 3 | 4 | 5;
         "Bakabase.Modules.Search.Models.Db.ResourceSearchDbModel": {
             group?: components["schemas"]["Bakabase.Modules.Search.Models.Db.ResourceSearchFilterGroupDbModel"];
             orders?: components["schemas"]["Bakabase.Abstractions.Models.Input.ResourceSearchOrderInputModel"][];
@@ -10322,11 +10494,29 @@ export interface components {
             presetSiteIds?: string[];
             customSites?: string[];
         };
+        "Bakabase.Service.Models.Input.RemoteAccessDeviceNameInputModel": {
+            name?: string;
+        };
         "Bakabase.Service.Models.Input.RemoteAccessLiveTranscodeInputModel": {
             allow: boolean;
         };
         "Bakabase.Service.Models.Input.RemoteAccessModeInputModel": {
             mode?: components["schemas"]["Bakabase.Abstractions.Models.Domain.Constants.RemoteAccessMode"];
+        };
+        "Bakabase.Service.Models.Input.RemoteAccessPairClaimInputModel": {
+            requestId?: string;
+        };
+        "Bakabase.Service.Models.Input.RemoteAccessPairRequestInputModel": {
+            deviceName?: string;
+            platform: components["schemas"]["Bakabase.Modules.RemoteAccess.Abstractions.Models.RemoteDevicePlatform"];
+        };
+        "Bakabase.Service.Models.Input.RemoteAccessPairWithCodeInputModel": {
+            code?: string;
+            deviceName?: string;
+            platform: components["schemas"]["Bakabase.Modules.RemoteAccess.Abstractions.Models.RemoteDevicePlatform"];
+        };
+        "Bakabase.Service.Models.Input.RemoteAccessRequirePairingInputModel": {
+            require: boolean;
         };
         "Bakabase.Service.Models.Input.ResourceCoverSaveInputModel": {
             base64String: string;
@@ -10754,6 +10944,54 @@ export interface components {
         "Bakabase.Service.Models.View.RemoteAccessClientContextViewModel": {
             isLocal: boolean;
             mode: components["schemas"]["Bakabase.Abstractions.Models.Domain.Constants.RemoteAccessMode"];
+            paired: boolean;
+            deviceId?: string;
+            deviceName?: string;
+        };
+        "Bakabase.Service.Models.View.RemoteAccessDeviceViewModel": {
+            id: string;
+            name: string;
+            platform: components["schemas"]["Bakabase.Modules.RemoteAccess.Abstractions.Models.RemoteDevicePlatform"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            lastSeenAt?: string;
+            approvedByDeviceId?: string;
+        };
+        "Bakabase.Service.Models.View.RemoteAccessIssuedPairingCodeViewModel": {
+            code: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        "Bakabase.Service.Models.View.RemoteAccessPairingCodeViewModel": {
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: int32 */
+            remainingAttempts: number;
+        };
+        "Bakabase.Service.Models.View.RemoteAccessPairingCredentialsViewModel": {
+            deviceId: string;
+            key: string;
+            serverId: string;
+        };
+        "Bakabase.Service.Models.View.RemoteAccessPairingRequestAcceptedViewModel": {
+            requestId: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        "Bakabase.Service.Models.View.RemoteAccessPairingResultViewModel": {
+            credentials?: components["schemas"]["Bakabase.Service.Models.View.RemoteAccessPairingCredentialsViewModel"];
+            failure: components["schemas"]["Bakabase.Modules.RemoteAccess.Abstractions.Models.PairingFailure"];
+        };
+        "Bakabase.Service.Models.View.RemoteAccessPendingRequestViewModel": {
+            id: string;
+            deviceName: string;
+            platform: components["schemas"]["Bakabase.Modules.RemoteAccess.Abstractions.Models.RemoteDevicePlatform"];
+            remoteAddress?: string;
+            /** Format: date-time */
+            requestedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
         };
         "Bakabase.Service.Models.View.RemoteAccessServerInfoViewModel": {
             id: string;
@@ -10762,11 +11000,18 @@ export interface components {
             /** Format: int32 */
             protocolVersion: number;
             mode: components["schemas"]["Bakabase.Abstractions.Models.Domain.Constants.RemoteAccessMode"];
+            pairingSupported: boolean;
+            /** Format: date-time */
+            serverTime: string;
         };
         "Bakabase.Service.Models.View.RemoteAccessSettingsViewModel": {
             mode: components["schemas"]["Bakabase.Abstractions.Models.Domain.Constants.RemoteAccessMode"];
             addresses: components["schemas"]["Bakabase.Service.Models.View.RemoteAccessAddressViewModel"][];
             allowLiveTranscode: boolean;
+            requirePairing: boolean;
+            devices: components["schemas"]["Bakabase.Service.Models.View.RemoteAccessDeviceViewModel"][];
+            pendingRequests: components["schemas"]["Bakabase.Service.Models.View.RemoteAccessPendingRequestViewModel"][];
+            pairingCode?: components["schemas"]["Bakabase.Service.Models.View.RemoteAccessPairingCodeViewModel"];
         };
         "Bakabase.Service.Models.View.ResourceAncestorViewModel": {
             /** Format: int32 */
@@ -11293,6 +11538,12 @@ export interface components {
             code: number;
             message?: string;
             data?: components["schemas"]["Bakabase.Service.Models.View.ProxyTestResultViewModel"][];
+        };
+        "Bootstrap.Models.ResponseModels.ListResponse`1[Bakabase.Service.Models.View.RemoteAccessDeviceViewModel]": {
+            /** Format: int32 */
+            code: number;
+            message?: string;
+            data?: components["schemas"]["Bakabase.Service.Models.View.RemoteAccessDeviceViewModel"][];
         };
         "Bootstrap.Models.ResponseModels.ListResponse`1[Bakabase.Service.Models.View.ResourceEnhancements]": {
             /** Format: int32 */
@@ -12103,6 +12354,24 @@ export interface components {
             code: number;
             message?: string;
             data?: components["schemas"]["Bakabase.Service.Models.View.RemoteAccessClientContextViewModel"];
+        };
+        "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.RemoteAccessIssuedPairingCodeViewModel]": {
+            /** Format: int32 */
+            code: number;
+            message?: string;
+            data?: components["schemas"]["Bakabase.Service.Models.View.RemoteAccessIssuedPairingCodeViewModel"];
+        };
+        "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.RemoteAccessPairingRequestAcceptedViewModel]": {
+            /** Format: int32 */
+            code: number;
+            message?: string;
+            data?: components["schemas"]["Bakabase.Service.Models.View.RemoteAccessPairingRequestAcceptedViewModel"];
+        };
+        "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.RemoteAccessPairingResultViewModel]": {
+            /** Format: int32 */
+            code: number;
+            message?: string;
+            data?: components["schemas"]["Bakabase.Service.Models.View.RemoteAccessPairingResultViewModel"];
         };
         "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.RemoteAccessServerInfoViewModel]": {
             /** Format: int32 */
@@ -23394,6 +23663,269 @@ export interface operations {
                 "application/json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessLiveTranscodeInputModel"];
                 "text/json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessLiveTranscodeInputModel"];
                 "application/*+json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessLiveTranscodeInputModel"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                };
+            };
+        };
+    };
+    SetRemoteAccessRequirePairing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json-patch+json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessRequirePairingInputModel"];
+                "application/json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessRequirePairingInputModel"];
+                "text/json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessRequirePairingInputModel"];
+                "application/*+json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessRequirePairingInputModel"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                };
+            };
+        };
+    };
+    PairRemoteDeviceWithCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json-patch+json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessPairWithCodeInputModel"];
+                "application/json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessPairWithCodeInputModel"];
+                "text/json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessPairWithCodeInputModel"];
+                "application/*+json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessPairWithCodeInputModel"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.RemoteAccessPairingResultViewModel]"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.RemoteAccessPairingResultViewModel]"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.RemoteAccessPairingResultViewModel]"];
+                };
+            };
+        };
+    };
+    RequestRemoteDevicePairing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json-patch+json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessPairRequestInputModel"];
+                "application/json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessPairRequestInputModel"];
+                "text/json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessPairRequestInputModel"];
+                "application/*+json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessPairRequestInputModel"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.RemoteAccessPairingRequestAcceptedViewModel]"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.RemoteAccessPairingRequestAcceptedViewModel]"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.RemoteAccessPairingRequestAcceptedViewModel]"];
+                };
+            };
+        };
+    };
+    ClaimRemoteDevicePairing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json-patch+json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessPairClaimInputModel"];
+                "application/json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessPairClaimInputModel"];
+                "text/json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessPairClaimInputModel"];
+                "application/*+json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessPairClaimInputModel"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.RemoteAccessPairingResultViewModel]"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.RemoteAccessPairingResultViewModel]"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.RemoteAccessPairingResultViewModel]"];
+                };
+            };
+        };
+    };
+    IssueRemoteAccessPairingCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.RemoteAccessIssuedPairingCodeViewModel]"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.RemoteAccessIssuedPairingCodeViewModel]"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.RemoteAccessIssuedPairingCodeViewModel]"];
+                };
+            };
+        };
+    };
+    ApproveRemoteDevicePairingRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                };
+            };
+        };
+    };
+    RejectRemoteDevicePairingRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                };
+            };
+        };
+    };
+    GetRemoteAccessDevices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.ListResponse`1[Bakabase.Service.Models.View.RemoteAccessDeviceViewModel]"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.ListResponse`1[Bakabase.Service.Models.View.RemoteAccessDeviceViewModel]"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.ListResponse`1[Bakabase.Service.Models.View.RemoteAccessDeviceViewModel]"];
+                };
+            };
+        };
+    };
+    RevokeRemoteAccessDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                };
+            };
+        };
+    };
+    RenameRemoteAccessDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json-patch+json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessDeviceNameInputModel"];
+                "application/json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessDeviceNameInputModel"];
+                "text/json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessDeviceNameInputModel"];
+                "application/*+json": components["schemas"]["Bakabase.Service.Models.Input.RemoteAccessDeviceNameInputModel"];
             };
         };
         responses: {

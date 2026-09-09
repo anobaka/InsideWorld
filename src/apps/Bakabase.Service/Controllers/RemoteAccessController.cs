@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Modules.RemoteAccess.Abstractions.Models;
 using Bakabase.Modules.RemoteAccess.Abstractions.Services;
+using Bakabase.Modules.Notification.Abstractions.Models.Input;
+using Bakabase.Modules.Notification.Abstractions.Services;
 using Bakabase.Modules.RemoteAccess.Components.Pairing;
 using Bakabase.Service.Components.RemoteAccess;
 using Bakabase.Service.Models.Input;
@@ -32,7 +34,9 @@ namespace Bakabase.Service.Controllers
     public class RemoteAccessController(
         IRemoteAccessService remoteAccessService,
         IRemoteDeviceService deviceService,
-        RemoteConnectionRegistry connections) : Controller
+        RemoteConnectionRegistry connections,
+        INotificationService notificationService,
+        PairingRequestRateLimiter rateLimiter) : Controller
     {
         /// <summary>
         /// Recorded as the approver when the approval came from the host itself rather
@@ -187,8 +191,39 @@ namespace Bakabase.Service.Controllers
         public async Task<SingletonResponse<RemoteAccessPairingRequestAcceptedViewModel>> RequestPairing(
             [FromBody] RemoteAccessPairRequestInputModel model)
         {
+            var remoteAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+            // This is the one endpoint an uncredentialed caller can make write to disk,
+            // so its budget is checked before anything happens rather than after.
+            if (!rateLimiter.TryTake(remoteAddress))
+            {
+                return new SingletonResponse<RemoteAccessPairingRequestAcceptedViewModel>
+                {
+                    Code = (int) ResponseCode.Unauthorized,
+                    Message = "Too many pairing attempts from this device. Wait a few minutes and try again."
+                };
+            }
+
             var request = await deviceService.RequestPairingAsync(model.DeviceName ?? string.Empty, model.Platform,
-                HttpContext.Connection.RemoteIpAddress?.ToString(), HttpContext.RequestAborted);
+                remoteAddress, HttpContext.RequestAborted);
+
+            // The request expires in minutes, and whoever can approve it is unlikely to
+            // be sitting on the settings page. A persistent notification reaches them
+            // wherever they are, and survives a reload the way a toast would not.
+            // Throttled separately from the per-address budget: many addresses can each
+            // stay inside theirs and still add up to a wall of notifications.
+            if (rateLimiter.TryNotify())
+            {
+                await notificationService.CreateAsync(new NotificationCreationInputModel
+                {
+                    Source = "RemoteAccess",
+                    Title = $"{request.DeviceName} wants to pair with Bakabase",
+                    Body = request.RemoteAddress == null
+                        ? $"{request.Platform}. Approve it in Settings → Remote access."
+                        : $"{request.Platform}, from {request.RemoteAddress}. Approve it in Settings → Remote access.",
+                    Severity = AppNotificationSeverity.Warning
+                });
+            }
 
             return new SingletonResponse<RemoteAccessPairingRequestAcceptedViewModel>(
                 new RemoteAccessPairingRequestAcceptedViewModel
