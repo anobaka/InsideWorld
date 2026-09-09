@@ -2,7 +2,6 @@
 "use strict";
 
 import type { ResourceCountsSource } from "@/hooks/useResourceCountsSource";
-
 import type { ValueRendererProps } from "../models";
 import type { MultilevelData } from "../../models";
 
@@ -12,6 +11,10 @@ import { useTranslation } from "react-i18next";
 import MultilevelValueEditor from "../../ValueEditor/Editors/MultilevelValueEditor";
 import { buildVisibleOptions, hasMoreOptions, getRemainingCount } from "../utils";
 
+import {
+  useDisabledChoiceKeys,
+  type DisabledChoiceKeysSource,
+} from "@/hooks/useDisabledChoiceKeys";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
 import { Button } from "@/components/bakaui";
 import NotSet, {
@@ -36,6 +39,8 @@ type MultilevelValueRendererProps = ValueRendererProps<string[][], string[]> & {
   size?: "sm" | "md" | "lg";
   resourceCounts?: Record<string, number>;
   resourceCountsSource?: ResourceCountsSource;
+  disabledKeys?: ReadonlySet<string>;
+  disabledKeysSource?: DisabledChoiceKeysSource;
 };
 
 const log = buildLogger("MultilevelValueRenderer");
@@ -50,6 +55,8 @@ const MultilevelValueRenderer = ({
   valueAttributes,
   resourceCounts,
   resourceCountsSource,
+  disabledKeys: initialDisabledKeys,
+  disabledKeysSource,
   size,
   isReadonly: propsIsReadonly,
   isEditing: controlledIsEditing,
@@ -59,6 +66,7 @@ const MultilevelValueRenderer = ({
   const [dataSource, setDataSource] = useState<MultilevelData<string>[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [optionsThreshold] = useFilterOptionsThreshold();
+  const disabledKeys = useDisabledChoiceKeys(disabledKeysSource, initialDisabledKeys);
 
   // Internal editing state for uncontrolled mode
   const [internalIsEditing, setInternalIsEditing] = useState(defaultEditing);
@@ -107,6 +115,8 @@ const MultilevelValueRenderer = ({
         createPortal(MultilevelValueEditor<string>, {
           resourceCounts,
           resourceCountsSource,
+          disabledKeys,
+          disabledKeysSource,
           getDataSource: getDataSource,
           onValueChange: editor?.onValueChange,
           multiple,
@@ -163,6 +173,8 @@ const MultilevelValueRenderer = ({
     const leafValue = path[path.length - 1];
     const isSelected = selectedValues.includes(leafValue);
 
+    if (disabledKeys?.has(leafValue) && !isSelected) return;
+
     let newDbValues: string[];
     let newBizValues: string[][];
 
@@ -209,6 +221,9 @@ const MultilevelValueRenderer = ({
           <SelectableChip
             key={opt.path.join("/")}
             color={opt.color}
+            isDisabled={
+              disabledKeys?.has(opt.path[opt.path.length - 1]) && !isPathSelected(opt.path)
+            }
             isSelected={isPathSelected(opt.path)}
             itemKey={opt.path.join("/")}
             label={

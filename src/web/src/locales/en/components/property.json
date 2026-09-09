@@ -1,5 +1,5 @@
 {
-  "property.reference.filteredCountsHelp": "Numbers in parentheses count resources using this value within the current search results and update with the filters.",
+  "property.reference.filteredCountsHelp": "Counts in parentheses show references in the current results; zero counts are hidden. Only unselected values with no references in the library are disabled. Selected values can still be removed.",
   "property.reference.ignoreCase": "Ignore case",
   "property.reference.ignoreCaseHelp": "Match option text without case sensitivity and keep the first spelling added. Existing options and resource references are preserved; incoming text uses the first matching option.",
   "property.reference.resourceCount": "{{count}} resources",

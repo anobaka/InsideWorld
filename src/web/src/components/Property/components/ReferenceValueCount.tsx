@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 export default function ReferenceValueCount({ count }: { count?: number }) {
   const { t } = useTranslation();
 
-  if (count === undefined) return null;
+  if (count === undefined || count <= 0) return null;
 
   return (
     <span

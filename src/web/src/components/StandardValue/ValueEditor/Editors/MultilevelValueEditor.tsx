@@ -1,10 +1,5 @@
 "use client";
 
-import {
-  useResourceCountsSource,
-  type ResourceCountsSource,
-} from "@/hooks/useResourceCountsSource";
-
 import type { CSSProperties } from "react";
 import type { ValueEditorProps } from "../models";
 import type { MultilevelData } from "@/components/StandardValue/models";
@@ -15,6 +10,14 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { RightOutlined, SearchOutlined } from "@ant-design/icons";
 import { useUpdateEffect } from "react-use";
 
+import {
+  useResourceCountsSource,
+  type ResourceCountsSource,
+} from "@/hooks/useResourceCountsSource";
+import {
+  useDisabledChoiceKeys,
+  type DisabledChoiceKeysSource,
+} from "@/hooks/useDisabledChoiceKeys";
 import ReferenceValueCount from "@/components/Property/components/ReferenceValueCount";
 import { Button, Input, Modal } from "@/components/bakaui";
 import {
@@ -33,6 +36,8 @@ interface MultilevelValueEditorProps<V>
   multiple?: boolean;
   resourceCounts?: Record<string, number>;
   resourceCountsSource?: ResourceCountsSource;
+  disabledKeys?: ReadonlySet<string>;
+  disabledKeysSource?: DisabledChoiceKeysSource;
 }
 
 const buildDefaultSelectable: <V>() => Selectable<V> = () => {
@@ -52,9 +57,12 @@ const MultilevelValueEditor = <V = string,>(props: MultilevelValueEditorProps<V>
     multiple,
     resourceCounts: initialResourceCounts,
     resourceCountsSource,
+    disabledKeys: initialDisabledKeys,
+    disabledKeysSource,
   } = props;
 
   const resourceCounts = useResourceCountsSource(resourceCountsSource, initialResourceCounts);
+  const disabledKeys = useDisabledChoiceKeys(disabledKeysSource, initialDisabledKeys);
 
   log(props);
 
@@ -115,6 +123,8 @@ const MultilevelValueEditor = <V = string,>(props: MultilevelValueEditorProps<V>
       // Expand this item - truncate expanded path to this level and add this item
       setExpandedPath([...expandedPath.slice(0, depth), item.value]);
     } else {
+      if (disabledKeys?.has(String(item.value)) && !value.includes(item.value)) return;
+
       // Leaf node - toggle selection
       if (multiple) {
         if (value.includes(item.value)) {
@@ -123,7 +133,7 @@ const MultilevelValueEditor = <V = string,>(props: MultilevelValueEditorProps<V>
           setValue([...value, item.value]);
         }
       } else {
-        setValue([item.value]);
+        setValue(value.includes(item.value) ? [] : [item.value]);
       }
     }
   };
@@ -138,6 +148,8 @@ const MultilevelValueEditor = <V = string,>(props: MultilevelValueEditorProps<V>
           const hasChildren = item.children && item.children.length > 0;
           const isSelected = value.includes(item.value);
           const isExpanded = expandedPath[depth] === item.value;
+          // Parent rows navigate to children; their availability never blocks expansion.
+          const isDisabled = !hasChildren && disabledKeys?.has(String(item.value)) && !isSelected;
           const style: CSSProperties = {};
 
           if (item.color) {
@@ -152,6 +164,7 @@ const MultilevelValueEditor = <V = string,>(props: MultilevelValueEditorProps<V>
               key={idx}
               className="justify-between"
               color={isSelected ? "primary" : isExpanded ? "secondary" : "default"}
+              isDisabled={isDisabled}
               size="sm"
               style={style}
               variant={isExpanded && !isSelected ? "flat" : "solid"}

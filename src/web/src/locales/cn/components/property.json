@@ -1,5 +1,5 @@
 {
-  "property.reference.filteredCountsHelp": "括号内为当前筛选结果中引用该值的资源数，随筛选条件更新。",
+  "property.reference.filteredCountsHelp": "括号内为当前筛选结果中引用该值的资源数，零计数不显示。仅全库无资源引用的未选选项会被禁用，已选项仍可取消。",
   "property.reference.ignoreCase": "忽略大小写",
   "property.reference.ignoreCaseHelp": "匹配选项时忽略大小写，并保留首次加入的文本。现有选项及资源引用保持不变；后续传入的文本使用首次匹配的选项。",
   "property.reference.resourceCount": "{{count}} 个资源",

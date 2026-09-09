@@ -1,8 +1,8 @@
 "use client";
 "use strict";
 
+import type { DisabledChoiceKeysSource } from "@/hooks/useDisabledChoiceKeys";
 import type { ResourceCountsSource } from "@/hooks/useResourceCountsSource";
-
 import type { Dayjs } from "dayjs";
 import type { Duration } from "dayjs/plugin/duration";
 import type {
@@ -49,6 +49,9 @@ export type Props = {
   property: IProperty;
   resourceCounts?: Record<string, number>;
   resourceCountsSource?: ResourceCountsSource;
+  /** Reference option IDs that cannot be newly selected; selected values remain removable. */
+  disabledKeys?: ReadonlySet<string>;
+  disabledKeysSource?: DisabledChoiceKeysSource;
   /**
    * Both arguments are serialized (wire-format) strings, not raw values.
    */
@@ -84,6 +87,8 @@ const PropertyValueRenderer = (props: Props) => {
     property,
     resourceCounts,
     resourceCountsSource,
+    disabledKeys,
+    disabledKeysSource,
     variant = "default",
     onValueChange,
     dbValue,
@@ -219,15 +224,17 @@ const PropertyValueRenderer = (props: Props) => {
 
       return (
         <ChoiceValueRenderer
-          resourceCounts={resourceCounts}
-          resourceCountsSource={resourceCountsSource}
           defaultEditing={defaultEditing}
+          disabledKeys={disabledKeys}
+          disabledKeysSource={disabledKeysSource}
           editor={editor}
           getDataSource={async () =>
             choices.map((c) => ({ value: c.value, label: c.label ?? "", color: c.color }))
           }
           isEditing={isEditing}
           isReadonly={isReadonly}
+          resourceCounts={resourceCounts}
+          resourceCountsSource={resourceCountsSource}
           size={size}
           value={typedBv == undefined ? undefined : [typedBv]}
           valueAttributes={vas}
@@ -259,16 +266,18 @@ const PropertyValueRenderer = (props: Props) => {
 
       return (
         <ChoiceValueRenderer
-          resourceCounts={resourceCounts}
-          resourceCountsSource={resourceCountsSource}
           multiple
           defaultEditing={defaultEditing}
+          disabledKeys={disabledKeys}
+          disabledKeysSource={disabledKeysSource}
           editor={simpleEditor}
           getDataSource={async () =>
             choices.map((c) => ({ value: c.value, label: c.label ?? "", color: c.color }))
           }
           isEditing={isEditing}
           isReadonly={isReadonly}
+          resourceCounts={resourceCounts}
+          resourceCountsSource={resourceCountsSource}
           size={size}
           value={typedBv}
           valueAttributes={vas}
@@ -461,14 +470,16 @@ const PropertyValueRenderer = (props: Props) => {
 
       return (
         <MultilevelValueRenderer
-          resourceCounts={resourceCounts}
-          resourceCountsSource={resourceCountsSource}
           defaultEditing={defaultEditing}
+          disabledKeys={disabledKeys}
+          disabledKeysSource={disabledKeysSource}
           editor={simpleEditor}
           getDataSource={async () => data}
           isEditing={isEditing}
           isReadonly={isReadonly}
           multiple={!(options?.valueIsSingleton ?? false)}
+          resourceCounts={resourceCounts}
+          resourceCountsSource={resourceCountsSource}
           size={size}
           value={typedBv}
           valueAttributes={vas}
@@ -500,9 +511,9 @@ const PropertyValueRenderer = (props: Props) => {
 
       return (
         <TagsValueRenderer
-          resourceCounts={resourceCounts}
-          resourceCountsSource={resourceCountsSource}
           defaultEditing={defaultEditing}
+          disabledKeys={disabledKeys}
+          disabledKeysSource={disabledKeysSource}
           editor={simpleEditor}
           getDataSource={async () =>
             tags.map((t) => ({
@@ -514,6 +525,8 @@ const PropertyValueRenderer = (props: Props) => {
           }
           isEditing={isEditing}
           isReadonly={isReadonly}
+          resourceCounts={resourceCounts}
+          resourceCountsSource={resourceCountsSource}
           size={size}
           value={typedBv}
           valueAttributes={vas}
