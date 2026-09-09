@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useUpdateEffect } from "react-use";
 import { DeleteOutlined, EyeInvisibleOutlined, EyeOutlined } from "@ant-design/icons";
 
+import ReferenceValueUsage from "@/components/PropertyModal/components/ReferenceValueUsage";
 import DragHandle from "@/components/DragHandle";
 import { Button, ColorPicker, Input, Modal } from "@/components/bakaui";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
@@ -85,6 +86,10 @@ export function SortableTag({
             name,
           });
         }}
+      />
+      <ReferenceValueUsage
+        value={tag.value}
+        label={tag.group ? `${tag.group}:${tag.name ?? ""}` : tag.name}
       />
       <div className={"flex items-center"}>
         <Button

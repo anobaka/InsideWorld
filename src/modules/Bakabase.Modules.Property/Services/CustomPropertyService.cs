@@ -6,6 +6,7 @@ using Bakabase.InsideWorld.Models.Constants.AdditionalItems;
 using Bakabase.Modules.Property.Abstractions.Components;
 using Bakabase.Modules.Property.Abstractions.Models.Db;
 using Bakabase.Modules.Property.Abstractions.Services;
+using Bakabase.Modules.Property.Components;
 using Bakabase.Modules.Property.Extensions;
 using Bakabase.Modules.Property.Models.View;
 using Bakabase.Modules.StandardValue.Abstractions.Services;
@@ -14,6 +15,7 @@ using Bootstrap.Components.Orm;
 using Bootstrap.Extensions;
 using Bootstrap.Models.ResponseModels;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using StackExchange.Profiling;
 
 namespace Bakabase.Modules.Property.Services
@@ -110,7 +112,7 @@ namespace Bakabase.Modules.Property.Services
             {
                 CreatedAt = DateTime.Now,
                 Name = model.Name,
-                Options = model.Options,
+                Options = NormalizeOptions(model.Type, model.Options),
                 Type = model.Type
             });
 
@@ -124,7 +126,7 @@ namespace Bakabase.Modules.Property.Services
             {
                 CreatedAt = now,
                 Name = model.Name,
-                Options = model.Options,
+                Options = NormalizeOptions(model.Type, model.Options),
                 Type = model.Type
             }).ToList());
             return data.Data!.Select(d => d.ToDomainModel()).ToList();
@@ -135,11 +137,26 @@ namespace Bakabase.Modules.Property.Services
             var rsp = await UpdateByKey(id, cp =>
             {
                 cp.Name = model.Name;
-                cp.Options = model.Options;
+                cp.Options = NormalizeOptions(model.Type, model.Options, cp.Type == model.Type ? cp.Options : null);
                 cp.Type = model.Type;
             });
 
             return rsp.Data!.ToDomainModel();
+        }
+
+        private static string? NormalizeOptions(PropertyType type, string? serializedOptions,
+            string? previousSerializedOptions = null)
+        {
+            if (string.IsNullOrEmpty(serializedOptions)) return serializedOptions;
+            var descriptor = PropertySystem.Property.GetDescriptor(type);
+            if (!descriptor.IsReferenceValueType || descriptor.OptionsType == null) return serializedOptions;
+            var options = JsonConvert.DeserializeObject(serializedOptions, descriptor.OptionsType);
+            if (options is not IReferencePropertyOptions { IgnoreCase: true }) return serializedOptions;
+            var previousOptions = string.IsNullOrEmpty(previousSerializedOptions)
+                ? null
+                : JsonConvert.DeserializeObject(previousSerializedOptions, descriptor.OptionsType);
+            ReferencePropertyOptionsNormalizer.Normalize(options, previousOptions);
+            return JsonConvert.SerializeObject(options);
         }
 
         public async Task Sort(int[] ids)
@@ -207,6 +224,12 @@ namespace Bakabase.Modules.Property.Services
                 Type = type,
                 Options = targetPropertyDescriptor.InitializeOptions(),
             };
+
+            if (property.Options is IReferencePropertyOptions sourceOptions &&
+                toProperty.Options is IReferencePropertyOptions targetOptions)
+            {
+                targetOptions.IgnoreCase = sourceOptions.IgnoreCase;
+            }
 
             // Batch convert all values using the type converter
             var conversionResult = await PropertyTypeConverter.ConvertValuesAsync(

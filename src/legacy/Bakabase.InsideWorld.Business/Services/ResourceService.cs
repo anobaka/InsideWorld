@@ -312,9 +312,10 @@ namespace Bakabase.InsideWorld.Business.Services
 
             // Apply ResourceTag filter
             ResourceTag? tagsValue = model.Tags?.Any() == true ? (ResourceTag)model.Tags.Sum(x => (int)x) : null;
-            if (tagsValue.HasValue && resourceIds != null)
+            if (tagsValue.HasValue)
             {
-                var dbModels = await _orm.GetAll(r => resourceIds.Contains(r.Id), asNoTracking: false);
+                var dbModels = await _orm.GetAll(
+                    resourceIds == null ? null : r => resourceIds.Contains(r.Id), asNoTracking: false);
                 resourceIds = dbModels
                     .Where(r => (r.Tags & tagsValue.Value) == tagsValue.Value)
                     .Select(r => r.Id)

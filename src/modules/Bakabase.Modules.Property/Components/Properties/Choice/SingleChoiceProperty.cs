@@ -120,6 +120,7 @@ public class SingleChoicePropertyDescriptor : AbstractPropertyDescriptor<SingleC
             new MultipleChoicePropertyOptions
             {
                 Choices = options?.Choices,
+                IgnoreCase = options?.IgnoreCase ?? false,
                 // AllowAddingNewDataDynamically = options?.AllowAddingNewDataDynamically ?? false,
                 DefaultValue = string.IsNullOrEmpty(options?.DefaultValue) ? null : [options.DefaultValue]
             }, p.Order);
@@ -140,7 +141,7 @@ public class SingleChoicePropertyDescriptor : AbstractPropertyDescriptor<SingleC
             }
 
             var options = property.Options as SingleChoicePropertyOptions;
-            var stringValue = options?.Choices?.Find(x => x.Label == bizValue)?.Value;
+            var stringValue = options?.Choices?.Find(x => options.GetLabelComparer().Equals(x.Label, bizValue))?.Value;
             return (stringValue, propertyChanged);
         }
 

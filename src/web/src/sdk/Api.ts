@@ -4037,6 +4037,11 @@ export interface BakabaseModulesPropertyModelsViewCustomPropertyTypeConversionPr
   serializedToValue?: string;
 }
 
+export interface BakabaseModulesPropertyModelsViewPropertyValueResourceCountsViewModel {
+  isReady: boolean;
+  counts: Record<string, number>;
+}
+
 export interface BakabaseModulesPropertyModelsViewPropertyViewModel {
   /** [1: Internal, 2: Reserved, 4: Custom, 7: All] */
   pool: BakabaseAbstractionsModelsDomainConstantsPropertyPool;
@@ -6528,6 +6533,13 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesP
   code: number;
   message?: string;
   data?: BakabaseModulesPropertyModelsViewCustomPropertyTypeConversionPreviewViewModel;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesPropertyModelsViewPropertyValueResourceCountsViewModel {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseModulesPropertyModelsViewPropertyValueResourceCountsViewModel;
 }
 
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesPropertyModelsViewPropertyViewModel {
@@ -20821,6 +20833,31 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     },
   };
   property = {
+    /**
+     * No description
+     *
+     * @tags Property
+     * @name GetPropertyValueResourceCounts
+     * @request POST:/property/pool/{pool}/id/{id}/value-resource-counts
+     */
+    getPropertyValueResourceCounts: (
+      pool: BakabaseAbstractionsModelsDomainConstantsPropertyPool,
+      id: number,
+      data: BakabaseServiceModelsInputResourceSearchInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesPropertyModelsViewPropertyValueResourceCountsViewModel,
+        any
+      >({
+        path: `/property/pool/${pool}/id/${id}/value-resource-counts`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
     /**
      * No description
      *

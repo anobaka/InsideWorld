@@ -1864,5 +1864,104 @@ public class PathMarkSyncTests
         }
     }
 
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task PropertyMark_MultipleChoice_ResolvesOriginalCaseVariantsInsideProperty(bool ignoreCase)
+    {
+        // Separate ancestors also preserve both spellings on case-insensitive filesystems.
+        var firstPath = Path.Combine(_testRoot, "First", "Action", "Movie1");
+        var laterPath = Path.Combine(_testRoot, "Second", "action", "Movie2");
+        Directory.CreateDirectory(firstPath);
+        Directory.CreateDirectory(laterPath);
+
+        var pathMarks = _sp.GetRequiredService<IPathMarkService>();
+        var sync = _sp.GetRequiredService<IPathMarkSyncService>();
+        var properties = _sp.GetRequiredService<ICustomPropertyService>();
+        var propertyValues = _sp.GetRequiredService<ICustomPropertyValueService>();
+        var resources = _sp.GetRequiredService<IResourceService>();
+        var effects = _sp.GetRequiredService<IPathMarkEffectService>();
+        var genre = await properties.Add(new CustomPropertyAddOrPutDto
+        {
+            Name = "Genre",
+            Type = PropertyType.MultipleChoice,
+            // The false case intentionally omits options to cover the default behavior.
+            Options = ignoreCase ? JsonConvert.SerializeObject(new MultipleChoicePropertyOptions { IgnoreCase = true }) : null
+        });
+
+        await pathMarks.Add(new PathMark
+        {
+            Path = _testRoot,
+            Type = PathMarkType.Resource,
+            ConfigJson = JsonConvert.SerializeObject(new ResourceMarkConfig
+            {
+                MatchMode = PathMatchMode.Layer,
+                Layer = 3,
+                FsTypeFilter = PathFilterFsType.Directory,
+                ApplyScope = PathMarkApplyScope.MatchedOnly
+            }),
+            Priority = 100
+        });
+        var firstPropertyMark = await pathMarks.Add(new PathMark
+        {
+            Path = Path.Combine(_testRoot, "First"),
+            Type = PathMarkType.Property,
+            ConfigJson = JsonConvert.SerializeObject(new PropertyMarkConfig
+            {
+                MatchMode = PathMatchMode.Layer,
+                Layer = 2,
+                Pool = PropertyPool.Custom,
+                PropertyId = genre.Id,
+                ValueType = PropertyValueType.Dynamic,
+                ValueLayer = 1,
+                ApplyScope = PathMarkApplyScope.MatchedOnly
+            }),
+            Priority = 50
+        });
+
+        await EnqueueAndWaitSync(sync);
+        var firstProperty = await properties.GetByKey(genre.Id);
+        var firstChoice = ((MultipleChoicePropertyOptions)firstProperty.Options!).Choices!.Should().ContainSingle().Subject;
+        firstChoice.Label.Should().Be("Action");
+        var firstChoiceId = firstChoice.Value;
+
+        // Add the second contribution later so "first added" is deterministic without
+        // depending on filesystem enumeration order or refreshing directory caches.
+        var laterPropertyMark = await pathMarks.Add(new PathMark
+        {
+            Path = Path.Combine(_testRoot, "Second"),
+            Type = PathMarkType.Property,
+            ConfigJson = firstPropertyMark.ConfigJson,
+            Priority = 50
+        });
+        await EnqueueAndWaitSync(sync, laterPropertyMark.Id);
+
+        var refreshedProperty = await properties.GetByKey(genre.Id);
+        var options = (MultipleChoicePropertyOptions)refreshedProperty.Options!;
+        options.Choices!.Select(choice => choice.Label).Should().BeEquivalentTo(
+            ignoreCase ? new[] { "Action" } : new[] { "Action", "action" });
+        options.Choices.Single(choice => choice.Label == "Action").Value.Should().Be(firstChoiceId);
+        var allResources = await resources.GetAll();
+        var originalEffects = await effects.GetPropertyEffectsByMarkIds([firstPropertyMark.Id, laterPropertyMark.Id]);
+
+        foreach (var (path, originalLabel) in new[] { (firstPath, "Action"), (laterPath, "action") })
+        {
+            var resource = allResources.Should().ContainSingle(r => r.Path == path).Subject;
+            var effect = originalEffects.Should().ContainSingle(e => e.ResourceId == resource.Id).Subject;
+            effect.Value.DeserializeAsStandardValue<List<string>>(StandardValueType.ListString)
+                .Should().BeEquivalentTo(new[] { originalLabel },
+                    "path marking must keep the extracted text; matching belongs to the property module");
+
+            var stored = (await propertyValues.GetAllDbModels(v =>
+                v.ResourceId == resource.Id && v.PropertyId == genre.Id)).Should().ContainSingle().Subject;
+            var expectedLabel = ignoreCase ? "Action" : originalLabel;
+            var expectedChoiceId = options.Choices.Single(choice => choice.Label == expectedLabel).Value;
+            var storedIds = stored.Value.DeserializeAsStandardValue<List<string>>(StandardValueType.ListString);
+            storedIds.Should().BeEquivalentTo(new[] { expectedChoiceId });
+            PropertySystem.Property.ToBizValue(refreshedProperty.ToProperty(), storedIds).Should()
+                .BeEquivalentTo(new[] { expectedLabel }, "the first label is retained only when IgnoreCase is enabled");
+        }
+    }
+
     #endregion
 }

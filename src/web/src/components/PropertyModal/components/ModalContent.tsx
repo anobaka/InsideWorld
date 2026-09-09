@@ -12,6 +12,8 @@ import "ace-builds/src-noconflict/ext-language_tools";
 import { useUpdate } from "react-use";
 
 import MultilevelData from "./MultilevelData";
+import { ReferenceValueUsageProvider } from "./ReferenceValueUsage";
+import { isReferenceValueType } from "@/components/Property/PropertySystem";
 
 import {
   Button,
@@ -30,7 +32,7 @@ import {
   Tooltip,
 } from "@/components/bakaui";
 import FeatureStatusTip from "@/components/FeatureStatusTip";
-import { AttachmentLayout, PropertyType } from "@/sdk/constants";
+import { AttachmentLayout, PropertyPool, PropertyType } from "@/sdk/constants";
 import {
   type ChoicePropertyOptions,
   type NumberPropertyOptions,
@@ -348,7 +350,7 @@ const ModalContent = ({ validValueTypes, value, onChange }: Props) => {
               options={property.options}
               onChange={(options) => {
                 patchProperty({
-                  options,
+                  options: { ...property.options, ...options },
                 });
               }}
             />
@@ -467,7 +469,10 @@ const ModalContent = ({ validValueTypes, value, onChange }: Props) => {
           <div ref={typePopoverDomRef} className={"p-2 flex flex-col gap-2"}>
             {Object.keys(PropertyTypeGroup).map((group) => {
               return (
-                <div key={group} className={"pb-2 mb-2 border-b-1 last:mb-0 last:border-b-0 last:pb-0"}>
+                <div
+                  key={group}
+                  className={"pb-2 mb-2 border-b-1 last:mb-0 last:border-b-0 last:pb-0"}
+                >
                   <div className={"mb-2 font-bold"}>{t<string>(group)}</div>
                   <div className="grid grid-cols-3 gap-x-2 text-sm leading-5">
                     {PropertyTypeGroup[group]!.map((type) => {
@@ -522,11 +527,18 @@ const ModalContent = ({ validValueTypes, value, onChange }: Props) => {
                                           <div className={"flex flex-wrap gap-2 items-center mt-1"}>
                                             {rules.map((r, i) => {
                                               if (r.description == null) {
-                                                return <Chip key={i} size={"sm"}>{r.name}</Chip>;
+                                                return (
+                                                  <Chip key={i} size={"sm"}>
+                                                    {r.name}
+                                                  </Chip>
+                                                );
                                               }
 
                                               return (
-                                                <Tooltip key={i} content={<pre>{r.description}</pre>}>
+                                                <Tooltip
+                                                  key={i}
+                                                  content={<pre>{r.description}</pre>}
+                                                >
                                                   <Chip size={"sm"}>{r.name}</Chip>
                                                 </Tooltip>
                                               );
@@ -676,7 +688,35 @@ const ModalContent = ({ validValueTypes, value, onChange }: Props) => {
           }
         />
       </div>
-      {renderOptions()}
+      {property.type != undefined && isReferenceValueType(property.type) && (
+        <div className="mt-2 flex flex-col gap-1">
+          <Switch
+            size="sm"
+            isSelected={property.options?.ignoreCase ?? false}
+            onValueChange={(ignoreCase) =>
+              patchProperty({ options: { ...property.options, ignoreCase } })
+            }
+          >
+            {t("property.reference.ignoreCase")}
+          </Switch>
+          <p className="text-xs text-default-500">{t("property.reference.ignoreCaseHelp")}</p>
+        </div>
+      )}
+      <ReferenceValueUsageProvider
+        options={property.options}
+        property={
+          property.id && property.type != undefined && isReferenceValueType(property.type)
+            ? {
+                id: property.id,
+                type: property.type,
+                name: property.name,
+                pool: PropertyPool.Custom,
+              }
+            : undefined
+        }
+      >
+        {renderOptions()}
+      </ReferenceValueUsageProvider>
     </div>
   );
 };

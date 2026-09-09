@@ -2,8 +2,10 @@
 
 namespace Bakabase.Modules.Property.Components.Properties.Multilevel
 {
-    public class MultilevelPropertyOptions
+    public class MultilevelPropertyOptions : IReferencePropertyOptions
     {
+        public bool IgnoreCase { get; set; }
+
         public List<MultilevelDataOptions>? Data { get; set; }
         public List<string>? DefaultValue { get; set; }
         // public bool AllowAddingNewDataDynamically { get; set; }

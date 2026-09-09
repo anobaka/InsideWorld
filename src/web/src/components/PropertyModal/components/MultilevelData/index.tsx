@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { Button, ColorPicker, Input, Tree } from "@/components/bakaui";
 import { buildUntitledLabel, uuidv4 } from "@/components/utils";
 import { buildColorValueString } from "@/components/bakaui/components/ColorPicker";
+import ReferenceValueUsage from "../ReferenceValueUsage";
 import colors from "@/components/bakaui/colors";
 
 type Props = {
@@ -35,7 +36,7 @@ type TreeData = {
 const MultilevelData = ({ options: propOptions, onChange }: Props) => {
   const { t } = useTranslation();
 
-  const [options, setOptions] = useState(propOptions ?? {});
+  const options = propOptions ?? {};
   const [editingKey, setEditingKey] = useState<string>();
   const [expandKeys, setExpandKeys] = useState<React.Key[] | undefined>(
     options.data?.map((d) => d.value),
@@ -47,7 +48,6 @@ const MultilevelData = ({ options: propOptions, onChange }: Props) => {
       ...patches,
     };
 
-    setOptions(newOptions);
     onChange?.(newOptions);
   };
 
@@ -94,6 +94,7 @@ const MultilevelData = ({ options: propOptions, onChange }: Props) => {
               </Button>
             )}
 
+            <ReferenceValueUsage value={md.value} label={md.label} />
             <Button
               isIconOnly
               radius={"sm"}

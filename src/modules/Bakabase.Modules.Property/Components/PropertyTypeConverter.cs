@@ -55,6 +55,14 @@ public class PropertyTypeConverter : IPropertyTypeConverter
         var fromHandler = StandardValueSystem.GetHandler(fromBizType);
         var toHandler = StandardValueSystem.GetHandler(toBizType);
 
+        var toDescriptor = PropertySystem.Property.GetDescriptor(toType);
+        var toProperty = fromProperty with { Type = toType, Options = toDescriptor.InitializeOptions() };
+        if (fromProperty.Options is IReferencePropertyOptions sourceOptions &&
+            toProperty.Options is IReferencePropertyOptions targetOptions)
+        {
+            targetOptions.IgnoreCase = sourceOptions.IgnoreCase;
+        }
+
         var changes = new List<PropertyValueChangePreview>();
         var total = 0;
 
@@ -65,6 +73,11 @@ public class PropertyTypeConverter : IPropertyTypeConverter
             // Convert to biz value
             var bizValue = fromDescriptor.GetBizValue(fromProperty, dbValue);
             var newBizValue = await _standardValueService.Convert(bizValue, fromBizType, toBizType);
+
+            // Preparing the target also applies reference matching and preserves the first label
+            // across this batch, just as ChangeType does when it saves the converted values.
+            var (newDbValue, _) = toDescriptor.PrepareDbValue(toProperty, newBizValue);
+            newBizValue = toDescriptor.GetBizValue(toProperty, newDbValue);
 
             // Build display values
             var fromDisplay = fromHandler.BuildDisplayValue(bizValue);

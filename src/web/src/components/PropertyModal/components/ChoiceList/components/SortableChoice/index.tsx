@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useUpdateEffect } from "react-use";
 import { DeleteOutlined, EyeInvisibleOutlined, EyeOutlined } from "@ant-design/icons";
 
+import ReferenceValueUsage from "@/components/PropertyModal/components/ReferenceValueUsage";
 import DragHandle from "@/components/DragHandle";
 import { Button, ColorPicker, Input, Modal } from "@/components/bakaui";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
@@ -79,6 +80,7 @@ export function SortableChoice({
           });
         }}
       />
+      <ReferenceValueUsage value={choice.value} label={choice.label} />
       <div className={"flex items-center"}>
         <Button
           isIconOnly

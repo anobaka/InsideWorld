@@ -1,7 +1,11 @@
 using Bakabase.Abstractions.Models.Domain.Constants;
+using Bakabase.Abstractions.Models.Dto;
 using Bakabase.Modules.Property.Abstractions.Components;
+using Bakabase.Modules.Property.Abstractions.Services;
+using Bakabase.Modules.Property.Components.Properties.Choice;
 using Bakabase.TestKit.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using DomainProperty = Bakabase.Abstractions.Models.Domain.Property;
 
 namespace Bakabase.Modules.Property.Tests;
@@ -17,15 +21,92 @@ namespace Bakabase.Modules.Property.Tests;
 public sealed class PropertyTypeConverterTests
 {
     private static IPropertyTypeConverter _converter = null!;
+    private static ICustomPropertyService _customProperties = null!;
 
     [ClassInitialize]
     public static async Task ClassInit(TestContext _)
     {
         var sp = await TestServiceBuilder.BuildServiceProvider();
         _converter = sp.GetRequiredService<IPropertyTypeConverter>();
+        _customProperties = sp.GetRequiredService<ICustomPropertyService>();
     }
 
     private static DomainProperty Prop(PropertyType type) => new(PropertyPool.Custom, 1, type);
+
+    [TestMethod]
+    public async Task ConvertValues_TextToIgnoreCaseChoice_ReusesFirstLabelAcrossBatch()
+    {
+        var options = new SingleChoicePropertyOptions { IgnoreCase = true };
+        var target = new DomainProperty(PropertyPool.Custom, 2, PropertyType.SingleChoice, Options: options);
+        var result = await _converter.ConvertValuesAsync(Prop(PropertyType.SingleLineText), target,
+            new object?[] { "Title", "TITLE", "title" });
+
+        Assert.AreEqual(1, options.Choices!.Count);
+        Assert.AreEqual("Title", options.Choices[0].Label);
+        Assert.IsTrue(result.NewDbValues.All(v => Equals(v, options.Choices[0].Value)));
+    }
+
+    [TestMethod]
+    public async Task SaveIgnoreCaseOptions_PreservesOldReferenceIdsAndFoldsNewEditorDuplicates()
+    {
+        var options = new SingleChoicePropertyOptions
+        {
+            Choices = [new() { Label = "Title", Value = "old1" }, new() { Label = "title", Value = "old2" }]
+        };
+        var created = await _customProperties.Add(new CustomPropertyAddOrPutDto
+        {
+            Name = "Case-sensitive existing choices",
+            Type = PropertyType.SingleChoice,
+            Options = JsonConvert.SerializeObject(options)
+        });
+        options.IgnoreCase = true;
+        options.Choices.Add(new() { Label = "TITLE", Value = "new" });
+        options.DefaultValue = "new";
+        var saved = await _customProperties.Put(created.Id, new CustomPropertyAddOrPutDto
+        {
+            Name = created.Name,
+            Type = created.Type,
+            Options = JsonConvert.SerializeObject(options)
+        });
+        var savedOptions = (SingleChoicePropertyOptions) saved.Options!;
+        CollectionAssert.AreEqual(new[] { "old1", "old2" }, savedOptions.Choices!.Select(c => c.Value).ToArray());
+        Assert.AreEqual("old1", savedOptions.DefaultValue);
+        Assert.IsTrue(savedOptions.IgnoreCase);
+    }
+
+    [TestMethod]
+    public async Task AddIgnoreCaseOptions_FoldsNewEditorDuplicates()
+    {
+        var created = await _customProperties.Add(new CustomPropertyAddOrPutDto
+        {
+            Name = "New case-insensitive choices",
+            Type = PropertyType.SingleChoice,
+            Options = JsonConvert.SerializeObject(new SingleChoicePropertyOptions
+            {
+                IgnoreCase = true,
+                Choices = [new() { Label = "Title", Value = "first" }, new() { Label = "TITLE", Value = "second" }]
+            })
+        });
+        var savedOptions = (SingleChoicePropertyOptions) created.Options!;
+        Assert.AreEqual("Title", savedOptions.Choices!.Single().Label);
+        Assert.AreEqual("first", savedOptions.Choices[0].Value);
+    }
+
+    [TestMethod]
+    public async Task PreviewConversion_UsesSameFirstLabelAsIgnoreCaseTypeChange()
+    {
+        var source = new DomainProperty(PropertyPool.Custom, 1, PropertyType.SingleChoice,
+            Options: new SingleChoicePropertyOptions
+            {
+                IgnoreCase = true,
+                Choices = [new() { Label = "Title", Value = "first" }, new() { Label = "TITLE", Value = "second" }]
+            });
+        var preview = await _converter.PreviewConversionAsync(source, PropertyType.MultipleChoice,
+            new object?[] { "first", "second" });
+        Assert.AreEqual(1, preview.Changes.Count);
+        Assert.AreEqual("TITLE", preview.Changes[0].FromDisplay);
+        Assert.AreEqual("Title", preview.Changes[0].ToDisplay);
+    }
 
     #region ConvertValueAsync
 

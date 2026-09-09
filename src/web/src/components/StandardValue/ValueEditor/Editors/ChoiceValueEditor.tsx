@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  useResourceCountsSource,
+  type ResourceCountsSource,
+} from "@/hooks/useResourceCountsSource";
+
 import type { ValueEditorProps } from "../models";
 import type { DestroyableProps } from "@/components/bakaui/types";
 
@@ -7,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { SearchOutlined } from "@ant-design/icons";
 
+import ReferenceValueCount from "@/components/Property/components/ReferenceValueCount";
 import { Button, Input, Modal } from "@/components/bakaui";
 import { buildLogger } from "@/components/utils";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
@@ -15,6 +21,8 @@ type Data = { value: string; label: string };
 
 type ChoiceValueEditorProps = ValueEditorProps<string[] | undefined> &
   DestroyableProps & {
+    resourceCounts?: Record<string, number>;
+    resourceCountsSource?: ResourceCountsSource;
     multiple: boolean;
     getDataSource: () => Promise<Data[] | undefined>;
   };
@@ -23,7 +31,16 @@ const log = buildLogger("ChoiceValueEditor");
 const ChoiceValueEditor = (props: ChoiceValueEditorProps) => {
   const { t } = useTranslation();
   const { createPortal } = useBakabaseContext();
-  const { multiple, getDataSource, value: propsValue, onValueChange } = props;
+  const {
+    resourceCounts: initialResourceCounts,
+    resourceCountsSource,
+    multiple,
+    getDataSource,
+    value: propsValue,
+    onValueChange,
+  } = props;
+
+  const resourceCounts = useResourceCountsSource(resourceCountsSource, initialResourceCounts);
 
   const [dataSource, setDataSource] = useState<Data[]>([]);
   const [keyword, setKeyword] = useState("");
@@ -99,6 +116,7 @@ const ChoiceValueEditor = (props: ChoiceValueEditorProps) => {
                     }}
                   >
                     {d.label}
+                    <ReferenceValueCount count={resourceCounts?.[d.value]} />
                   </Button>
                 );
               })}

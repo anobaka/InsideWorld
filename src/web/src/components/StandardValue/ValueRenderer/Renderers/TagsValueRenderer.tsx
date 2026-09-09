@@ -1,5 +1,7 @@
 "use client";
 
+import type { ResourceCountsSource } from "@/hooks/useResourceCountsSource";
+
 import type { ValueRendererProps } from "../models";
 import type { TagValue } from "../../models";
 
@@ -16,6 +18,7 @@ import SelectableChip from "@/components/StandardValue/ValueRenderer/Renderers/c
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
 import { Button } from "@/components/bakaui";
 import { buildLogger } from "@/components/utils";
+import ReferenceValueCount from "@/components/Property/components/ReferenceValueCount";
 import { useFilterOptionsThreshold } from "@/hooks/useFilterOptionsThreshold";
 
 type TagData = TagValue & { value: string; color?: string };
@@ -24,6 +27,8 @@ type TagsValueRendererProps = ValueRendererProps<TagValue[], string[]> & {
   getDataSource?: () => Promise<TagData[]>;
   valueAttributes?: { color?: string }[];
   size?: "sm" | "md" | "lg";
+  resourceCounts?: Record<string, number>;
+  resourceCountsSource?: ResourceCountsSource;
 };
 
 const log = buildLogger("TagsValueRenderer");
@@ -37,6 +42,8 @@ const TagsValueRenderer = (props: TagsValueRendererProps) => {
     variant,
     getDataSource,
     valueAttributes,
+    resourceCounts,
+    resourceCountsSource,
     size,
     isReadonly: propsIsReadonly,
     isEditing: controlledIsEditing,
@@ -101,6 +108,8 @@ const TagsValueRenderer = (props: TagsValueRendererProps) => {
   const openFullEditor = editor
     ? () => {
         createPortal(TagsValueEditor, {
+          resourceCounts,
+          resourceCountsSource,
           value: editor?.value,
           getDataSource: async () => {
             return (await getDataSource?.()) || [];
@@ -164,7 +173,12 @@ const TagsValueRenderer = (props: TagsValueRendererProps) => {
             color={item.color}
             isSelected={selectedValues.includes(item.value)}
             itemKey={item.value}
-            label={getTagLabel(item)}
+            label={
+              <>
+                {getTagLabel(item)}
+                <ReferenceValueCount count={resourceCounts?.[item.value]} />
+              </>
+            }
             size={size}
             onClick={() => toggleValue(item.value)}
           />

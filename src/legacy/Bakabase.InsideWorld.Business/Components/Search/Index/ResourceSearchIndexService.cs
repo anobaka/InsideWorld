@@ -789,6 +789,46 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
 
     #region Search Implementation
 
+    public async Task<Dictionary<string, int>?> GetPropertyValueResourceCountsAsync(PropertyPool pool, int propertyId,
+        IEnumerable<string> valueIds, IReadOnlySet<int>? resourceIds = null)
+    {
+        if (!IsReady)
+        {
+            try
+            {
+                await WaitForReadyAsync(TimeSpan.FromSeconds(1));
+            }
+            catch (TimeoutException)
+            {
+                return null;
+            }
+        }
+
+        var valueIndex = _index.ValueIndex.GetValueOrDefault(pool)?.GetValueOrDefault(propertyId);
+        var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var valueId in valueIds.Where(id => !string.IsNullOrEmpty(id)).Distinct(StringComparer.Ordinal))
+        {
+            var count = 0;
+            if (valueIndex?.TryGetValue(NormalizeValue(valueId), out var references) == true)
+            {
+                // Writers use this same lock. Count in place rather than copying every posting list.
+                lock (references)
+                {
+                    count = resourceIds == null
+                        ? references.Count
+                        : resourceIds.Count < references.Count
+                            ? resourceIds.Count(references.Contains)
+                            : references.Count(resourceIds.Contains);
+                }
+            }
+
+            counts[valueId] = count;
+        }
+
+        // A rebuild clears the index; do not present a partial rebuild as authoritative zeros.
+        return IsReady ? counts : null;
+    }
+
     public async Task<HashSet<int>?> SearchResourceIdsAsync(ResourceSearchFilterGroup? group)
     {
         if (group == null || group.Disabled)

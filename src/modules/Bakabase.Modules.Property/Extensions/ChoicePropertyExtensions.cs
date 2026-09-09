@@ -35,11 +35,11 @@ namespace Bakabase.Modules.Property.Extensions
             }
 
             options.Choices ??= [];
-            if (ignoreSameValue)
+            if (ignoreSameValue || options.IgnoreCase)
             {
                 // Seed with existing labels so duplicates are skipped; Add() also
                 // de-duplicates repeated labels inside this call.
-                var seen = options.Choices.Select(c => c.Label).ToHashSet();
+                var seen = options.Choices.Select(c => c.Label).ToHashSet(options.GetLabelComparer());
                 candidates = candidates.Where(x => seen.Add(x.Label!)).ToList();
                 if (candidates.Count == 0)
                 {
