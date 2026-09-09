@@ -18,6 +18,7 @@ using Bakabase.Modules.StandardValue.Abstractions.Configurations;
 using Bakabase.Modules.StandardValue.Extensions;
 using Bakabase.Service.Extensions;
 using Bakabase.Service.Models.View;
+using Bakabase.Service.Models.Input;
 using Bootstrap.Components.Miscellaneous.ResponseBuilders;
 using Bootstrap.Extensions;
 using Bootstrap.Models.ResponseModels;
@@ -35,8 +36,42 @@ namespace Bakabase.Service.Controllers
         ICustomPropertyService customPropertyService,
         ICustomPropertyValueService customPropertyValueService,
         IReservedPropertyValueService reservedPropertyValueService,
-        IMediaLibraryV2Service mediaLibraryV2Service) : Controller
+        IMediaLibraryV2Service mediaLibraryV2Service,
+        IResourceSearchIndexService resourceSearchIndexService,
+        IResourceService resourceService) : Controller
     {
+        [HttpPost("pool/{pool}/id/{id}/value-resource-counts")]
+        [SwaggerOperation(OperationId = "GetPropertyValueResourceCounts")]
+        [RemoteAccessible]
+        public async Task<SingletonResponse<PropertyValueResourceCountsViewModel>> GetValueResourceCounts(
+            PropertyPool pool, int id, [FromBody] ResourceSearchInputModel model)
+        {
+            var property = await service.GetProperty(pool, id);
+            var valueIds = property.GetReferenceValueIds().ToArray();
+
+            // Avoid invoking the full-scan search fallback while the index is warming up.
+            if (!resourceSearchIndexService.IsReady)
+            {
+                return new SingletonResponse<PropertyValueResourceCountsViewModel>(
+                    new PropertyValueResourceCountsViewModel(false, []));
+            }
+
+            HashSet<int>? resourceIds = null;
+            if (model.Group != null || !string.IsNullOrEmpty(model.Keyword) || model.Tags?.Length > 0)
+            {
+                var search = await model.ToDomainModel(service);
+                if (search.Group is { Disabled: false } || search.Tags?.Length > 0)
+                {
+                    resourceIds = (await resourceService.GetAllIds(search)).ToHashSet();
+                }
+            }
+
+            var counts = await resourceSearchIndexService.GetPropertyValueResourceCountsAsync(pool, id, valueIds,
+                resourceIds);
+            return new SingletonResponse<PropertyValueResourceCountsViewModel>(
+                new PropertyValueResourceCountsViewModel(counts != null, counts ?? []));
+        }
+
         [HttpGet("pool/{pool}")]
         [SwaggerOperation(OperationId = "GetPropertiesByPool")]
         [RemoteAccessible]

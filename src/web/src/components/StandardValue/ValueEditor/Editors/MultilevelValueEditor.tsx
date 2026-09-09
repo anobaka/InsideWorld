@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  useResourceCountsSource,
+  type ResourceCountsSource,
+} from "@/hooks/useResourceCountsSource";
+
 import type { CSSProperties } from "react";
 import type { ValueEditorProps } from "../models";
 import type { MultilevelData } from "@/components/StandardValue/models";
@@ -10,6 +15,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { RightOutlined, SearchOutlined } from "@ant-design/icons";
 import { useUpdateEffect } from "react-use";
 
+import ReferenceValueCount from "@/components/Property/components/ReferenceValueCount";
 import { Button, Input, Modal } from "@/components/bakaui";
 import {
   filterMultilevelData,
@@ -25,6 +31,8 @@ interface MultilevelValueEditorProps<V>
   getDataSource?: () => Promise<MultilevelData<V>[] | undefined>;
   selectable?: Selectable<V>;
   multiple?: boolean;
+  resourceCounts?: Record<string, number>;
+  resourceCountsSource?: ResourceCountsSource;
 }
 
 const buildDefaultSelectable: <V>() => Selectable<V> = () => {
@@ -42,7 +50,11 @@ const MultilevelValueEditor = <V = string,>(props: MultilevelValueEditorProps<V>
     onValueChange,
     onCancel,
     multiple,
+    resourceCounts: initialResourceCounts,
+    resourceCountsSource,
   } = props;
+
+  const resourceCounts = useResourceCountsSource(resourceCountsSource, initialResourceCounts);
 
   log(props);
 
@@ -145,7 +157,10 @@ const MultilevelValueEditor = <V = string,>(props: MultilevelValueEditorProps<V>
               variant={isExpanded && !isSelected ? "flat" : "solid"}
               onPress={() => handleItemClick(item, depth)}
             >
-              <span className="truncate">{item.label}</span>
+              <span className="truncate">
+                {item.label}
+                <ReferenceValueCount count={resourceCounts?.[String(item.value)]} />
+              </span>
               {hasChildren && <RightOutlined className="text-xs flex-shrink-0" />}
             </Button>
           );

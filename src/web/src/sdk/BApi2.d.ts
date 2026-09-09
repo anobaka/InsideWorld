@@ -4832,6 +4832,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/property/pool/{pool}/id/{id}/value-resource-counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["GetPropertyValueResourceCounts"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/property/pool/{pool}": {
         parameters: {
             query?: never;
@@ -9843,6 +9859,12 @@ export interface components {
             serializedFromValue?: string;
             serializedToValue?: string;
         };
+        "Bakabase.Modules.Property.Models.View.PropertyValueResourceCountsViewModel": {
+            isReady: boolean;
+            counts: {
+                [key: string]: number;
+            };
+        };
         "Bakabase.Modules.Property.Models.View.PropertyViewModel": {
             pool: components["schemas"]["Bakabase.Abstractions.Models.Domain.Constants.PropertyPool"];
             /** Format: int32 */
@@ -11931,6 +11953,12 @@ export interface components {
             code: number;
             message?: string;
             data?: components["schemas"]["Bakabase.Modules.Property.Models.View.CustomPropertyTypeConversionPreviewViewModel"];
+        };
+        "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.Property.Models.View.PropertyValueResourceCountsViewModel]": {
+            /** Format: int32 */
+            code: number;
+            message?: string;
+            data?: components["schemas"]["Bakabase.Modules.Property.Models.View.PropertyValueResourceCountsViewModel"];
         };
         "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.Property.Models.View.PropertyViewModel]": {
             /** Format: int32 */
@@ -23035,6 +23063,39 @@ export interface operations {
                     "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[System.Collections.Generic.Dictionary`2[System.String,Bakabase.InsideWorld.Business.Components.PostParser.Models.Domain.Constants.PostParserTaskStatus]]"];
                     "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[System.Collections.Generic.Dictionary`2[System.String,Bakabase.InsideWorld.Business.Components.PostParser.Models.Domain.Constants.PostParserTaskStatus]]"];
                     "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[System.Collections.Generic.Dictionary`2[System.String,Bakabase.InsideWorld.Business.Components.PostParser.Models.Domain.Constants.PostParserTaskStatus]]"];
+                };
+            };
+        };
+    };
+    GetPropertyValueResourceCounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description [1: Internal, 2: Reserved, 4: Custom, 7: All] */
+                pool: components["schemas"]["Bakabase.Abstractions.Models.Domain.Constants.PropertyPool"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json-patch+json": components["schemas"]["Bakabase.Service.Models.Input.ResourceSearchInputModel"];
+                "application/json": components["schemas"]["Bakabase.Service.Models.Input.ResourceSearchInputModel"];
+                "text/json": components["schemas"]["Bakabase.Service.Models.Input.ResourceSearchInputModel"];
+                "application/*+json": components["schemas"]["Bakabase.Service.Models.Input.ResourceSearchInputModel"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.Property.Models.View.PropertyValueResourceCountsViewModel]"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.Property.Models.View.PropertyValueResourceCountsViewModel]"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.Property.Models.View.PropertyValueResourceCountsViewModel]"];
                 };
             };
         };

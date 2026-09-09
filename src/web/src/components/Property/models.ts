@@ -90,6 +90,7 @@ export type Tag = {
  * @deprecated Use TypedTagsPropertyOptions from PropertySystem instead.
  */
 export type TagsPropertyOptions = {
+  ignoreCase?: boolean;
   tags: Tag[];
 };
 
@@ -97,6 +98,7 @@ export type TagsPropertyOptions = {
  * @deprecated Use SingleChoicePropertyOptions or MultipleChoicePropertyOptions from PropertySystem instead.
  */
 export interface ChoicePropertyOptions {
+  ignoreCase?: boolean;
   choices: IChoice[];
   defaultValue?: string;
 }
@@ -127,6 +129,7 @@ export interface RatingPropertyOptions {
  * @deprecated Use TypedMultilevelPropertyOptions from PropertySystem instead.
  */
 export interface MultilevelPropertyOptions {
+  ignoreCase?: boolean;
   data?: MultilevelData<string>[];
   defaultValue?: string;
 }

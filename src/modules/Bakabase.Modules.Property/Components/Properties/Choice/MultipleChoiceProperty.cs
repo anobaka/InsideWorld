@@ -116,8 +116,11 @@ public class MultipleChoicePropertyDescriptor
             }
 
             var options = property.Options as MultipleChoicePropertyOptions;
-            var stringValues = goodValues.Select(v => options?.Choices?.Find(c => c.Label == v)?.Value).OfType<string>()
-                .ToList();
+            var comparer = options.GetLabelComparer();
+            var stringValues = goodValues
+                .Select(v => options?.Choices?.Find(c => comparer.Equals(c.Label, v))?.Value)
+                .OfType<string>().ToList();
+            if (options?.IgnoreCase == true) stringValues = stringValues.Distinct().ToList();
             return (stringValues.Any() ? stringValues : null, propertyChanged);
         }
 

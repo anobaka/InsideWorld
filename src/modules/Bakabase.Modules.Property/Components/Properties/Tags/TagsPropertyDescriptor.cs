@@ -1,6 +1,7 @@
 ﻿using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Modules.Property.Abstractions.Components;
 using Bakabase.Modules.Property.Abstractions.Models.Domain;
+using Bakabase.Modules.Property.Extensions;
 using Bakabase.Modules.StandardValue.Extensions;
 using Bakabase.Modules.StandardValue.Models.Domain;
 
@@ -64,10 +65,12 @@ public class TagsPropertyDescriptor : AbstractPropertyDescriptor<TagsPropertyOpt
         }
 
         var dbValue = new List<string>();
+        var comparer = options.GetLabelComparer();
         var propertyChanged = false;
         foreach (var tag in bizValue)
         {
-            var definedTag = options?.Tags?.FirstOrDefault(x => x.Name == tag.Name && x.Group == tag.Group);
+            var definedTag = options?.Tags?.FirstOrDefault(x =>
+                comparer.Equals(x.Name, tag.Name) && comparer.Equals(x.Group, tag.Group));
             if (definedTag == null)
             {
                 if (!autoCreate)
@@ -81,7 +84,10 @@ public class TagsPropertyDescriptor : AbstractPropertyDescriptor<TagsPropertyOpt
                 propertyChanged = true;
             }
 
-            dbValue.Add(definedTag.Value);
+            if (options?.IgnoreCase != true || !dbValue.Contains(definedTag.Value))
+            {
+                dbValue.Add(definedTag.Value);
+            }
         }
 
         return (dbValue.Any() ? dbValue : null, propertyChanged);

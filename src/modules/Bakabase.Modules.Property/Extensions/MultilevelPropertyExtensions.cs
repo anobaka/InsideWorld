@@ -22,17 +22,18 @@ namespace Bakabase.Modules.Property.Extensions
         }
 
         public static List<string?> FindValuesByLabelChains(this List<MultilevelDataOptions> branches,
-            List<List<string>> labelChains)
+            List<List<string>> labelChains, StringComparer? comparer = null)
         {
-            return labelChains.Select(branches.FindValueByLabelChain).ToList();
+            return labelChains.Select(chain => branches.FindValueByLabelChain(chain, comparer)).ToList();
         }
 
-        public static string? FindValueByLabelChain(this List<MultilevelDataOptions> branches, List<string> labelChain)
+        public static string? FindValueByLabelChain(this List<MultilevelDataOptions> branches,
+            List<string> labelChain, StringComparer? comparer = null)
         {
             if (labelChain.Any())
             {
                 var label = labelChain[0];
-                var branch = branches.FirstOrDefault(x => x.Label == label);
+                var branch = branches.FirstOrDefault(x => (comparer ?? StringComparer.Ordinal).Equals(x.Label, label));
                 if (branch != null)
                 {
                     if (labelChain.Count == 1)
@@ -40,7 +41,7 @@ namespace Bakabase.Modules.Property.Extensions
                         return branch.Value;
                     }
 
-                    return branch.Children?.FindValueByLabelChain(labelChain.Skip(1).ToList());
+                    return branch.Children?.FindValueByLabelChain(labelChain.Skip(1).ToList(), comparer);
                 }
             }
 
@@ -128,7 +129,7 @@ namespace Bakabase.Modules.Property.Extensions
                 foreach (var bizValueBranch in bizValueBranches)
                 {
                     options.Data ??= [];
-                    if (AddBranchOptions(options.Data, bizValueBranch))
+                    if (AddBranchOptions(options.Data, bizValueBranch, options.GetLabelComparer()))
                     {
                         optionsChanged = true;
                     }
@@ -143,10 +144,11 @@ namespace Bakabase.Modules.Property.Extensions
         /// </summary>
         /// <param name="options"></param>
         /// <param name="bizValueBranch"></param>
+        /// <param name="comparer"></param>
         /// <param name="index"></param>
         /// <returns>Whether options have been changed.</returns>
         private static bool AddBranchOptions(this List<MultilevelDataOptions> options, List<string> bizValueBranch,
-            int index = 0)
+            StringComparer comparer, int index = 0)
         {
             bizValueBranch.TrimAll();
             if (index >= bizValueBranch.Count)
@@ -155,7 +157,7 @@ namespace Bakabase.Modules.Property.Extensions
             }
 
             var bizValue = bizValueBranch[index];
-            var node = options.FirstOrDefault(o => o.Label == bizValue);
+            var node = options.FirstOrDefault(o => comparer.Equals(o.Label, bizValue));
             var optionsChanged = false;
             if (node == null)
             {
@@ -171,7 +173,7 @@ namespace Bakabase.Modules.Property.Extensions
             if (index < bizValueBranch.Count - 1)
             {
                 node.Children ??= [];
-                optionsChanged = AddBranchOptions(node.Children, bizValueBranch, index + 1) || optionsChanged;
+                optionsChanged = AddBranchOptions(node.Children, bizValueBranch, comparer, index + 1) || optionsChanged;
             }
 
             return optionsChanged;

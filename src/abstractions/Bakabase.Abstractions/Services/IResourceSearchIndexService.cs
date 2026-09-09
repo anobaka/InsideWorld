@@ -1,4 +1,5 @@
 using Bakabase.Abstractions.Models.Domain;
+using Bakabase.Abstractions.Models.Domain.Constants;
 
 namespace Bakabase.Abstractions.Services;
 
@@ -32,6 +33,13 @@ public interface IResourceSearchIndexService
     /// non-empty: 匹配的资源ID集合
     /// </returns>
     Task<HashSet<int>?> SearchResourceIdsAsync(ResourceSearchFilterGroup? group);
+
+    /// <summary>
+    /// Counts distinct resources referencing each value, optionally within a search result.
+    /// Value IDs retain their original spelling in the response. Null means the index is unavailable.
+    /// </summary>
+    Task<Dictionary<string, int>?> GetPropertyValueResourceCountsAsync(PropertyPool pool, int propertyId,
+        IEnumerable<string> valueIds, IReadOnlySet<int>? resourceIds = null);
 
     /// <summary>
     /// 标记资源需要重新索引（非阻塞，立即返回）

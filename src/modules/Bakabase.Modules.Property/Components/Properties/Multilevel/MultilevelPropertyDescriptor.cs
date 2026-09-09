@@ -124,7 +124,9 @@ public class MultilevelPropertyDescriptor : AbstractPropertyDescriptor<Multileve
             var propertyChanged = autoCreate && options!.AddBranchOptions(bizValue);
 
             var branches = options?.Data ?? [];
-            var values = branches.FindValuesByLabelChains(bizValue).OfType<string>().ToList();
+            var values = branches.FindValuesByLabelChains(bizValue, options.GetLabelComparer())
+                .OfType<string>().ToList();
+            if (options?.IgnoreCase == true) values = values.Distinct().ToList();
 
             return (values.Any() ? values : null, propertyChanged);
         }

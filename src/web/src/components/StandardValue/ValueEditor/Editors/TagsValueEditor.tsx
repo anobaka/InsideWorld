@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  useResourceCountsSource,
+  type ResourceCountsSource,
+} from "@/hooks/useResourceCountsSource";
+
 import type { CSSProperties } from "react";
 import type { ValueEditorProps } from "../models";
 import type { TagValue } from "@/components/StandardValue/models";
@@ -9,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { SearchOutlined } from "@ant-design/icons";
 
+import ReferenceValueCount from "@/components/Property/components/ReferenceValueCount";
 import { Button, Input, Modal } from "@/components/bakaui";
 import { autoBackgroundColor, buildLogger } from "@/components/utils";
 
@@ -16,6 +22,8 @@ type TagData = TagValue & { value: string; color?: string };
 
 type TagsValueEditorProps = ValueEditorProps<string[], TagValue[]> &
   DestroyableProps & {
+    resourceCounts?: Record<string, number>;
+    resourceCountsSource?: ResourceCountsSource;
     getDataSource: () => Promise<TagData[] | undefined>;
   };
 
@@ -23,7 +31,16 @@ const log = buildLogger("TagsValueEditor");
 
 const TagsValueEditor = (props: TagsValueEditorProps) => {
   const { t } = useTranslation();
-  const { getDataSource, value: propsValue, onValueChange, onCancel } = props;
+  const {
+    resourceCounts: initialResourceCounts,
+    resourceCountsSource,
+    getDataSource,
+    value: propsValue,
+    onValueChange,
+    onCancel,
+  } = props;
+
+  const resourceCounts = useResourceCountsSource(resourceCountsSource, initialResourceCounts);
 
   const [dataSource, setDataSource] = useState<TagData[]>([]);
   const [keyword, setKeyword] = useState("");
@@ -99,6 +116,7 @@ const TagsValueEditor = (props: TagsValueEditorProps) => {
         onPress={() => toggleTag(tag.value)}
       >
         {tag.name}
+        <ReferenceValueCount count={resourceCounts?.[tag.value]} />
       </Button>
     );
   };

@@ -1,6 +1,8 @@
 "use client";
-
 "use strict";
+
+import type { ResourceCountsSource } from "@/hooks/useResourceCountsSource";
+
 import type { ValueRendererProps } from "../models";
 import type { MultilevelData } from "../../models";
 
@@ -18,6 +20,7 @@ import NotSet, {
 import NoChoicesAvailable from "@/components/StandardValue/ValueRenderer/Renderers/components/NoChoicesAvailable";
 import SelectableChip from "@/components/StandardValue/ValueRenderer/Renderers/components/SelectableChip";
 import { buildLogger } from "@/components/utils";
+import ReferenceValueCount from "@/components/Property/components/ReferenceValueCount";
 import { useFilterOptionsThreshold } from "@/hooks/useFilterOptionsThreshold";
 
 type FlattenedOption = {
@@ -31,6 +34,8 @@ type MultilevelValueRendererProps = ValueRendererProps<string[][], string[]> & {
   getDataSource?: () => Promise<MultilevelData<string>[]>;
   valueAttributes?: { color?: string }[][];
   size?: "sm" | "md" | "lg";
+  resourceCounts?: Record<string, number>;
+  resourceCountsSource?: ResourceCountsSource;
 };
 
 const log = buildLogger("MultilevelValueRenderer");
@@ -43,6 +48,8 @@ const MultilevelValueRenderer = ({
   multiple,
   defaultEditing = false,
   valueAttributes,
+  resourceCounts,
+  resourceCountsSource,
   size,
   isReadonly: propsIsReadonly,
   isEditing: controlledIsEditing,
@@ -98,6 +105,8 @@ const MultilevelValueRenderer = ({
   const openFullEditor = editor
     ? () => {
         createPortal(MultilevelValueEditor<string>, {
+          resourceCounts,
+          resourceCountsSource,
           getDataSource: getDataSource,
           onValueChange: editor?.onValueChange,
           multiple,
@@ -202,7 +211,12 @@ const MultilevelValueRenderer = ({
             color={opt.color}
             isSelected={isPathSelected(opt.path)}
             itemKey={opt.path.join("/")}
-            label={opt.label}
+            label={
+              <>
+                {opt.label}
+                <ReferenceValueCount count={resourceCounts?.[opt.path[opt.path.length - 1]]} />
+              </>
+            }
             size={size}
             onClick={() => togglePath(opt.path)}
           />

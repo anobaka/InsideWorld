@@ -9,6 +9,8 @@ import { AiOutlineExport, AiOutlineSearch } from "react-icons/ai";
 import { MdPlaylistPlay } from "react-icons/md";
 import { HistoryOutlined } from "@ant-design/icons";
 
+import { ReferenceValueSearchProvider } from "@/hooks/useReferenceValueResourceCounts";
+
 import styles from "./index.module.scss";
 import OrderSelector from "./OrderSelector";
 import ShortcutsButton from "./ShortcutsButton";
@@ -201,43 +203,45 @@ const FilterPanel = (props: IProps) => {
 
       {/* Scrollable Filters Area */}
       <div className="flex-grow overflow-y-auto min-h-0">
-        <ResourceFilterController
-          autoCreateMediaLibraryFilter
-          showRecentFilters
-          showTags
-          filterDisplayMode={filterMode}
-          filterLayout="vertical"
-          group={searchForm.group}
-          keyword={searchForm.keyword}
-          keywordPlaceholder={t<string>("resource.search.placeholder")}
-          tags={searchForm.tags}
-          onFilterDisplayModeChange={handleModeChange}
-          onGroupChange={(group) => {
-            setSearchForm({
-              ...searchForm,
-              group,
-            });
-            scheduleAutoSearch();
-          }}
-          onKeywordChange={(keyword) => {
-            setSearchForm({
-              ...searchForm,
-              keyword,
-            });
-          }}
-          onSearch={() => {
-            search({
-              ...searchForm,
-              page: 1,
-            });
-          }}
-          onTagsChange={(tags) => {
-            setSearchForm({
-              ...searchForm,
-              tags: tags.length > 0 ? tags : undefined,
-            });
-          }}
-        />
+        <ReferenceValueSearchProvider search={searchForm}>
+          <ResourceFilterController
+            autoCreateMediaLibraryFilter
+            showRecentFilters
+            showTags
+            filterDisplayMode={filterMode}
+            filterLayout="vertical"
+            group={searchForm.group}
+            keyword={searchForm.keyword}
+            keywordPlaceholder={t<string>("resource.search.placeholder")}
+            tags={searchForm.tags}
+            onFilterDisplayModeChange={handleModeChange}
+            onGroupChange={(group) => {
+              setSearchForm({
+                ...searchForm,
+                group,
+              });
+              scheduleAutoSearch();
+            }}
+            onKeywordChange={(keyword) => {
+              setSearchForm({
+                ...searchForm,
+                keyword,
+              });
+            }}
+            onSearch={() => {
+              search({
+                ...searchForm,
+                page: 1,
+              });
+            }}
+            onTagsChange={(tags) => {
+              setSearchForm({
+                ...searchForm,
+                tags: tags.length > 0 ? tags : undefined,
+              });
+            }}
+          />
+        </ReferenceValueSearchProvider>
       </div>
 
       {/* Order Selector - Fixed */}

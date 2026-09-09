@@ -3,8 +3,10 @@ using Bakabase.Modules.StandardValue.Models.Domain;
 
 namespace Bakabase.Modules.Property.Components.Properties.Tags;
 
-public record TagsPropertyOptions
+public record TagsPropertyOptions : IReferencePropertyOptions
 {
+    public bool IgnoreCase { get; set; }
+
     public List<TagOptions>? Tags { get; set; }
     // public bool AllowAddingNewDataDynamically { get; set; }
 

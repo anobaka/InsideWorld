@@ -5,7 +5,7 @@ import type { IProperty } from "@/components/Property/models";
 
 import BApi from "@/sdk/BApi";
 import PropertySelector from "@/components/PropertySelector";
-import PropertyValueRenderer from "@/components/Property/components/PropertyValueRenderer";
+import ReferencePropertyValueInput from "../components/Filter/ReferencePropertyValueInput";
 import { PropertyPool, ResourceProperty } from "@/sdk/constants";
 
 /**
@@ -99,7 +99,7 @@ export function createDefaultFilterConfig(
 
       renderValueInput: (property, dbValue, bizValue, onValueChange, options) => {
         return (
-          <PropertyValueRenderer
+          <ReferencePropertyValueInput
             bizValue={bizValue}
             dbValue={dbValue}
             defaultEditing={options?.defaultEditing}

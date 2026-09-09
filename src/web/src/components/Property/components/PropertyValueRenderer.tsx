@@ -1,6 +1,7 @@
 "use client";
-
 "use strict";
+
+import type { ResourceCountsSource } from "@/hooks/useResourceCountsSource";
 
 import type { Dayjs } from "dayjs";
 import type { Duration } from "dayjs/plugin/duration";
@@ -46,13 +47,12 @@ export type DataPool = {};
 
 export type Props = {
   property: IProperty;
+  resourceCounts?: Record<string, number>;
+  resourceCountsSource?: ResourceCountsSource;
   /**
    * Both arguments are serialized (wire-format) strings, not raw values.
    */
-  onValueChange?: (
-    dbValue?: SerializedStandardValue,
-    bizValue?: SerializedStandardValue,
-  ) => any;
+  onValueChange?: (dbValue?: SerializedStandardValue, bizValue?: SerializedStandardValue) => any;
   /**
    * Serialized (wire-format) biz value.
    */
@@ -82,6 +82,8 @@ const log = buildLogger("PropertyValueRenderer");
 const PropertyValueRenderer = (props: Props) => {
   const {
     property,
+    resourceCounts,
+    resourceCountsSource,
     variant = "default",
     onValueChange,
     dbValue,
@@ -217,6 +219,8 @@ const PropertyValueRenderer = (props: Props) => {
 
       return (
         <ChoiceValueRenderer
+          resourceCounts={resourceCounts}
+          resourceCountsSource={resourceCountsSource}
           defaultEditing={defaultEditing}
           editor={editor}
           getDataSource={async () =>
@@ -255,6 +259,8 @@ const PropertyValueRenderer = (props: Props) => {
 
       return (
         <ChoiceValueRenderer
+          resourceCounts={resourceCounts}
+          resourceCountsSource={resourceCountsSource}
           multiple
           defaultEditing={defaultEditing}
           editor={simpleEditor}
@@ -455,6 +461,8 @@ const PropertyValueRenderer = (props: Props) => {
 
       return (
         <MultilevelValueRenderer
+          resourceCounts={resourceCounts}
+          resourceCountsSource={resourceCountsSource}
           defaultEditing={defaultEditing}
           editor={simpleEditor}
           getDataSource={async () => data}
@@ -492,6 +500,8 @@ const PropertyValueRenderer = (props: Props) => {
 
       return (
         <TagsValueRenderer
+          resourceCounts={resourceCounts}
+          resourceCountsSource={resourceCountsSource}
           defaultEditing={defaultEditing}
           editor={simpleEditor}
           getDataSource={async () =>

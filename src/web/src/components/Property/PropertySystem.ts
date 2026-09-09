@@ -203,6 +203,7 @@ export interface TagOption {
  * Options for SingleChoice property.
  */
 export interface SingleChoicePropertyOptions {
+  ignoreCase?: boolean;
   choices: ChoiceOption[];
   defaultValue?: string;
 }
@@ -212,6 +213,7 @@ export interface SingleChoicePropertyOptions {
  * defaultValue mirrors the backend ChoicePropertyOptions&lt;List&lt;string&gt;&gt;.
  */
 export interface MultipleChoicePropertyOptions {
+  ignoreCase?: boolean;
   choices: ChoiceOption[];
   defaultValue?: string[];
 }
@@ -244,6 +246,7 @@ export interface RatingPropertyOptions {
  * valueIsSingleton limits the value to a single chain).
  */
 export interface MultilevelPropertyOptions {
+  ignoreCase?: boolean;
   data?: MultilevelData<string>[];
   defaultValue?: string[];
   valueIsSingleton?: boolean;
@@ -260,6 +263,7 @@ export interface AttachmentPropertyOptions {
  * Options for Tags property.
  */
 export interface TagsPropertyOptions {
+  ignoreCase?: boolean;
   tags: TagOption[];
 }
 

@@ -2,8 +2,10 @@
 
 namespace Bakabase.Modules.Property.Components.Properties.Choice.Abstractions
 {
-    public abstract record ChoicePropertyOptions<TDbValue>
+    public abstract record ChoicePropertyOptions<TDbValue> : IReferencePropertyOptions
     {
+        public bool IgnoreCase { get; set; }
+
         public List<ChoiceOptions>? Choices { get; set; }
         // public bool AllowAddingNewDataDynamically { get; set; }
         public TDbValue? DefaultValue { get; set; }
