@@ -6,7 +6,8 @@ Local media manager for organizing files of any type.
 
 - **Bakabase/** - Main application
   - `src/web/` - React frontend (TypeScript)
-  - `src/apps/Bakabase/` - C# Windows desktop entry point
+  - `src/apps/Bakabase/` - C# all-in-one desktop entry point (process entry + packaging inputs)
+  - `src/apps/Bakabase.Shell/` - C# Avalonia shell shared by desktop flavours (windows, tray, exit coordination, embedded browser). Talks to a host only through `IShellHost`; must not reference `Bakabase.Service`
   - `src/apps/Bakabase.Service/` - C# HTTP API layer
   - `src/apps/Bakabase.Cli/` - C# offline build-time tool (SDK/constants generation). Reserve for dev-time codegen only.
   - `src/abstractions/` - C# interfaces & shared types
@@ -14,15 +15,17 @@ Local media manager for organizing files of any type.
   - `src/legacy/` - C# historical core code, actively maintained
     - New features: prefer `modules/`, but `legacy/` OK if scope is small or tightly coupled with existing legacy code
 - **Bakabase.Infrastructures/** - C# hosting & DI setup
-- **Bakabase.Updater/** - C# application updater
 - **LazyMortal/** - C# internal base framework
 
 ## Module Dependencies
 
 ```
-Bakabase (desktop) → Bakabase.Service → modules → abstractions
-                                      ↘ abstractions ↗
+Bakabase (all-in-one entry) → Bakabase.Shell  → abstractions
+                            ↘ Bakabase.Service → modules → abstractions
+                                               ↘ abstractions ↗
 ```
+
+Updating is handled by Velopack; there is no updater project in this repo.
 
 ## Common Commands
 

@@ -27,6 +27,31 @@ works under the hood. The rules below cover **when** you need it.
 Then commit the regenerated `Api.ts` / `BApi2.d.ts` / `constants.ts`
 together with the C# change.
 
+## Decide where a new action runs
+
+Every new controller action needs an answer to one question before it ships:
+**does this do something on the machine the server runs on that only makes
+sense on the user's own machine?** Launching a player or any other process,
+opening a folder or a file in the desktop shell, showing a native window,
+reading the local clipboard, capturing a login in an embedded browser.
+
+It matters because the server is not always on the user's machine. In the
+container build it never is, and a "play this" call from a remote browser
+today starts a player on the server, on a screen nobody is watching, and
+reports success.
+
+- **Yes, it is user-side** — say so in the pull request. These actions are
+  being collected so the client build can run them locally instead; the
+  marker attribute for them arrives with that work. Until then, at minimum
+  do not mark such an action `[RemoteAccessible]`.
+- **No, it is ordinary data or file work** — mark it `[RemoteAccessible]`
+  when a remote client legitimately needs it, and remember that path
+  parameters need declaring so the path guard can check them.
+
+Depending on `IGuiAdapter`, `ISystemPlayer`, `IBatchPlayService`,
+`TampermonkeyService` or `IDLsiteWorkService` is a strong hint the answer is
+"yes" — but the constructor is only a hint, so read the method body.
+
 ## Static data for the frontend
 
 When the frontend needs a server-side value that is **known at build time**
