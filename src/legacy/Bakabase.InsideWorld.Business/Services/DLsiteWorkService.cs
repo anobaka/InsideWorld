@@ -9,6 +9,7 @@ using Bakabase.Abstractions.Components.Tasks;
 using Bakabase.Abstractions.Models.Db;
 using Bakabase.Abstractions.Services;
 using Bakabase.InsideWorld.Business.Components.Compression;
+using Bakabase.Abstractions.Models.Domain;
 using Bakabase.InsideWorld.Business.Components.Configurations.Models.Domain;
 using Bakabase.InsideWorld.Business.Components.Dependency.Implementations.LocaleEmulator;
 using Bakabase.Modules.ThirdParty.ThirdParties.DLsite;
@@ -632,7 +633,7 @@ public class DLsiteWorkService(
         return work.DrmKey;
     }
 
-    public async Task LaunchWork(string workId, CancellationToken ct = default)
+    public async Task<DLsiteWorkLaunchTarget> ResolveLaunchTarget(string workId, CancellationToken ct = default)
     {
         var work = await GetByWorkId(workId);
         if (work == null)
@@ -652,12 +653,21 @@ public class DLsiteWorkService(
         }
 
         var targetFile = playableFiles[0];
-        var ext = Path.GetExtension(targetFile).ToLowerInvariant();
 
-        if (ExecutableExtensions.Contains(ext))
+        return new DLsiteWorkLaunchTarget(targetFile,
+            ExecutableExtensions.Contains(Path.GetExtension(targetFile).ToLowerInvariant()),
+            work.UseLocaleEmulator);
+    }
+
+    public async Task LaunchWork(string workId, CancellationToken ct = default)
+    {
+        var target = await ResolveLaunchTarget(workId, ct);
+        var targetFile = target.File;
+
+        if (target.IsExecutable)
         {
             // Launch executable with Locale Emulator if enabled for this work
-            if (work.UseLocaleEmulator && localeEmulatorService.IsAvailableOnCurrentPlatform)
+            if (target.UseLocaleEmulator && localeEmulatorService.IsAvailableOnCurrentPlatform)
             {
                 try
                 {

@@ -35,6 +35,15 @@ public interface IShellOpener
     /// True for a Windows shortcut, which the OS refuses to start any other way.
     /// </param>
     void LaunchProcess(string executable, string arguments, bool useShellExecute);
+
+    /// <summary>
+    /// Runs a downloaded program from its own folder.
+    /// </summary>
+    /// <param name="workingDirectory">
+    /// Null to let the OS pick. A game that reads its data with relative paths finds
+    /// nothing when started from somewhere else, so this is not optional for one.
+    /// </param>
+    void LaunchProgram(string path, string? workingDirectory);
 }
 
 public sealed class OsShellOpener : IShellOpener
@@ -48,5 +57,13 @@ public sealed class OsShellOpener : IShellOpener
         {
             Arguments = arguments,
             UseShellExecute = useShellExecute
+        });
+
+    public void LaunchProgram(string path, string? workingDirectory) =>
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = path,
+            UseShellExecute = true,
+            WorkingDirectory = workingDirectory ?? string.Empty
         });
 }

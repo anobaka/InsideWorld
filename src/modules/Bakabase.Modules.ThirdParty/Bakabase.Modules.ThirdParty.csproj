@@ -19,6 +19,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\abstractions\Bakabase.Abstractions\Bakabase.Abstractions.csproj" />
+    <!-- For the GUI seam only (IGuiAdapter / IWebViewSession): cookie capture drives a
+         login window, and that window has to open wherever the user is sitting. -->
+    <ProjectReference Include="..\..\libs\Bakabase.Infrastructures\Bakabase.Infrastructures\Bakabase.Infrastructures.csproj" />
     <ProjectReference Include="..\Bakabase.Modules.StandardValue\Bakabase.Modules.StandardValue.csproj" />
   </ItemGroup>
 

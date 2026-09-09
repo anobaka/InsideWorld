@@ -60,6 +60,9 @@ public class SimpleUserMachineHandlerTests
 
         public void LaunchProcess(string executable, string arguments, bool useShellExecute) =>
             throw new NotSupportedException();
+
+        public void LaunchProgram(string path, string? workingDirectory) =>
+            throw new NotSupportedException();
     }
 
     private sealed class StubLoopback(string baseAddress) : ILoopbackAddressProvider

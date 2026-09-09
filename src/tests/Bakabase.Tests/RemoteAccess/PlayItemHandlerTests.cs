@@ -48,6 +48,9 @@ public class PlayItemHandlerTests
 
         public void LaunchProcess(string executable, string arguments, bool useShellExecute) =>
             Processes.Add((executable, arguments, useShellExecute));
+
+        public void LaunchProgram(string path, string? workingDirectory) =>
+            throw new NotSupportedException();
     }
 
     /// <summary>Stands in for this machine's installed players.</summary>

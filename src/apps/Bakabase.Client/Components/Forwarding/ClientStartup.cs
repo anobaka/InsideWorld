@@ -5,6 +5,7 @@ using Bakabase.Client.Components.UserMachine;
 using Bakabase.Infrastructures.Components.App;
 using Bakabase.Client.Components.BatchPlay;
 using Bakabase.Modules.Player.Abstractions.Components;
+using Bakabase.Modules.ThirdParty.Abstractions.Http.Cookie;
 using Bakabase.Modules.Player.Abstractions.Models.Domain;
 using Bakabase.Modules.Player.Extensions;
 using Microsoft.Extensions.Options;
@@ -114,6 +115,22 @@ public class ClientStartup
         services.AddSingleton<IUserMachineHandler, FileIconHandler>();
         services.AddSingleton<IUserMachineHandler, TampermonkeyInstallHandler>();
         services.AddSingleton<IUserMachineHandler, OpenAigcArtifactHandler>();
+        services.TryAddSingleton<ILocaleEmulatorLauncher, LocaleEmulatorLauncher>();
+        services.AddSingleton<IUserMachineHandler, DLsiteLaunchHandler>();
+
+        // Signing in to a third-party site opens a window, so it has to open here. The
+        // flows and the orchestration are the server's own; only the window is local.
+        services.AddLocalization();
+        services.TryAddTransient<ICookieCaptureLocalizer, ThirdPartyCookieCaptureLocalizer>();
+        services.TryAddTransient<CookieCaptureOrchestrator>();
+        foreach (var flow in typeof(ICookieCaptureFlow).Assembly.GetTypes()
+                     .Where(t => t is {IsAbstract: false, IsInterface: false} &&
+                                 typeof(ICookieCaptureFlow).IsAssignableFrom(t)))
+        {
+            services.AddTransient(typeof(ICookieCaptureFlow), flow);
+        }
+
+        services.AddSingleton<IUserMachineHandler, CookieCaptureHandler>();
         services.TryAddSingleton<UserMachineDispatcher>();
 
         services.AddRouting();

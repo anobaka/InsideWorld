@@ -50,6 +50,9 @@ public class UserMachineHandlerTests
 
         public void LaunchProcess(string executable, string arguments, bool useShellExecute) =>
             throw new NotSupportedException();
+
+        public void LaunchProgram(string path, string? workingDirectory) =>
+            throw new NotSupportedException();
     }
 
     [TestInitialize]

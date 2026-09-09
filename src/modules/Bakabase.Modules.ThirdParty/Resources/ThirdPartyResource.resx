@@ -123,4 +123,22 @@
   <data name="ThirdParty_Bilibili_FavoritesIsMissing" xml:space="preserve">
     <value>Bilibili favorites is missing</value>
   </data>
+  <data name="CookieCapture_Confirm" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="CookieCapture_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CookieCapture_WaitingForLogin" xml:space="preserve">
+    <value>Please log in, or click Confirm if already logged in</value>
+  </data>
+  <data name="CookieCapture_ExtractingCookies" xml:space="preserve">
+    <value>Extracting cookies...</value>
+  </data>
+  <data name="CookieCapture_Cancelled" xml:space="preserve">
+    <value>Cookie import was cancelled. You can try again when ready.</value>
+  </data>
+  <data name="CookieCapture_LoginTo" xml:space="preserve">
+    <value>Login to {0}</value>
+  </data>
 </root>

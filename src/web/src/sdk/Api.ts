@@ -433,6 +433,12 @@ export interface BakabaseAbstractionsModelsDomainCustomPropertyValue {
   bizValue?: any;
 }
 
+export interface BakabaseAbstractionsModelsDomainDLsiteWorkLaunchTarget {
+  file: string;
+  isExecutable: boolean;
+  useLocaleEmulator: boolean;
+}
+
 export interface BakabaseAbstractionsModelsDomainEnhancerFullOptions {
   /** @format int32 */
   enhancerId: number;
@@ -4237,6 +4243,12 @@ export interface BakabaseModulesSubscriptionAbstractionsModelsViewSubscriptionVi
   targetSummary?: string;
 }
 
+export interface BakabaseModulesThirdPartyAbstractionsHttpCookieCookieCaptureResult {
+  cookie: string;
+  userAgent?: string;
+  tlsPreset?: string;
+}
+
 export interface BakabaseModulesThirdPartyHelpersTlsPresetInfo {
   id: string;
   label: string;
@@ -4468,12 +4480,6 @@ export interface BakabaseServiceControllersChatControllerSetToolEnabledRequest {
 
 export interface BakabaseServiceControllersChatControllerUpdateTitleRequest {
   title: string;
-}
-
-export interface BakabaseServiceControllersCookieCaptureResult {
-  cookie: string;
-  userAgent?: string;
-  tlsPreset?: string;
 }
 
 export interface BakabaseServiceControllersDiscoverySubscribeRequest {
@@ -6175,6 +6181,13 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstract
   data: BakabaseAbstractionsModelsDomainConstantsInitializationContentType;
 }
 
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainDLsiteWorkLaunchTarget {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseAbstractionsModelsDomainDLsiteWorkLaunchTarget;
+}
+
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainExtensionGroup {
   /** @format int32 */
   code: number;
@@ -6770,6 +6783,13 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesS
   data?: BakabaseModulesSubscriptionAbstractionsModelsViewSubscriptionViewModel;
 }
 
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesThirdPartyAbstractionsHttpCookieCookieCaptureResult {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseModulesThirdPartyAbstractionsHttpCookieCookieCaptureResult;
+}
+
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesWorkflowAbstractionsModelsViewWorkflowDefinitionViewModel {
   /** @format int32 */
   code: number;
@@ -6789,13 +6809,6 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceC
   code: number;
   message?: string;
   data?: BakabaseServiceControllersAppDataPathControllerValidateResponse;
-}
-
-export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceControllersCookieCaptureResult {
-  /** @format int32 */
-  code: number;
-  message?: string;
-  data?: BakabaseServiceControllersCookieCaptureResult;
 }
 
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceControllersMediaLibraryStatistics {
@@ -12152,6 +12165,24 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       this.request<BootstrapModelsResponseModelsBaseResponse, any>({
         path: `/dlsite-work/${workId}/launch`,
         method: "POST",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags DLsiteWork
+     * @name GetDLsiteWorkLaunchTarget
+     * @request GET:/dlsite-work/{workId}/launch-target
+     */
+    getDLsiteWorkLaunchTarget: (workId: string, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainDLsiteWorkLaunchTarget,
+        any
+      >({
+        path: `/dlsite-work/${workId}/launch-target`,
+        method: "GET",
         format: "json",
         ...params,
       }),
@@ -23049,7 +23080,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       params: RequestParams = {},
     ) =>
       this.request<
-        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceControllersCookieCaptureResult,
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesThirdPartyAbstractionsHttpCookieCookieCaptureResult,
         any
       >({
         path: `/tool/cookie-capture`,

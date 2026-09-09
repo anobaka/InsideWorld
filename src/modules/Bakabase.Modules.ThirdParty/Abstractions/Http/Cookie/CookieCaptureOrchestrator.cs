@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Bakabase.Abstractions.Components.Localization;
 using Bakabase.Infrastructures.Components.Gui;
-using Bakabase.Modules.ThirdParty.Abstractions.Http.Cookie;
 
-namespace Bakabase.InsideWorld.Business.Components.CookieCapture;
+namespace Bakabase.Modules.ThirdParty.Abstractions.Http.Cookie;
 
 /// <summary>
 /// Drives a cookie-capture flow against an <see cref="IWebViewSession"/>:
@@ -25,16 +23,16 @@ namespace Bakabase.InsideWorld.Business.Components.CookieCapture;
 /// All chain / mirror / stale policy lives here — the GUI adapter is policy-free, the
 /// flow is a pure declarative spec.
 /// </summary>
-public class CookieCaptureOrchestrator(IGuiAdapter guiAdapter, IBakabaseLocalizer localizer)
+public class CookieCaptureOrchestrator(IGuiAdapter guiAdapter, ICookieCaptureLocalizer localizer)
 {
     public async Task<string?> CaptureAsync(ICookieCaptureFlow flow, CancellationToken cancellationToken = default)
     {
         var options = new WebViewSessionOptions
         {
-            Title = localizer["CookieCapture_LoginTo", flow.PlatformName],
-            ConfirmButtonText = localizer["CookieCapture_Confirm"],
-            CancelButtonText = localizer["CookieCapture_Cancel"],
-            InitialStatusText = localizer["CookieCapture_WaitingForLogin"],
+            Title = localizer.LoginTo(flow.PlatformName),
+            ConfirmButtonText = localizer.Confirm,
+            CancelButtonText = localizer.Cancel,
+            InitialStatusText = localizer.WaitingForLogin,
             InitialUrl = flow.StartUrl,
         };
 
@@ -62,7 +60,7 @@ public class CookieCaptureOrchestrator(IGuiAdapter guiAdapter, IBakabaseLocalize
             return null;
         }
 
-        session.SetStatusText(localizer["CookieCapture_ExtractingCookies"]);
+        session.SetStatusText(localizer.ExtractingCookies);
         return await session.GetCookiesAsync(flow.CookieUrls);
     }
 
@@ -94,4 +92,24 @@ public class CookieCaptureOrchestrator(IGuiAdapter guiAdapter, IBakabaseLocalize
 
         await session.NavigateAsync(nextUrl);
     }
+}
+
+/// <summary>
+/// The five strings the login window shows.
+/// </summary>
+/// <remarks>
+/// A port rather than the application's own localizer, so the orchestration can run in
+/// any process that can put a window on the user's screen — which, once the client is a
+/// separate program, is not only the one holding the database.
+/// </remarks>
+public interface ICookieCaptureLocalizer
+{
+    string LoginTo(string platformName);
+    string Confirm { get; }
+    string Cancel { get; }
+    string WaitingForLogin { get; }
+    string ExtractingCookies { get; }
+
+    /// <summary>Shown when the user closes the window instead of signing in.</summary>
+    string Cancelled { get; }
 }

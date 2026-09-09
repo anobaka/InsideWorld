@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Bakabase.Abstractions.Components.Localization;
 using Bakabase.Abstractions.Components.Tasks;
 using Bakabase.Abstractions.Models.Db;
+using Bakabase.Abstractions.Models.Domain;
 using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Abstractions.Services;
 using Bootstrap.Components.Miscellaneous.ResponseBuilders;
@@ -12,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Swashbuckle.AspNetCore.Annotations;
 using Bakabase.Modules.RemoteAccess.Abstractions.Components;
+using Bakabase.Service.Components.RemoteAccess;
 
 namespace Bakabase.Service.Controllers;
 
@@ -131,6 +133,23 @@ public class DLsiteWorkController(IDLsiteWorkService service, BTaskManager btm, 
     {
         await service.LaunchWork(workId);
         return BaseResponseBuilder.Ok;
+    }
+
+    /// <summary>
+    /// What running a work would start, without starting it.
+    /// </summary>
+    /// <remarks>
+    /// Read by the thin client, which runs the program itself. Picking the file needs the
+    /// work's type, its download location and the priority rules over that folder — all
+    /// of which are here.
+    /// </remarks>
+    [HttpGet("{workId}/launch-target")]
+    [SwaggerOperation(OperationId = "GetDLsiteWorkLaunchTarget")]
+    [RemoteAccessible]
+    public async Task<SingletonResponse<DLsiteWorkLaunchTarget>> GetLaunchTarget(string workId,
+        CancellationToken ct)
+    {
+        return new SingletonResponse<DLsiteWorkLaunchTarget>(await service.ResolveLaunchTarget(workId, ct));
     }
 
     [HttpGet("{workId}/playable-files")]

@@ -72,6 +72,12 @@ public interface IUpstreamApi
     /// could not be reached — the caller decides whether that matters.
     /// </summary>
     Task MarkManyPlayedAsync(IReadOnlyDictionary<int, string> playedByResourceId, CancellationToken ct = default);
+
+    /// <summary>
+    /// What running a downloaded DLsite work would start. Null when the server did not
+    /// answer, which also covers a work it has not downloaded.
+    /// </summary>
+    Task<DLsiteWorkLaunchTarget?> GetDLsiteWorkLaunchTargetAsync(string workId, CancellationToken ct = default);
 }
 
 /// <summary>The server's answer to "pick me something".</summary>
@@ -166,6 +172,11 @@ public sealed class UpstreamApi(HttpClient http, IUpstreamTarget target) : IUpst
 
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task<DLsiteWorkLaunchTarget?> GetDLsiteWorkLaunchTargetAsync(string workId,
+        CancellationToken ct = default) =>
+        await ReadAsync<DLsiteWorkLaunchTarget>(
+            $"/dlsite-work/{Uri.EscapeDataString(workId)}/launch-target", ct);
 
     private async Task<T?> ReadAsync<T>(string pathAndQuery, CancellationToken ct) where T : class =>
         (await ReadEnvelopeAsync<T>(pathAndQuery, ct))?.Data;

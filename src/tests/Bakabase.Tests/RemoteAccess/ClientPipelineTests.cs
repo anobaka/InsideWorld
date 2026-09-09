@@ -11,6 +11,7 @@ using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Client.Abstractions;
 using Bakabase.Client.Abstractions.Models;
 using Bakabase.Client.Components.Forwarding;
+using Bakabase.Client.Components.UserMachine;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -183,6 +184,21 @@ public class ClientPipelineTests
         await Send("/resource/search");
 
         Assert.IsFalse(Directory.Exists(_root));
+    }
+
+    [TestMethod]
+    public void Every_route_the_client_claims_has_a_handler()
+    {
+        // The dispatcher answers a declared route with no handler as "this client is
+        // behind", which is right while one is being written and wrong once they all are.
+        // Assembled from the real container, so a handler that was written but never
+        // registered fails here rather than in front of a user.
+        var dispatcher = _host.Services.GetRequiredService<UserMachineDispatcher>();
+        var missing = UserMachineRoutes.All.Select(r => r.Key)
+            .Except(dispatcher.ImplementedRoutes, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        Assert.AreEqual(0, missing.Length, string.Join(", ", missing));
     }
 
     [TestMethod]

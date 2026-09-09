@@ -17,7 +17,6 @@ using Bakabase.Abstractions.Services;
 using Bakabase.Infrastructures.Components.App;
 using Bakabase.Infrastructures.Components.Gui;
 using Bakabase.InsideWorld.Business.Components.Compression;
-using Bakabase.InsideWorld.Business.Components.CookieCapture;
 using Bakabase.InsideWorld.Models.Constants;
 using Bakabase.InsideWorld.Models.Constants.AdditionalItems;
 using Bakabase.Modules.ThirdParty.Abstractions.Http.Cookie;
@@ -82,15 +81,8 @@ namespace Bakabase.Service.Controllers
                 };
             }
 
-            var webViewUserAgent = GetWebViewUserAgent();
-            var tlsPreset = TlsPresetHelper.InferPresetFromUserAgent(webViewUserAgent);
 
-            return new SingletonResponse<CookieCaptureResult>(new CookieCaptureResult
-            {
-                Cookie = cookie,
-                UserAgent = webViewUserAgent,
-                TlsPreset = tlsPreset,
-            });
+            return new SingletonResponse<CookieCaptureResult>(CookieCaptureResult.For(cookie));
         }
 
         [HttpGet("tls-presets")]
@@ -366,21 +358,6 @@ namespace Bakabase.Service.Controllers
         /// Returns the User-Agent string used by the embedded WebView on the current platform.
         /// This is a known constant since the WebView UA is explicitly set during initialization.
         /// </summary>
-        private static string GetWebViewUserAgent()
-        {
-            if (OperatingSystem.IsMacOS())
-                return "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
-            if (OperatingSystem.IsLinux())
-                return "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
-            // Windows (default)
-            return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
-        }
     }
 
-    public class CookieCaptureResult
-    {
-        public string Cookie { get; set; } = string.Empty;
-        public string? UserAgent { get; set; }
-        public string? TlsPreset { get; set; }
-    }
 }

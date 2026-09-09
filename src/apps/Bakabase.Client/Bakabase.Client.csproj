@@ -25,6 +25,9 @@
         <ProjectReference Include="..\..\libs\Bakabase.Infrastructures\Bakabase.Infrastructures\Bakabase.Infrastructures.csproj" />
         <ProjectReference Include="..\..\modules\Bakabase.Modules.Player\Bakabase.Modules.Player.csproj" />
         <ProjectReference Include="..\..\modules\Bakabase.Modules.RemoteAccess\Bakabase.Modules.RemoteAccess.csproj" />
+        <!-- For the cookie-capture flows and the orchestration that drives them: the
+             sign-in window has to open on the machine the user is sitting at. -->
+        <ProjectReference Include="..\..\modules\Bakabase.Modules.ThirdParty\Bakabase.Modules.ThirdParty.csproj" />
     </ItemGroup>
 
     <ItemGroup>

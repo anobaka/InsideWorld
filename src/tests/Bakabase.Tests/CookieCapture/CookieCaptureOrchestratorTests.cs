@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Bakabase.Infrastructures.Components.Gui;
-using Bakabase.InsideWorld.Business.Components.CookieCapture;
 using Bakabase.InsideWorld.Models.Constants;
 using Bakabase.Modules.ThirdParty.Abstractions.Http.Cookie;
+using Bakabase.Service.Components;
 using Bakabase.TestKit.Implementations;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -279,7 +279,8 @@ public class CookieCaptureOrchestratorTests
 
     private static CookieCaptureOrchestrator NewOrchestrator(FakeWebViewSession session)
     {
-        return new CookieCaptureOrchestrator(new FakeGuiAdapter(session), new TestBakabaseLocalizer());
+        return new CookieCaptureOrchestrator(new FakeGuiAdapter(session),
+            new BakabaseCookieCaptureLocalizer(new TestBakabaseLocalizer()));
     }
 }
 

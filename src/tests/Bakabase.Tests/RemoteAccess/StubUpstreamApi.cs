@@ -63,6 +63,11 @@ public sealed class StubUpstreamApi : IUpstreamApi
     public Task<UpstreamPlaylistSnapshot?> GetBatchPlayPlaylistSnapshotAsync(int playlistId,
         CancellationToken ct = default) => Task.FromResult(BatchPlayPlaylist);
 
+    public DLsiteWorkLaunchTarget? DLsiteLaunchTarget;
+
+    public Task<DLsiteWorkLaunchTarget?> GetDLsiteWorkLaunchTargetAsync(string workId,
+        CancellationToken ct = default) => Task.FromResult(DLsiteLaunchTarget);
+
     public Task MarkManyPlayedAsync(IReadOnlyDictionary<int, string> playedByResourceId,
         CancellationToken ct = default)
     {

@@ -1924,6 +1924,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/dlsite-work/{workId}/launch-target": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetDLsiteWorkLaunchTarget"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/dlsite-work/{workId}/playable-files": {
         parameters: {
             query?: never;
@@ -7145,6 +7161,11 @@ export interface components {
             readonly bizKey: string;
             bizValue?: unknown;
         };
+        "Bakabase.Abstractions.Models.Domain.DLsiteWorkLaunchTarget": {
+            file: string;
+            isExecutable: boolean;
+            useLocaleEmulator: boolean;
+        };
         "Bakabase.Abstractions.Models.Domain.EnhancerFullOptions": {
             /** Format: int32 */
             enhancerId: number;
@@ -10282,6 +10303,11 @@ export interface components {
             intervalMinutes?: number;
             targetSummary?: string;
         };
+        "Bakabase.Modules.ThirdParty.Abstractions.Http.Cookie.CookieCaptureResult": {
+            cookie: string;
+            userAgent?: string;
+            tlsPreset?: string;
+        };
         "Bakabase.Modules.ThirdParty.Helpers.TlsPresetInfo": {
             id: string;
             label: string;
@@ -10467,11 +10493,6 @@ export interface components {
         };
         "Bakabase.Service.Controllers.ChatController+UpdateTitleRequest": {
             title: string;
-        };
-        "Bakabase.Service.Controllers.CookieCaptureResult": {
-            cookie: string;
-            userAgent?: string;
-            tlsPreset?: string;
         };
         "Bakabase.Service.Controllers.DiscoverySubscribeRequest": {
             /** Format: int32 */
@@ -11908,6 +11929,12 @@ export interface components {
             message?: string;
             data: components["schemas"]["Bakabase.Abstractions.Models.Domain.Constants.InitializationContentType"];
         };
+        "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Abstractions.Models.Domain.DLsiteWorkLaunchTarget]": {
+            /** Format: int32 */
+            code: number;
+            message?: string;
+            data?: components["schemas"]["Bakabase.Abstractions.Models.Domain.DLsiteWorkLaunchTarget"];
+        };
         "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Abstractions.Models.Domain.ExtensionGroup]": {
             /** Format: int32 */
             code: number;
@@ -12418,6 +12445,12 @@ export interface components {
             message?: string;
             data?: components["schemas"]["Bakabase.Modules.Subscription.Abstractions.Models.View.SubscriptionViewModel"];
         };
+        "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.ThirdParty.Abstractions.Http.Cookie.CookieCaptureResult]": {
+            /** Format: int32 */
+            code: number;
+            message?: string;
+            data?: components["schemas"]["Bakabase.Modules.ThirdParty.Abstractions.Http.Cookie.CookieCaptureResult"];
+        };
         "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.Workflow.Abstractions.Models.View.WorkflowDefinitionViewModel]": {
             /** Format: int32 */
             code: number;
@@ -12435,12 +12468,6 @@ export interface components {
             code: number;
             message?: string;
             data?: components["schemas"]["Bakabase.Service.Controllers.AppDataPathController+ValidateResponse"];
-        };
-        "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Controllers.CookieCaptureResult]": {
-            /** Format: int32 */
-            code: number;
-            message?: string;
-            data?: components["schemas"]["Bakabase.Service.Controllers.CookieCaptureResult"];
         };
         "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Controllers.MediaLibraryStatistics]": {
             /** Format: int32 */
@@ -17191,6 +17218,30 @@ export interface operations {
                     "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
                     "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
                     "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                };
+            };
+        };
+    };
+    GetDLsiteWorkLaunchTarget: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Abstractions.Models.Domain.DLsiteWorkLaunchTarget]"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Abstractions.Models.Domain.DLsiteWorkLaunchTarget]"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Abstractions.Models.Domain.DLsiteWorkLaunchTarget]"];
                 };
             };
         };
@@ -26745,9 +26796,9 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Controllers.CookieCaptureResult]"];
-                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Controllers.CookieCaptureResult]"];
-                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Controllers.CookieCaptureResult]"];
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.ThirdParty.Abstractions.Http.Cookie.CookieCaptureResult]"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.ThirdParty.Abstractions.Http.Cookie.CookieCaptureResult]"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.ThirdParty.Abstractions.Http.Cookie.CookieCaptureResult]"];
                 };
             };
         };
