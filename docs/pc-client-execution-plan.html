@@ -178,7 +178,13 @@ footer{margin-top:36px;color:var(--dim);font-size:12px;border-top:1px solid var(
 </table>
 
 <h3>阶段一：服务端——执行位置、设备配对、签名地址</h3>
-<div class="rule ok"><b>进度（2026-09-09）</b>：前两项已完成并推送——<code class="i">RunsOnUserMachineAttribute</code> + 17 个动作标记 + <code class="i">UserMachineEndpointCatalog</code> + 快照测试；授权过滤器四步顺序（含 <code class="i">RunsOnUserMachine = 5</code> 拒绝原因）与 10 个顺序测试。<b>"远程浏览器让 Docker 服务器拉起播放器"这个洞已经堵上</b>。剩余：设备配对与存储、<code class="i">RequirePairing</code>、签名地址、控制器端点、前端。</div>
+<div class="rule ok"><b>进度（2026-09-09）</b>：<b>阶段一全部完成并推送</b>。执行位置标记（17 个动作 + 快照测试）、授权过滤器四步顺序、请求签名与随机数缓存、设备存储与配对全流程、<code class="i">RequirePairing</code>、签名地址、控制器端点、连接撤销、锁死自救、前端设置页与 <code class="i">gen-sdk</code>，全量测试 738 通过。<b>"远程浏览器让 Docker 服务器拉起播放器"这个洞已经堵上</b>，"公网部署只服务已配对设备"也已成立。</div>
+<div class="rule warn"><b>与本表的三处出入（实现时改判，均已写进代码注释）</b>
+<ol style="margin:.4em 0 0 1.2em">
+<li><b>签名地址不设签发端点</b>。本表要新写 <code class="i">GET /remote-access/signed-media-url</code>，那是旧设计的形状——旧树里设备的凭据是不透明 bearer token，自己没有可签的东西，只能问服务端要。现在设备手上就有 HMAC 密钥，<b>本地自签</b>更简单也更严：没有服务端保管的签名密钥（<code class="i">SigningSecret</code> 字段随之删掉），撤销一台设备即刻作废它发出过的每一条链接，包括已经躺在播放器列表里的。</li>
+<li><b>锁死自救的触发条件改成"锁死"本身</b>，不是运行时形态。本表写的是 Docker + 无设备 + 模式≠Disabled，但 Unrestricted 根本不看配对，那样会在最常见的 Docker 配置下每 10 分钟印一个没人需要的配对码。改成 <code class="i">Enabled + RequirePairing + 无设备</code>——即"谁都进不来且没人能批准"，这样纯服务端形态到来时不用回头改。</li>
+<li><b>配对申请补了限流</b>。它是唯一一个无凭据调用者能让服务端写盘的端点，原表没有约束：现在按来源地址 10 分钟 3 次，通知另设全局节流。限额按地址而非全局，否则网络上任何人都能让所有人配不上。</li>
+</ol></div>
 <table>
 <tr><th style="width:44%">事项</th><th>验收</th></tr>
 <tr><td><code class="i">RunsOnUserMachineAttribute</code> + 约 16 个动作标记（<a href="#s510">§5.10</a> A、B 组）+ <code class="i">UserMachineEndpointCatalog</code></td><td>快照测试锁定集合；"依赖用户侧能力的动作必须标记"测试通过（<a href="#s6">§6</a>）</td></tr>
