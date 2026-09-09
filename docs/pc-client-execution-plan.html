@@ -166,7 +166,7 @@ footer{margin-top:36px;color:var(--dim);font-size:12px;border-top:1px solid var(
 <p>与设计文档相比多了一个"阶段零"，并把三件事提前：客户端日志与更新器（阶段二，否则发布的客户端没有日志也没有升级通道）、用户主动登录态采集（阶段二，它不需要转交通道）、<code class="i">/updater/*</code> 与 <code class="i">/app/restart</code> 的执行位置定案（阶段一，否则阶段二的客户端一打开就会开始更新服务器）。</p>
 
 <h3>阶段零：准备（一体版行为零变化的清理）</h3>
-<div class="rule ok"><b>进度（2026-09-09）</b>：外壳搬移、死注入与死代码清理、持续集成补测试工程、子模块地址、规则文件，均已完成并推送。发布产物对比：571 → 573 个文件，差异只有 <code class="i">Bakabase.Shell.dll</code>、其调试符号，以及本地化资源随外壳改名；总体积不变，全量测试 1409 通过。剩下<b>按 §7 修订设计文档</b>一项未做。</div>
+<div class="rule ok"><b>进度（2026-09-09）</b>：外壳搬移、死注入与死代码清理、持续集成补测试工程、子模块地址、规则文件，均已完成并推送。发布产物对比：571 → 573 个文件，差异只有 <code class="i">Bakabase.Shell.dll</code>、其调试符号，以及本地化资源随外壳改名；总体积不变，全量测试 1409 通过。<b>按 §7 修订设计文档已完成，阶段零收尾。</b></div>
 <table>
 <tr><th style="width:44%">事项</th><th>验收</th></tr>
 <tr><td><b>外壳搬移</b>：把 <a href="#s3">§3.1</a> 列出的窗口、托盘、退出协调、内嵌浏览器、图形适配器从 <code class="i">src/apps/Bakabase/</code> 搬进新的 <code class="i">Bakabase.Shell</code>，引入 <code class="i">IShellHost</code> 接缝。<b>不改任何行为</b>，只搬文件与加接口</td><td><code class="i">-p:RuntimeMode=WINFORMS</code> 发布产物与搬移前<b>文件清单一致、各程序集大小无异常变化</b>；一体版手工冒烟：启动、托盘、退出协调、登录态采集窗口</td></tr>
@@ -430,7 +430,7 @@ sig = HMAC-SHA256(deviceKey, 规范串)
 <div class="rule ok"><b>决策 06 让这里的两条例外消失了。</b>原本要写明"客户端读一次、切回时删一次一体版锚点下的 <code class="i">.launch-mode</code>"——现在没有这个文件，客户端<b>一次也不触碰</b>一体版目录。原本还要承认"一体版进程会多加载客户端程序集，所以只能在容器描述符层面断言"——现在一体版入口<b>根本不引用</b> <code class="i">Bakabase.Client</code>，可以直接在<b>程序集层面</b>断言，连同 R2–R4 的三类扫描（控制器、选项描述器、后台任务构建器）都由引用图自动满足。<br><br>代价是多了一条新的验收项：<b>外壳搬移必须证明一体版产物没变</b>（阶段零那行），以及客户端安装包要单独走一遍升级测试（场景 E）。</div>
 
 <h2 id="s7"><span class="n">§7</span>设计文档需要修订的地方</h2>
-<p>以下每条都已在代码中核实。建议在决策 1–11 定稿后一次性修订 <a href="pc-client-design.html">设计文档</a>，本计划不重复它的内容。</p>
+<div class="rule ok"><b>已于 2026-09-09 全部应用。</b><a href="pc-client-design.html">设计文档</a>改到第四版，凡与代码不符处均<b>就地标注"更正"</b>而不是悄悄改写，方便与本表对照。<code class="i">mobile-app-design.md</code> 的两条也已修订。下表保留作为改动索引。</div>
 <table>
 <tr><th style="width:12%">章节</th><th>修订内容</th></tr>
 <tr><td class="e">§5.2</td><td>"在 <code class="i">RuntimeMode</code> 上增加取值"改为<b>并列的构建期属性 <code class="i">AppFlavor</code> + 独立入口工程</b>（决策 06）；枚举实际位于 <code class="i">LazyMortal</code> 子模块，且两个子模块都已签出（"本仓库未签出"不成立）；删掉"模式是设置项、可在界面里切换"的说法——切换风味等于换一个安装包</td></tr>
