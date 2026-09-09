@@ -639,14 +639,38 @@
   <data name="SyncPathMark_Collected" xml:space="preserve">
     <value>已收集 {0} 个路径标记</value>
   </data>
+  <data name="SyncPathMark_CollectingPropertyEffects" xml:space="preserve">
+    <value>正在计算属性标记结果...</value>
+  </data>
   <data name="SyncPathMark_ProcessingResource" xml:space="preserve">
     <value>处理资源: {0}</value>
   </data>
   <data name="SyncPathMark_ProcessingProperty" xml:space="preserve">
     <value>处理属性: {0}</value>
   </data>
+  <data name="SyncPathMark_CollectingMediaLibraryEffects" xml:space="preserve">
+    <value>正在计算媒体库标记结果...</value>
+  </data>
   <data name="SyncPathMark_ProcessingMediaLibrary" xml:space="preserve">
     <value>处理媒体库: {0}</value>
+  </data>
+  <data name="SyncPathMark_ComputingFinalState" xml:space="preserve">
+    <value>正在计算最终状态...</value>
+  </data>
+  <data name="SyncPathMark_ApplyingPropertyChanges" xml:space="preserve">
+    <value>正在应用属性变更...</value>
+  </data>
+  <data name="SyncPathMark_ApplyingMediaLibraryChanges" xml:space="preserve">
+    <value>正在应用媒体库变更...</value>
+  </data>
+  <data name="SyncPathMark_PersistingEffects" xml:space="preserve">
+    <value>正在保存标记计算结果...</value>
+  </data>
+  <data name="SyncPathMark_UpdatingSearchIndex" xml:space="preserve">
+    <value>正在等待资源搜索索引更新...</value>
+  </data>
+  <data name="SyncPathMark_UpdatingMarkStatuses" xml:space="preserve">
+    <value>正在更新标记状态...</value>
   </data>
   <data name="SyncPathMark_FindingRelated" xml:space="preserve">
     <value>查找关联标记中</value>

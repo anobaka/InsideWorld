@@ -1,7 +1,6 @@
 "use client";
 
 import type { BakabaseAbstractionsModelsDomainPathMark } from "@/sdk/Api";
-import type { BTask } from "@/core/models/BTask";
 
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -15,6 +14,11 @@ import {
 import { AiOutlineFieldTime } from "react-icons/ai";
 
 import MarkDescription from "./MarkDescription";
+import {
+  getPathMarkSyncProgress,
+  getPathMarkSyncTask,
+  isPathMarkSyncTaskActive,
+} from "./pathMarkSyncTask";
 
 import {
   Chip,
@@ -25,7 +29,7 @@ import {
   Button,
   toast,
 } from "@/components/bakaui";
-import { PathMarkType, PathMarkSyncStatus, BTaskStatus } from "@/sdk/constants";
+import { PathMarkType, PathMarkSyncStatus } from "@/sdk/constants";
 import { useBTasksStore } from "@/stores/bTasks";
 import { usePathMarksStore } from "@/stores/pathMarks";
 import BApi from "@/sdk/BApi";
@@ -39,9 +43,6 @@ export interface PathMarkChipProps {
   onSelectionChange?: (selected: boolean) => void;
 }
 
-// Build task ID for a single mark sync
-const buildMarkTaskId = (markId: number) => `SyncPathMark_${markId}`;
-
 const getSyncStatusIcon = (status?: number, isTaskRunning?: boolean, taskProgress?: number) => {
   // If task is running, show CircularProgress
   if (isTaskRunning) {
@@ -51,8 +52,9 @@ const getSyncStatusIcon = (status?: number, isTaskRunning?: boolean, taskProgres
         classNames={{
           svg: "w-3.5 h-3.5",
         }}
+        isIndeterminate={taskProgress == null}
         size="sm"
-        value={taskProgress || 0}
+        value={taskProgress}
       />
     );
   }
@@ -140,7 +142,7 @@ const PathMarkChip = ({
   const { t } = useTranslation();
   const [syncing, setSyncing] = useState(false);
 
-  // Watch BTask store for this mark's sync task
+  // Path-mark synchronization is represented by one global BTask.
   const bTasks = useBTasksStore((state) => state.tasks);
 
   // Get the latest mark state from store (updated via SignalR)
@@ -155,17 +157,14 @@ const PathMarkChip = ({
   const label = getMarkTypeLabel(mark.type, t);
   const isPendingDelete = mark.syncStatus === PathMarkSyncStatus.PendingDelete;
 
-  // Check if there's an active task for this mark
-  const markTask = mark.id
-    ? (bTasks?.find((task) => task.id === buildMarkTaskId(mark.id!)) as BTask | undefined)
-    : undefined;
-  const isTaskRunning =
-    markTask?.status === BTaskStatus.Running || markTask?.status === BTaskStatus.NotStarted;
-  const taskProgress = markTask?.percentage || 0;
+  const pathMarkSyncTask = getPathMarkSyncTask(bTasks);
+  const isMarkSyncing = mark.syncStatus === PathMarkSyncStatus.Syncing;
+  const isTaskRunning = isMarkSyncing && isPathMarkSyncTaskActive(pathMarkSyncTask);
+  const taskProgress = getPathMarkSyncProgress(pathMarkSyncTask);
 
   // Sync this mark immediately
   const handleSyncMark = useCallback(async () => {
-    if (!mark.id || syncing || isTaskRunning) return;
+    if (!mark.id || syncing || isMarkSyncing) return;
 
     setSyncing(true);
     try {
@@ -176,7 +175,7 @@ const PathMarkChip = ({
     } finally {
       setSyncing(false);
     }
-  }, [mark.id, syncing, isTaskRunning, t]);
+  }, [mark.id, syncing, isMarkSyncing, t]);
 
   const chipContent = (
     <Chip
@@ -215,7 +214,7 @@ const PathMarkChip = ({
   }
 
   // Can sync if mark has an id and is not already syncing/running
-  const canSync = mark.id && !syncing && !isTaskRunning && !isPendingDelete;
+  const canSync = mark.id && !syncing && !isMarkSyncing && !isPendingDelete;
 
   return (
     <Tooltip
@@ -230,7 +229,11 @@ const PathMarkChip = ({
           )}
           {isTaskRunning && (
             <span className="text-xs opacity-80">
-              {t("pathMarkConfig.status.syncProgress", { progress: Math.round(taskProgress) })}
+              {taskProgress == null
+                ? t("pathMarkConfig.status.syncing")
+                : t("pathMarkConfig.status.overallSyncProgress", {
+                    progress: Math.round(taskProgress),
+                  })}
             </span>
           )}
           {mark.expiresInSeconds != null && mark.expiresInSeconds > 0 && (

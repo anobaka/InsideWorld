@@ -410,9 +410,17 @@ namespace Bakabase.InsideWorld.Business.Components
         // PathMark Sync
         public string SyncPathMark_Collecting() => this[nameof(SyncPathMark_Collecting)];
         public string SyncPathMark_Collected(int count) => this[nameof(SyncPathMark_Collected), count];
+        public string SyncPathMark_CollectingPropertyEffects() => this[nameof(SyncPathMark_CollectingPropertyEffects)];
         public string SyncPathMark_ProcessingResource(string path) => this[nameof(SyncPathMark_ProcessingResource), path];
         public string SyncPathMark_ProcessingProperty(string path) => this[nameof(SyncPathMark_ProcessingProperty), path];
+        public string SyncPathMark_CollectingMediaLibraryEffects() => this[nameof(SyncPathMark_CollectingMediaLibraryEffects)];
         public string SyncPathMark_ProcessingMediaLibrary(string path) => this[nameof(SyncPathMark_ProcessingMediaLibrary), path];
+        public string SyncPathMark_ComputingFinalState() => this[nameof(SyncPathMark_ComputingFinalState)];
+        public string SyncPathMark_ApplyingPropertyChanges() => this[nameof(SyncPathMark_ApplyingPropertyChanges)];
+        public string SyncPathMark_ApplyingMediaLibraryChanges() => this[nameof(SyncPathMark_ApplyingMediaLibraryChanges)];
+        public string SyncPathMark_PersistingEffects() => this[nameof(SyncPathMark_PersistingEffects)];
+        public string SyncPathMark_UpdatingSearchIndex() => this[nameof(SyncPathMark_UpdatingSearchIndex)];
+        public string SyncPathMark_UpdatingMarkStatuses() => this[nameof(SyncPathMark_UpdatingMarkStatuses)];
         public string SyncPathMark_FindingRelated() => this[nameof(SyncPathMark_FindingRelated)];
         public string SyncPathMark_FoundRelated(int count) => this[nameof(SyncPathMark_FoundRelated), count];
         public string SyncPathMark_EstablishingRelationships() => this[nameof(SyncPathMark_EstablishingRelationships)];

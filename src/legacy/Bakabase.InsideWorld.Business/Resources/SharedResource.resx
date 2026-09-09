@@ -639,14 +639,38 @@ The version of lux is not limited.</value>
   <data name="SyncPathMark_Collected" xml:space="preserve">
     <value>Collected {0} path marks</value>
   </data>
+  <data name="SyncPathMark_CollectingPropertyEffects" xml:space="preserve">
+    <value>Collecting property effects...</value>
+  </data>
   <data name="SyncPathMark_ProcessingResource" xml:space="preserve">
     <value>Processing resource: {0}</value>
   </data>
   <data name="SyncPathMark_ProcessingProperty" xml:space="preserve">
     <value>Processing property: {0}</value>
   </data>
+  <data name="SyncPathMark_CollectingMediaLibraryEffects" xml:space="preserve">
+    <value>Collecting media library effects...</value>
+  </data>
   <data name="SyncPathMark_ProcessingMediaLibrary" xml:space="preserve">
     <value>Processing media library: {0}</value>
+  </data>
+  <data name="SyncPathMark_ComputingFinalState" xml:space="preserve">
+    <value>Computing final state...</value>
+  </data>
+  <data name="SyncPathMark_ApplyingPropertyChanges" xml:space="preserve">
+    <value>Applying property changes...</value>
+  </data>
+  <data name="SyncPathMark_ApplyingMediaLibraryChanges" xml:space="preserve">
+    <value>Applying media library changes...</value>
+  </data>
+  <data name="SyncPathMark_PersistingEffects" xml:space="preserve">
+    <value>Persisting effects...</value>
+  </data>
+  <data name="SyncPathMark_UpdatingSearchIndex" xml:space="preserve">
+    <value>Waiting for the resource search index to update...</value>
+  </data>
+  <data name="SyncPathMark_UpdatingMarkStatuses" xml:space="preserve">
+    <value>Updating mark statuses...</value>
   </data>
   <data name="SyncPathMark_FindingRelated" xml:space="preserve">
     <value>Finding related marks</value>

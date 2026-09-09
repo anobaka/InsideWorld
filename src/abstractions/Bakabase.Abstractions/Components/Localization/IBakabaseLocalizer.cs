@@ -110,9 +110,17 @@ public interface IBakabaseLocalizer
     // PathMark Sync
     string SyncPathMark_Collecting();
     string SyncPathMark_Collected(int count);
+    string SyncPathMark_CollectingPropertyEffects();
     string SyncPathMark_ProcessingResource(string path);
     string SyncPathMark_ProcessingProperty(string path);
+    string SyncPathMark_CollectingMediaLibraryEffects();
     string SyncPathMark_ProcessingMediaLibrary(string path);
+    string SyncPathMark_ComputingFinalState();
+    string SyncPathMark_ApplyingPropertyChanges();
+    string SyncPathMark_ApplyingMediaLibraryChanges();
+    string SyncPathMark_PersistingEffects();
+    string SyncPathMark_UpdatingSearchIndex();
+    string SyncPathMark_UpdatingMarkStatuses();
     string SyncPathMark_FindingRelated();
     string SyncPathMark_FoundRelated(int count);
     string SyncPathMark_EstablishingRelationships();

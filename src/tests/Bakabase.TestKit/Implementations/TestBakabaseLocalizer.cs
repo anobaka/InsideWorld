@@ -111,9 +111,17 @@ public class TestBakabaseLocalizer : IBakabaseLocalizer
     // PathMark Sync
     public string SyncPathMark_Collecting() => "SyncPathMark_Collecting";
     public string SyncPathMark_Collected(int count) => $"SyncPathMark_Collected_{count}";
+    public string SyncPathMark_CollectingPropertyEffects() => "SyncPathMark_CollectingPropertyEffects";
     public string SyncPathMark_ProcessingResource(string path) => $"SyncPathMark_ProcessingResource_{path}";
     public string SyncPathMark_ProcessingProperty(string path) => $"SyncPathMark_ProcessingProperty_{path}";
+    public string SyncPathMark_CollectingMediaLibraryEffects() => "SyncPathMark_CollectingMediaLibraryEffects";
     public string SyncPathMark_ProcessingMediaLibrary(string path) => $"SyncPathMark_ProcessingMediaLibrary_{path}";
+    public string SyncPathMark_ComputingFinalState() => "SyncPathMark_ComputingFinalState";
+    public string SyncPathMark_ApplyingPropertyChanges() => "SyncPathMark_ApplyingPropertyChanges";
+    public string SyncPathMark_ApplyingMediaLibraryChanges() => "SyncPathMark_ApplyingMediaLibraryChanges";
+    public string SyncPathMark_PersistingEffects() => "SyncPathMark_PersistingEffects";
+    public string SyncPathMark_UpdatingSearchIndex() => "SyncPathMark_UpdatingSearchIndex";
+    public string SyncPathMark_UpdatingMarkStatuses() => "SyncPathMark_UpdatingMarkStatuses";
     public string SyncPathMark_FindingRelated() => "SyncPathMark_FindingRelated";
     public string SyncPathMark_FoundRelated(int count) => $"SyncPathMark_FoundRelated_{count}";
     public string SyncPathMark_EstablishingRelationships() => "SyncPathMark_EstablishingRelationships";

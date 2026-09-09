@@ -3,7 +3,6 @@
 import type { BakabaseAbstractionsModelsDomainPathMark } from "@/sdk/Api";
 import type { DestroyableProps } from "@/components/bakaui/types";
 import type { PathMarkSyncStatus as PathMarkSyncStatusType } from "@/sdk/constants";
-import type { BTask } from "@/core/models/BTask";
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,10 +15,15 @@ import {
 } from "react-icons/ai";
 
 import SyncProgressModal from "./SyncProgressModal";
+import {
+  getPathMarkSyncProgress,
+  getPathMarkSyncTask,
+  isPathMarkSyncTaskActive,
+} from "./pathMarkSyncTask";
 
 import { Modal, Button, Chip, Spinner, Tooltip, CircularProgress } from "@/components/bakaui";
 import { HelpCenterButton } from "@/components/HelpCenter";
-import { PathMarkSyncStatus, PathMarkType, BTaskStatus } from "@/sdk/constants";
+import { PathMarkSyncStatus, PathMarkType } from "@/sdk/constants";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
 import BApi from "@/sdk/BApi";
 import { useBTasksStore } from "@/stores/bTasks";
@@ -101,9 +105,6 @@ const getMarkTypeColor = (type?: number) => {
   }
 };
 
-// Build task ID for a single mark sync
-const buildMarkTaskId = (markId: number) => `SyncPathMark_${markId}`;
-
 const PendingSyncListModal = ({
   visible = true,
   onClose,
@@ -116,8 +117,11 @@ const PendingSyncListModal = ({
   const [loading, setLoading] = useState(false);
   const [pendingMarks, setPendingMarks] = useState<BakabaseAbstractionsModelsDomainPathMark[]>([]);
 
-  // Watch BTask store for individual mark sync tasks
+  // Path-mark synchronization is represented by one global BTask.
   const bTasks = useBTasksStore((state) => state.tasks);
+  const pathMarkSyncTask = getPathMarkSyncTask(bTasks);
+  const isPathMarkSyncTaskRunning = isPathMarkSyncTaskActive(pathMarkSyncTask);
+  const pathMarkSyncProgress = getPathMarkSyncProgress(pathMarkSyncTask);
 
   // Watch PathMarks store for real-time status updates via SignalR
   const pathMarksStore = usePathMarksStore((state) => state.marks);
@@ -237,11 +241,6 @@ const PendingSyncListModal = ({
     }).length;
   }, [pendingMarks, pathMarksStore]);
 
-  // Get task for a specific mark
-  const getMarkTask = (markId: number): BTask | undefined => {
-    return bTasks?.find((t) => t.id === buildMarkTaskId(markId)) as BTask | undefined;
-  };
-
   return (
     <Modal
       footer={
@@ -313,10 +312,8 @@ const PendingSyncListModal = ({
               {/* Marks under this path */}
               <div className="flex flex-col gap-1 pl-4">
                 {group.marks.map((mark) => {
-                  const markTask = getMarkTask(mark.id!);
-                  const isTaskRunning =
-                    markTask?.status === BTaskStatus.Running ||
-                    markTask?.status === BTaskStatus.NotStarted;
+                  const isMarkSyncing = mark.syncStatus === PathMarkSyncStatus.Syncing;
+                  const showOverallProgress = isMarkSyncing && isPathMarkSyncTaskRunning;
                   const isPendingDelete = mark.syncStatus === PathMarkSyncStatus.PendingDelete;
 
                   return (
@@ -329,11 +326,7 @@ const PendingSyncListModal = ({
                       {/* Sync status icon */}
                       <Tooltip content={getSyncStatusLabel(mark.syncStatus, t)}>
                         <span className="flex items-center">
-                          {isTaskRunning ? (
-                            <Spinner className="w-4 h-4" size="sm" />
-                          ) : (
-                            getSyncStatusIcon(mark.syncStatus)
-                          )}
+                          {getSyncStatusIcon(mark.syncStatus)}
                         </span>
                       </Tooltip>
 
@@ -346,13 +339,24 @@ const PendingSyncListModal = ({
                       <span className="text-xs text-default-500">#{mark.priority}</span>
 
                       {/* Task progress if running */}
-                      {isTaskRunning && markTask && (
-                        <CircularProgress
-                          showValueLabel
-                          className="w-8"
-                          size="sm"
-                          value={markTask.percentage || 0}
-                        />
+                      {showOverallProgress && (
+                        <Tooltip
+                          content={
+                            pathMarkSyncProgress == null
+                              ? t("pathMarkConfig.status.syncing")
+                              : t("pathMarkConfig.status.overallSyncProgress", {
+                                  progress: Math.round(pathMarkSyncProgress),
+                                })
+                          }
+                        >
+                          <CircularProgress
+                            showValueLabel
+                            className="w-8"
+                            isIndeterminate={pathMarkSyncProgress == null}
+                            size="sm"
+                            value={pathMarkSyncProgress}
+                          />
+                        </Tooltip>
                       )}
 
                       {/* Error message */}
@@ -371,8 +375,8 @@ const PendingSyncListModal = ({
                       <Button
                         isIconOnly
                         color="primary"
-                        isDisabled={isPendingDelete || isTaskRunning}
-                        isLoading={isTaskRunning}
+                        isDisabled={isPendingDelete || isMarkSyncing}
+                        isLoading={isMarkSyncing}
                         size="sm"
                         variant="light"
                         onPress={() => handleSyncMark(mark)}

@@ -155,7 +155,7 @@
   "markDescription.empty": "无描述",
   "markDescription.invalid": "配置无效",
   "pathMarkConfig.tip.clickToEditRightClickDelete": "点击编辑，右键删除",
-  "pathMarkConfig.status.syncProgress": "同步中: {{progress}}%",
+  "pathMarkConfig.status.overallSyncProgress": "整体同步进度: {{progress}}%",
   "pathMarkConfig.tip.recheckAfter": "重新检查于",
   "pathMarkConfig.action.viewAllMarks": "查看全部标记",
   "pathMarkConfig.label.nextStepHint": "下一步：查看所有已配置的标记，或配置资源扩展来定义增强器、播放器等设置",
