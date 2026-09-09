@@ -26,6 +26,7 @@ import type { Resource as ResourceModel } from "@/core/models/Resource";
 
 import FallbackCover from "@/components/Resource/components/ResourceCover/components/FallbackCover.tsx";
 import { useCoverResolution } from "@/hooks/useCoverResolution";
+import BusinessConstants from "@/components/BusinessConstants";
 
 type TooltipPlacement =
   | "top"
@@ -126,7 +127,9 @@ const ResourceCover = React.forwardRef((props: Props, ref) => {
     const bust = reloadKey > 0 || reloadToken ? `&v=${reloadToken ?? 0}.${reloadKey}` : "";
 
     return coverPaths.map(
-      (coverPath) => `${serverAddress}/tool/thumbnail?path=${encodeURIComponent(coverPath)}${bust}`,
+      (coverPath) =>
+        `${serverAddress}/tool/thumbnail?path=${encodeURIComponent(coverPath)}` +
+        `&w=${BusinessConstants.MaxCoverSize}&h=${BusinessConstants.MaxCoverSize}${bust}`,
     );
   }, [
     coverResolution.status,
