@@ -30,3 +30,13 @@ public record PlayableItem
     /// </summary>
     public string? DisplayName { get; set; }
 }
+
+/// <summary>
+/// One playable item, together with the resource it belongs to.
+/// </summary>
+/// <remarks>
+/// What "pick something to play" answers when the picking and the playing happen on
+/// different machines. A <see cref="PlayableItem"/> alone is not enough there: the caller
+/// still has to say which resource was played, and it did not choose it.
+/// </remarks>
+public sealed record PlayableItemPick(int ResourceId, DataOrigin Origin, string Key);

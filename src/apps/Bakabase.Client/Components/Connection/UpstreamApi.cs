@@ -39,7 +39,23 @@ public interface IUpstreamApi
 
     /// <summary>Where an AIGC artifact's file is, as the server sees it.</summary>
     Task<string?> GetAigcArtifactPathAsync(int id, CancellationToken ct = default);
+
+    /// <summary>
+    /// What can be played in a resource. Null when the server did not answer; an empty
+    /// list means it answered "nothing", which the caller has to report differently.
+    /// </summary>
+    Task<List<PlayableItem>?> GetPlayableItemsAsync(int id, CancellationToken ct = default);
+
+    /// <summary>
+    /// Asks the server to pick something playable at random, without playing it. Null
+    /// when the server could not be asked at all.
+    /// </summary>
+    Task<UpstreamRandomPick?> PickRandomPlayableItemAsync(CancellationToken ct = default);
 }
+
+/// <summary>The server's answer to "pick me something".</summary>
+/// <param name="Item">Null when it was asked and had nothing to play.</param>
+public sealed record UpstreamRandomPick(PlayableItemPick? Item);
 
 public sealed class UpstreamApi(HttpClient http, IUpstreamTarget target) : IUpstreamApi
 {
@@ -86,7 +102,22 @@ public sealed class UpstreamApi(HttpClient http, IUpstreamTarget target) : IUpst
     public async Task<string?> GetAigcArtifactPathAsync(int id, CancellationToken ct = default) =>
         await ReadAsync<string>($"/aigc/artifacts/{id}/path", ct);
 
-    private async Task<T?> ReadAsync<T>(string pathAndQuery, CancellationToken ct) where T : class
+    public async Task<List<PlayableItem>?> GetPlayableItemsAsync(int id, CancellationToken ct = default) =>
+        await ReadAsync<List<PlayableItem>>($"/resource/{id}/playable-items", ct);
+
+    public async Task<UpstreamRandomPick?> PickRandomPlayableItemAsync(CancellationToken ct = default)
+    {
+        // Read as an envelope rather than a value: here a null payload is the server
+        // saying "nothing is playable", which is not the same answer as silence.
+        var envelope = await ReadEnvelopeAsync<PlayableItemPick>("/resource/play/random/candidate", ct);
+
+        return envelope == null ? null : new UpstreamRandomPick(envelope.Data);
+    }
+
+    private async Task<T?> ReadAsync<T>(string pathAndQuery, CancellationToken ct) where T : class =>
+        (await ReadEnvelopeAsync<T>(pathAndQuery, ct))?.Data;
+
+    private async Task<Envelope<T>?> ReadEnvelopeAsync<T>(string pathAndQuery, CancellationToken ct) where T : class
     {
         var destination = target.BaseAddress;
 
@@ -104,8 +135,8 @@ public sealed class UpstreamApi(HttpClient http, IUpstreamTarget target) : IUpst
                 return null;
             }
 
-            return (await JsonSerializer.DeserializeAsync<Envelope<T>>(
-                await response.Content.ReadAsStreamAsync(ct), Json, ct))?.Data;
+            return await JsonSerializer.DeserializeAsync<Envelope<T>>(
+                await response.Content.ReadAsStreamAsync(ct), Json, ct);
         }
         catch (Exception e) when (e is HttpRequestException or JsonException or TaskCanceledException &&
                                   !ct.IsCancellationRequested)

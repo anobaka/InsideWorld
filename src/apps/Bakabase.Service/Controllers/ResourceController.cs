@@ -595,6 +595,22 @@ public class ResourceController(
         return await service.PlayRandomResource();
     }
 
+    /// <summary>
+    /// Picks a random resource with something playable, without playing it.
+    /// </summary>
+    /// <remarks>
+    /// The picking half of random play, split out for the thin client: it starts the
+    /// player itself but cannot choose what to play, because the resources, the
+    /// playable-file cache and the live fallback probe are all here.
+    /// </remarks>
+    [HttpGet("play/random/candidate")]
+    [SwaggerOperation(OperationId = "PickRandomPlayableItem")]
+    [RemoteAccessible]
+    public async Task<SingletonResponse<PlayableItemPick?>> PickRandomPlayable()
+    {
+        return new SingletonResponse<PlayableItemPick?>(await service.PickRandomPlayableItem());
+    }
+
     [HttpPost("bulk-delete")]
     [SwaggerOperation(OperationId = "BulkDeleteResources")]
     public async Task<BaseResponse> BulkDelete([FromBody] BulkDeleteResourcesInputModel model)

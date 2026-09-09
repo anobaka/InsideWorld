@@ -80,7 +80,10 @@ public class ClientStartup
         services.TryAddSingleton<LocalPlayerResolver>();
         services.TryAddSingleton<ILoopbackAddressProvider>(sp =>
             new LoopbackAddressProvider(ResolveListeningPort(sp.GetRequiredService<AppContext>())));
+        services.TryAddSingleton<LocalPlayback>();
         services.AddSingleton<IUserMachineHandler, PlayItemHandler>();
+        services.AddSingleton<IUserMachineHandler, PlayResourceHandler>();
+        services.AddSingleton<IUserMachineHandler, PlayRandomResourceHandler>();
         services.AddSingleton<IUserMachineHandler, RecycleBinHandler>();
         services.AddSingleton<IUserMachineHandler, FileIconHandler>();
         services.AddSingleton<IUserMachineHandler, TampermonkeyInstallHandler>();

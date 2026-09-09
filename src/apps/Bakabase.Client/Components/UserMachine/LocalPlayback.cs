@@ -9,14 +9,20 @@ using Microsoft.Extensions.Logging;
 namespace Bakabase.Client.Components.UserMachine;
 
 /// <summary>
-/// Plays one item on this machine.
+/// Starting a player on this machine, whichever route asked for it.
 /// </summary>
 /// <remarks>
 /// <para>
+/// Three routes play something — one named item, a whole resource, a random one — and
+/// they differ only in how they work out what to play. Everything after that is the same
+/// decision, and it is the part with the sharp edges: which player, a real path or a
+/// stream, and never running an executable this machine did not recognise.
+/// </para>
+/// <para>
 /// The interesting case is a local file, and it has two ways to reach a player. If the
 /// user has mapped that library, the player gets the real path and reads from disk —
-/// fast, seekable, no server involved once it starts. If they have not, the player gets
-/// a URL through this client's own forwarding layer instead, which signs and relays it.
+/// fast, seekable, no server involved once it starts. If they have not, the player gets a
+/// URL through this client's own forwarding layer instead, which signs and relays it.
 /// </para>
 /// <para>
 /// That fallback is the difference between "set up a path mapping first" and "it plays".
@@ -25,31 +31,27 @@ namespace Bakabase.Client.Components.UserMachine;
 /// library that genuinely is not on this machine works at all.
 /// </para>
 /// </remarks>
-public sealed class PlayItemHandler(
+public sealed class LocalPlayback(
     ActiveConnection connection,
     IUpstreamApi upstream,
     LocalPlayerResolver players,
     IShellOpener shell,
     ILoopbackAddressProvider loopback,
-    ILogger<PlayItemHandler> logger) : PathHandlerBase(connection)
+    ILogger<LocalPlayback> logger)
 {
-    public override string RouteKey => "GET /resource/{resourceId}/play-item";
-
-    public override async Task HandleAsync(HttpContext context, IReadOnlyDictionary<string, string> routeValues)
+    /// <summary>
+    /// Plays one item and tells the server it happened.
+    /// </summary>
+    /// <remarks>
+    /// Writes its own response either way, so a caller that gets false has nothing left
+    /// to do — the reason it failed is already on the wire and only this method knows it.
+    /// </remarks>
+    public async Task<bool> PlayAsync(HttpContext context, int resourceId, DataOrigin origin, string key)
     {
-        if (!routeValues.TryGetValue("resourceId", out var idText) || !int.TryParse(idText, out var resourceId))
+        if (string.IsNullOrWhiteSpace(key))
         {
-            await WriteAsync(context, HttpStatusCode.BadRequest, "No resource id was given.");
-            return;
-        }
-
-        var key = context.Request.Query["key"].ToString();
-
-        if (!Enum.TryParse<DataOrigin>(context.Request.Query["origin"].ToString(), true, out var origin) ||
-            string.IsNullOrWhiteSpace(key))
-        {
-            await WriteAsync(context, HttpStatusCode.BadRequest, "No item was given to play.");
-            return;
+            await UserMachineResponse.WriteAsync(context, HttpStatusCode.BadRequest, "No item was given to play.");
+            return false;
         }
 
         var played = origin switch
@@ -58,14 +60,13 @@ public sealed class PlayItemHandler(
             DataOrigin.Steam => await LaunchUriAsync(context, SteamUri(key)),
             DataOrigin.DLsite => await LaunchUriAsync(context,
                 $"https://www.dlsite.com/maniax/work/=/product_id/{Uri.EscapeDataString(key)}.html"),
-            DataOrigin.ExHentai => await LaunchUriAsync(context,
-                $"https://exhentai.org/g/{key.TrimStart('/')}"),
-            _ => await Unsupported(context, origin)
+            DataOrigin.ExHentai => await LaunchUriAsync(context, $"https://exhentai.org/g/{key.TrimStart('/')}"),
+            _ => await UnsupportedAsync(context, origin)
         };
 
         if (!played)
         {
-            return;
+            return false;
         }
 
         // The server owns play history, so it is told after the fact — in the same
@@ -73,12 +74,14 @@ public sealed class PlayItemHandler(
         // halves would record the same event differently.
         await upstream.MarkPlayedAsync(resourceId, $"{origin}:{key}", context.RequestAborted);
 
-        await WriteAsync(context, HttpStatusCode.OK, null);
+        await UserMachineResponse.WriteAsync(context, HttpStatusCode.OK, null);
+
+        return true;
     }
 
     private async Task<bool> PlayFileAsync(HttpContext context, int resourceId, string serverPath)
     {
-        var mapped = ClientPathMapper.Map(serverPath, Connection.Server?.PathMappings ?? []);
+        var mapped = ClientPathMapper.Map(serverPath, connection.Server?.PathMappings ?? []);
 
         // A mapped file that is actually there beats streaming it back from the server
         // it already lives on. Mapped-but-missing means a stale mount, and streaming is
@@ -108,7 +111,7 @@ public sealed class PlayItemHandler(
         catch (Exception e)
         {
             logger.LogError(e, "Failed to play {Target}", target);
-            await WriteAsync(context, HttpStatusCode.InternalServerError,
+            await UserMachineResponse.WriteAsync(context, HttpStatusCode.InternalServerError,
                 $"Could not start a player on your machine: {e.Message}");
 
             return false;
@@ -119,7 +122,9 @@ public sealed class PlayItemHandler(
     {
         if (uri == null)
         {
-            await WriteAsync(context, HttpStatusCode.BadRequest, "That item cannot be opened on your machine.");
+            await UserMachineResponse.WriteAsync(context, HttpStatusCode.BadRequest,
+                "That item cannot be opened on your machine.");
+
             return false;
         }
 
@@ -131,7 +136,7 @@ public sealed class PlayItemHandler(
         catch (Exception e)
         {
             logger.LogError(e, "Failed to open {Uri}", uri);
-            await WriteAsync(context, HttpStatusCode.InternalServerError,
+            await UserMachineResponse.WriteAsync(context, HttpStatusCode.InternalServerError,
                 $"Could not open it on your machine: {e.Message}");
 
             return false;
@@ -146,28 +151,11 @@ public sealed class PlayItemHandler(
     public static string? SteamUri(string key) =>
         key.Length > 0 && key.All(char.IsAsciiDigit) ? $"steam://rungameid/{key}" : null;
 
-    private async Task<bool> Unsupported(HttpContext context, DataOrigin origin)
+    private static async Task<bool> UnsupportedAsync(HttpContext context, DataOrigin origin)
     {
-        await WriteAsync(context, HttpStatusCode.NotImplemented,
+        await UserMachineResponse.WriteAsync(context, HttpStatusCode.NotImplemented,
             $"This client does not know how to play a {origin} item yet.");
 
         return false;
     }
-}
-
-/// <summary>
-/// Where this client's own forwarding layer is listening, so it can hand a player a URL
-/// that comes back through itself.
-/// </summary>
-public interface ILoopbackAddressProvider
-{
-    /// <summary>
-    /// A URL a player on this machine can open for a file the server holds. It goes
-    /// through the forwarding layer, which signs it — so the player needs no credentials
-    /// and the device key never leaves this process.
-    /// </summary>
-    string BuildRawFileUrl(string serverPath);
-
-    /// <summary>A URL on this client for any server path, e.g. a userscript to install.</summary>
-    string BuildUrl(string pathAndQuery);
 }

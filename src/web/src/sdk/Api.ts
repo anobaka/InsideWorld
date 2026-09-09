@@ -637,6 +637,14 @@ export interface BakabaseAbstractionsModelsDomainPlayableItem {
   displayName?: string;
 }
 
+export interface BakabaseAbstractionsModelsDomainPlayableItemPick {
+  /** @format int32 */
+  resourceId: number;
+  /** [1: Manual, 2: FileSystem, 3: Steam, 4: DLsite, 5: ExHentai] */
+  origin: BakabaseAbstractionsModelsDomainConstantsDataOrigin;
+  key: string;
+}
+
 export interface BakabaseAbstractionsModelsDomainProperty {
   /** [1: Internal, 2: Reserved, 4: Custom, 7: All] */
   pool: BakabaseAbstractionsModelsDomainConstantsPropertyPool;
@@ -6175,6 +6183,13 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstract
   code: number;
   message?: string;
   data?: BakabaseAbstractionsModelsDomainPathMark;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainPlayableItemPick {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseAbstractionsModelsDomainPlayableItemPick;
 }
 
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainPropertyValueScopePreference {
@@ -13678,6 +13693,35 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     playRandomResourceUrl: () => {
       const baseUrl = this.baseUrl || "";
       let path = `/resource/play/random`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name PickRandomPlayableItem
+     * @request GET:/resource/play/random/candidate
+     */
+    pickRandomPlayableItem: (params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainPlayableItemPick,
+        any
+      >({
+        path: `/resource/play/random/candidate`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for pickRandomPlayableItem
+     * @name pickRandomPlayableItemUrl
+     */
+    pickRandomPlayableItemUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/play/random/candidate`;
       
       return baseUrl + path;
     },

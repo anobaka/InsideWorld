@@ -32,7 +32,7 @@ public class SimpleUserMachineHandlerTests
     private string _root = null!;
     private ActiveConnection _connection = null!;
     private RecordingShell _shell = null!;
-    private StubUpstream _upstream = null!;
+    private StubUpstreamApi _upstream = null!;
 
     private sealed class TempDirectory(string path) : IClientDataDirectory
     {
@@ -62,23 +62,6 @@ public class SimpleUserMachineHandlerTests
             throw new NotSupportedException();
     }
 
-    private sealed class StubUpstream : IUpstreamApi
-    {
-        public string? ArtifactPath;
-
-        public Task<UpstreamResource?> GetResourceAsync(int id, CancellationToken ct = default) =>
-            Task.FromResult<UpstreamResource?>(null);
-
-        public Task<Bakabase.Abstractions.Models.Domain.ResourceProfilePlayerOptions?>
-            GetEffectivePlayerOptionsAsync(int id, CancellationToken ct = default) =>
-            Task.FromResult<Bakabase.Abstractions.Models.Domain.ResourceProfilePlayerOptions?>(null);
-
-        public Task MarkPlayedAsync(int id, string item, CancellationToken ct = default) => Task.CompletedTask;
-
-        public Task<string?> GetAigcArtifactPathAsync(int id, CancellationToken ct = default) =>
-            Task.FromResult(ArtifactPath);
-    }
-
     private sealed class StubLoopback(string baseAddress) : ILoopbackAddressProvider
     {
         public string BuildRawFileUrl(string serverPath) =>
@@ -93,7 +76,7 @@ public class SimpleUserMachineHandlerTests
         _root = Path.Combine(Path.GetTempPath(), "bakabase-simple-handler-tests", Guid.NewGuid().ToString("N"));
         _connection = new ActiveConnection(new ClientConnectionStore(new TempDirectory(_root)));
         _shell = new RecordingShell();
-        _upstream = new StubUpstream();
+        _upstream = new StubUpstreamApi();
     }
 
     [TestCleanup]

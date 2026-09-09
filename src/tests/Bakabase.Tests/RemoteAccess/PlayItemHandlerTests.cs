@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Bakabase.Abstractions.Models.Domain;
+using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Client.Abstractions;
 using Bakabase.Client.Abstractions.Models;
 using Bakabase.Client.Components.Connection;
@@ -28,7 +29,7 @@ public class PlayItemHandlerTests
     private string _root = null!;
     private ActiveConnection _connection = null!;
     private RecordingShell _shell = null!;
-    private StubUpstream _upstream = null!;
+    private StubUpstreamApi _upstream = null!;
     private StubLocator _locator = null!;
 
     private sealed class TempDirectory(string path) : IClientDataDirectory
@@ -47,28 +48,6 @@ public class PlayItemHandlerTests
 
         public void LaunchProcess(string executable, string arguments, bool useShellExecute) =>
             Processes.Add((executable, arguments, useShellExecute));
-    }
-
-    private sealed class StubUpstream : IUpstreamApi
-    {
-        public ResourceProfilePlayerOptions? Options;
-        public readonly List<(int Id, string Item)> Played = [];
-
-        public Task<UpstreamResource?> GetResourceAsync(int id, CancellationToken ct = default) =>
-            Task.FromResult<UpstreamResource?>(null);
-
-        public Task<ResourceProfilePlayerOptions?> GetEffectivePlayerOptionsAsync(int id,
-            CancellationToken ct = default) => Task.FromResult(Options);
-
-        public Task MarkPlayedAsync(int id, string item, CancellationToken ct = default)
-        {
-            Played.Add((id, item));
-
-            return Task.CompletedTask;
-        }
-
-        public Task<string?> GetAigcArtifactPathAsync(int id, CancellationToken ct = default) =>
-            Task.FromResult<string?>(null);
     }
 
     /// <summary>Stands in for this machine's installed players.</summary>
@@ -94,7 +73,7 @@ public class PlayItemHandlerTests
         _root = Path.Combine(Path.GetTempPath(), "bakabase-play-tests", Guid.NewGuid().ToString("N"));
         _connection = new ActiveConnection(new ClientConnectionStore(new TempDirectory(_root)));
         _shell = new RecordingShell();
-        _upstream = new StubUpstream();
+        _upstream = new StubUpstreamApi();
         _locator = new StubLocator();
     }
 
@@ -110,9 +89,11 @@ public class PlayItemHandlerTests
         }
     }
 
-    private PlayItemHandler Handler() =>
+    private LocalPlayback Playback() =>
         new(_connection, _upstream, new LocalPlayerResolver(_locator), _shell, new StubLoopback(),
-            NullLogger<PlayItemHandler>.Instance);
+            NullLogger<LocalPlayback>.Instance);
+
+    private PlayItemHandler Handler() => new(Playback());
 
     private async Task<string> WithLibraryAt(string serverPath)
     {
@@ -208,7 +189,7 @@ public class PlayItemHandlerTests
 
         await File.WriteAllTextAsync(Path.Combine(local, "a.mkv"), "x");
         _locator.Installed["Vlc"] = @"C:\Program Files\VideoLAN\VLC\vlc.exe";
-        _upstream.Options = new ResourceProfilePlayerOptions
+        _upstream.PlayerOptions = new ResourceProfilePlayerOptions
         {
             Players =
             [
@@ -239,7 +220,7 @@ public class PlayItemHandlerTests
         var local = await WithLibraryAt("/data/media");
 
         await File.WriteAllTextAsync(Path.Combine(local, "a.mkv"), "x");
-        _upstream.Options = new ResourceProfilePlayerOptions
+        _upstream.PlayerOptions = new ResourceProfilePlayerOptions
         {
             Players = [new MediaLibraryPlayer {Extensions = [".mkv"], ExecutablePath = "/usr/bin/vlc"}]
         };
@@ -260,7 +241,7 @@ public class PlayItemHandlerTests
         var local = await WithLibraryAt("/data/media");
 
         await File.WriteAllTextAsync(Path.Combine(local, "a.mkv"), "x");
-        _upstream.Options = new ResourceProfilePlayerOptions
+        _upstream.PlayerOptions = new ResourceProfilePlayerOptions
         {
             Players = [new MediaLibraryPlayer {Extensions = [".mkv"], ExecutablePath = "/tmp/evil.sh"}]
         };
@@ -289,10 +270,10 @@ public class PlayItemHandlerTests
     {
         // The key reaches the OS as a URI to act on, and it came from a server that is
         // not necessarily the user's.
-        Assert.IsNull(PlayItemHandler.SteamUri("440 --exec"));
-        Assert.IsNull(PlayItemHandler.SteamUri("../../etc"));
-        Assert.IsNull(PlayItemHandler.SteamUri(""));
-        Assert.AreEqual("steam://rungameid/440", PlayItemHandler.SteamUri("440"));
+        Assert.IsNull(LocalPlayback.SteamUri("440 --exec"));
+        Assert.IsNull(LocalPlayback.SteamUri("../../etc"));
+        Assert.IsNull(LocalPlayback.SteamUri(""));
+        Assert.AreEqual("steam://rungameid/440", LocalPlayback.SteamUri("440"));
     }
 
     [TestMethod]
@@ -343,6 +324,125 @@ public class PlayItemHandlerTests
         await Play(context);
 
         Assert.AreEqual((int) HttpStatusCode.BadRequest, Read(context).Status);
+        Assert.AreEqual(0, _shell.Launched.Count);
+    }
+
+    // ---- a whole resource ----
+
+    private Task PlayResource(HttpContext context, string resourceId = "42") =>
+        new PlayResourceHandler(_upstream, Playback())
+            .HandleAsync(context, new Dictionary<string, string> {["resourceId"] = resourceId});
+
+    [TestMethod]
+    public async Task A_named_file_is_played_without_asking_the_server_what_is_playable()
+    {
+        var local = await WithLibraryAt("/data/media");
+
+        await File.WriteAllTextAsync(Path.Combine(local, "a.mkv"), "x");
+
+        // PlayableItems left null: reaching for it would be an unreachable server here,
+        // and this must not need the round trip at all.
+        var context = Request("?file=%2Fdata%2Fmedia%2Fa.mkv");
+
+        await PlayResource(context);
+
+        Assert.AreEqual((int) HttpStatusCode.OK, Read(context).Status);
+        CollectionAssert.AreEqual(new[] {Path.Combine(local, "a.mkv")}, _shell.Launched);
+    }
+
+    [TestMethod]
+    public async Task A_resource_with_no_file_named_plays_the_first_the_server_offers()
+    {
+        // Which file counts as playable is decided by profile rules and a cache that only
+        // the server has. Guessing from a path mapping would see only mounted libraries.
+        var local = await WithLibraryAt("/data/media");
+
+        await File.WriteAllTextAsync(Path.Combine(local, "ep1.mkv"), "x");
+        _upstream.PlayableItems =
+        [
+            new PlayableItem {Origin = DataOrigin.FileSystem, Key = "/data/media/ep1.mkv"},
+            new PlayableItem {Origin = DataOrigin.FileSystem, Key = "/data/media/ep2.mkv"}
+        ];
+
+        var context = Request("");
+
+        await PlayResource(context);
+
+        Assert.AreEqual((int) HttpStatusCode.OK, Read(context).Status);
+        CollectionAssert.AreEqual(new[] {Path.Combine(local, "ep1.mkv")}, _shell.Launched);
+    }
+
+    [TestMethod]
+    public async Task A_store_page_is_not_opened_when_the_user_asked_to_play_the_files()
+    {
+        // The server's own /play looks specifically for a local file. Opening a DLsite
+        // page instead would be a different action wearing the same name.
+        _upstream.PlayableItems = [new PlayableItem {Origin = DataOrigin.DLsite, Key = "RJ01234567"}];
+
+        var context = Request("");
+
+        await PlayResource(context);
+
+        Assert.AreEqual((int) HttpStatusCode.BadRequest, Read(context).Status);
+        Assert.AreEqual(0, _shell.Launched.Count);
+    }
+
+    [TestMethod]
+    public async Task A_server_that_cannot_be_asked_what_is_playable_is_reported_as_such()
+    {
+        var context = Request("");
+
+        await PlayResource(context);
+
+        Assert.AreEqual((int) HttpStatusCode.ServiceUnavailable, Read(context).Status);
+    }
+
+    // ---- something at random ----
+
+    private Task PlayRandom(HttpContext context) =>
+        new PlayRandomResourceHandler(_upstream, Playback())
+            .HandleAsync(context, new Dictionary<string, string>());
+
+    [TestMethod]
+    public async Task A_random_pick_is_played_and_recorded_against_the_resource_it_came_from()
+    {
+        // The client never chose this resource, so the id has to travel with the pick —
+        // history written against the wrong one would be worse than none.
+        var local = await WithLibraryAt("/data/media");
+
+        await File.WriteAllTextAsync(Path.Combine(local, "a.mkv"), "x");
+        _upstream.RandomPick = new UpstreamRandomPick(
+            new PlayableItemPick(99, DataOrigin.FileSystem, "/data/media/a.mkv"));
+
+        var context = Request("");
+
+        await PlayRandom(context);
+
+        Assert.AreEqual((int) HttpStatusCode.OK, Read(context).Status);
+        CollectionAssert.AreEqual(new[] {Path.Combine(local, "a.mkv")}, _shell.Launched);
+        CollectionAssert.AreEqual(new[] {(99, "FileSystem:/data/media/a.mkv")}, _upstream.Played);
+    }
+
+    [TestMethod]
+    public async Task Nothing_playable_and_no_answer_at_all_are_reported_differently()
+    {
+        // Both end in "nothing happened", and only one of them is something the user can
+        // do anything about.
+        var nothingPlayable = Request("");
+        _upstream.RandomPick = new UpstreamRandomPick(null);
+
+        await PlayRandom(nothingPlayable);
+
+        var (status, body) = Read(nothingPlayable);
+        Assert.AreEqual((int) HttpStatusCode.BadRequest, status);
+        StringAssert.Contains(body.GetProperty("message").GetString()!, "No playable resource");
+
+        var unreachable = Request("");
+        _upstream.RandomPick = null;
+
+        await PlayRandom(unreachable);
+
+        Assert.AreEqual((int) HttpStatusCode.ServiceUnavailable, Read(unreachable).Status);
         Assert.AreEqual(0, _shell.Launched.Count);
     }
 }

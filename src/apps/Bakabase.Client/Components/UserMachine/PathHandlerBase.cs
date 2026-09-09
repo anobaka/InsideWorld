@@ -54,15 +54,6 @@ public abstract class PathHandlerBase(ActiveConnection connection) : IUserMachin
         return null;
     }
 
-    protected static async Task WriteAsync(HttpContext context, HttpStatusCode status, string? message)
-    {
-        context.Response.StatusCode = (int) status;
-        context.Response.ContentType = "application/json";
-
-        await context.Response.WriteAsync(JsonSerializer.Serialize(new
-        {
-            code = status == HttpStatusCode.OK ? 0 : (int) status,
-            message
-        }), context.RequestAborted);
-    }
+    protected static Task WriteAsync(HttpContext context, HttpStatusCode status, string? message) =>
+        UserMachineResponse.WriteAsync(context, status, message);
 }

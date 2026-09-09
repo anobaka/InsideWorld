@@ -32,7 +32,7 @@ public class UserMachineHandlerTests
     private string _root = null!;
     private ActiveConnection _connection = null!;
     private RecordingShell _shell = null!;
-    private StubUpstream _upstream = null!;
+    private StubUpstreamApi _upstream = null!;
 
     private sealed class TempDirectory(string path) : IClientDataDirectory
     {
@@ -52,30 +52,13 @@ public class UserMachineHandlerTests
             throw new NotSupportedException();
     }
 
-    private sealed class StubUpstream : IUpstreamApi
-    {
-        public UpstreamResource? Resource;
-
-        public Task<UpstreamResource?> GetResourceAsync(int id, CancellationToken ct = default) =>
-            Task.FromResult(Resource);
-
-        public Task<Bakabase.Abstractions.Models.Domain.ResourceProfilePlayerOptions?>
-            GetEffectivePlayerOptionsAsync(int id, CancellationToken ct = default) =>
-            Task.FromResult<Bakabase.Abstractions.Models.Domain.ResourceProfilePlayerOptions?>(null);
-
-        public Task MarkPlayedAsync(int id, string item, CancellationToken ct = default) => Task.CompletedTask;
-
-        public Task<string?> GetAigcArtifactPathAsync(int id, CancellationToken ct = default) =>
-            Task.FromResult<string?>(null);
-    }
-
     [TestInitialize]
     public void Setup()
     {
         _root = Path.Combine(Path.GetTempPath(), "bakabase-handler-tests", Guid.NewGuid().ToString("N"));
         _connection = new ActiveConnection(new ClientConnectionStore(new TempDirectory(_root)));
         _shell = new RecordingShell();
-        _upstream = new StubUpstream();
+        _upstream = new StubUpstreamApi();
     }
 
     [TestCleanup]

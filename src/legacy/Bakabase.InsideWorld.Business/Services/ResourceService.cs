@@ -1175,10 +1175,19 @@ namespace Bakabase.InsideWorld.Business.Services
 
         public async Task<BaseResponse> PlayRandomResource()
         {
+            var pick = await PickRandomPlayableItem();
+
+            return pick == null
+                ? BaseResponseBuilder.BuildBadRequest("No playable resource was found.")
+                : await PlayItem(pick.ResourceId, pick.Origin, pick.Key);
+        }
+
+        public async Task<PlayableItemPick?> PickRandomPlayableItem()
+        {
             var existingResourceIds = (await GetAllDbModels(null, false)).Select(r => r.Id).ToHashSet();
             if (existingResourceIds.Count == 0)
             {
-                return BaseResponseBuilder.BuildBadRequest("No playable resource was found.");
+                return null;
             }
 
             if (!_uiOptions.Value.Resource.DisablePlayableFileCache)
@@ -1203,7 +1212,7 @@ namespace Bakabase.InsideWorld.Business.Services
                         ?.FirstOrDefault();
                     if (file != null)
                     {
-                        return await PlayItem(cache.ResourceId, DataOrigin.FileSystem, file);
+                        return new PlayableItemPick(cache.ResourceId, DataOrigin.FileSystem, file);
                     }
                 }
             }
@@ -1219,11 +1228,11 @@ namespace Bakabase.InsideWorld.Business.Services
                 var item = items.FirstOrDefault();
                 if (item != null)
                 {
-                    return await PlayItem(resourceId, item.Origin, item.Key);
+                    return new PlayableItemPick(resourceId, item.Origin, item.Key);
                 }
             }
 
-            return BaseResponseBuilder.BuildBadRequest("No playable resource was found.");
+            return null;
         }
 
         public async Task<bool> Any(Func<Abstractions.Models.Db.ResourceDbModel, bool>? selector = null)
