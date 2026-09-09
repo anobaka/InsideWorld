@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\legacy\Bakabase.InsideWorld.Business\Bakabase.InsideWorld.Business.csproj" />
+    <ProjectReference Include="..\..\apps\Bakabase.Client\Bakabase.Client.csproj" />
     <ProjectReference Include="..\..\apps\Bakabase.Service\Bakabase.Service.csproj" />
     <ProjectReference Include="..\Bakabase.TestKit\Bakabase.TestKit.csproj" />
   </ItemGroup>
