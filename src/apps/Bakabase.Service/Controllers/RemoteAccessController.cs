@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Modules.RemoteAccess.Abstractions.Models;
 using Bakabase.Modules.RemoteAccess.Abstractions.Services;
 using Bakabase.Modules.RemoteAccess.Components.Pairing;
@@ -30,7 +31,8 @@ namespace Bakabase.Service.Controllers
     [Route("~/remote-access")]
     public class RemoteAccessController(
         IRemoteAccessService remoteAccessService,
-        IRemoteDeviceService deviceService) : Controller
+        IRemoteDeviceService deviceService,
+        RemoteConnectionRegistry connections) : Controller
     {
         /// <summary>
         /// Recorded as the approver when the approval came from the host itself rather
@@ -121,6 +123,15 @@ namespace Bakabase.Service.Controllers
         public async Task<BaseResponse> SetMode([FromBody] RemoteAccessModeInputModel model)
         {
             await remoteAccessService.SetModeAsync(model.Mode);
+
+            // Every other check is per-request and takes effect on the next call. A hub
+            // connection is authorized once at its handshake, so switching remote access
+            // off has to reach the ones already open or they keep receiving pushes.
+            if (remoteAccessService.GetEffectiveMode() == RemoteAccessMode.Disabled)
+            {
+                connections.AbortAll();
+            }
+
             return BaseResponseBuilder.Ok;
         }
 
@@ -137,6 +148,14 @@ namespace Bakabase.Service.Controllers
         public async Task<BaseResponse> SetRequirePairing([FromBody] RemoteAccessRequirePairingInputModel model)
         {
             await remoteAccessService.SetRequirePairingAsync(model.Require);
+
+            // Leaving unpaired hub connections open would keep serving exactly the
+            // callers this switch was flipped to shut out.
+            if (model.Require)
+            {
+                connections.AbortUnpaired();
+            }
+
             return BaseResponseBuilder.Ok;
         }
 
@@ -251,6 +270,12 @@ namespace Bakabase.Service.Controllers
         public async Task<BaseResponse> RevokeDevice(string id)
         {
             await deviceService.RevokeAsync(id, HttpContext.RequestAborted);
+
+            // The device's next HTTP call fails on its own — the authenticator looks it
+            // up every time — but a hub connection it already holds would outlive the
+            // revocation.
+            connections.AbortDevice(id);
+
             return BaseResponseBuilder.Ok;
         }
 

@@ -56,6 +56,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -122,6 +123,12 @@ namespace Bakabase.Service.Components
                 o.Filters.Add<RemoteAccessAuthorizationFilter>();
                 o.Filters.Add<RemoteAccessPathGuardFilter>();
             });
+
+            // Same reasoning for the hub filter: AppStartup owns AddSignalR, and
+            // HubOptions configuration composes rather than replaces.
+            services.AddSingleton<RemoteConnectionRegistry>();
+            services.AddSingleton<RemoteAccessHubFilter>();
+            services.Configure<HubOptions>(o => o.AddFilter<RemoteAccessHubFilter>());
 
             services.AddSingleton<ThirdPartyHttpRequestLogger>();
 
