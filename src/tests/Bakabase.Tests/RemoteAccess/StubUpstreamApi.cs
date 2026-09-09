@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bakabase.Abstractions.Models.Domain;
 using Bakabase.Client.Components.Connection;
+using Bakabase.Modules.Player.Abstractions.Components;
 
 namespace Bakabase.Tests.RemoteAccess;
 
@@ -46,4 +47,32 @@ public sealed class StubUpstreamApi : IUpstreamApi
 
     public Task<UpstreamRandomPick?> PickRandomPlayableItemAsync(CancellationToken ct = default) =>
         Task.FromResult(RandomPick);
+
+    public BatchPlayResourceSnapshot? BatchPlayResources;
+    public UpstreamPlaylistSnapshot? BatchPlayPlaylist;
+
+    /// <summary>Every bulk history write, in order.</summary>
+    public readonly List<IReadOnlyDictionary<int, string>> BulkPlayed = [];
+
+    /// <summary>Set to make the history write fail, as an unreachable server would.</summary>
+    public Exception? MarkManyPlayedThrows;
+
+    public Task<BatchPlayResourceSnapshot?> GetBatchPlayResourceSnapshotAsync(int[] resourceIds,
+        CancellationToken ct = default) => Task.FromResult(BatchPlayResources);
+
+    public Task<UpstreamPlaylistSnapshot?> GetBatchPlayPlaylistSnapshotAsync(int playlistId,
+        CancellationToken ct = default) => Task.FromResult(BatchPlayPlaylist);
+
+    public Task MarkManyPlayedAsync(IReadOnlyDictionary<int, string> playedByResourceId,
+        CancellationToken ct = default)
+    {
+        if (MarkManyPlayedThrows != null)
+        {
+            return Task.FromException(MarkManyPlayedThrows);
+        }
+
+        BulkPlayed.Add(playedByResourceId);
+
+        return Task.CompletedTask;
+    }
 }

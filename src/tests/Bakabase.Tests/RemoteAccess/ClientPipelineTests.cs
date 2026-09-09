@@ -186,24 +186,13 @@ public class ClientPipelineTests
     }
 
     [TestMethod]
-    public async Task A_user_machine_route_with_no_handler_yet_is_still_not_forwarded()
+    public async Task A_user_machine_route_is_intercepted_rather_than_forwarded()
     {
-        // Batch play is this machine's to do. Forwarding it would ask a server — possibly
-        // somebody else's — to start players on a screen nobody is watching, and the
-        // answer would blame the server for something the client cannot do yet.
-        var response = await Send("/player/batch-play", method: HttpMethod.Post);
-
-        Assert.AreEqual(HttpStatusCode.NotImplemented, response.StatusCode);
-        Assert.AreEqual(nameof(ClientForwardingFailure.NeedsNewerClient),
-            response.Headers.GetValues("X-Bakabase-Client").First());
-    }
-
-    [TestMethod]
-    public async Task A_user_machine_route_with_a_handler_is_answered_here()
-    {
-        // It still fails — there is no server to ask what is playable — but it fails as
-        // this machine's action rather than as a forwarding failure. Those are different
-        // bugs, and the absence of the forwarding header is what tells them apart.
+        // Playing a file is this machine's to do. Forwarding it would ask a server —
+        // possibly somebody else's — to start a player on a screen nobody is watching.
+        // It still fails here, since there is no server to ask what is playable, but it
+        // fails as this machine's action: the forwarding header is absent, which is what
+        // tells the two apart.
         var response = await Send("/resource/42/play");
 
         Assert.AreEqual(HttpStatusCode.ServiceUnavailable, response.StatusCode);

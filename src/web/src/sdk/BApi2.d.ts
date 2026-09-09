@@ -4608,6 +4608,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/player/batch-play/resource-snapshot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["GetBatchPlayResourceSnapshot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/player/playlist/{playlistId}/batch-play/snapshot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetBatchPlayPlaylistSnapshot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/player/batch-play/candidates": {
         parameters: {
             query?: never;
@@ -5659,6 +5691,22 @@ export interface paths {
         put?: never;
         post: operations["MarkResourceAsPlayed"];
         delete: operations["MarkResourceAsNotPlayed"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resource/played-at/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MarkResourcesAsPlayed"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -7523,6 +7571,14 @@ export interface components {
         "Bakabase.Abstractions.Models.Input.ExtensionGroupPutInputModel": {
             name: string;
             extensions: string[];
+        };
+        "Bakabase.Abstractions.Models.Input.MarkResourcePlayed": {
+            /** Format: int32 */
+            resourceId: number;
+            item?: string;
+        };
+        "Bakabase.Abstractions.Models.Input.MarkResourcesPlayedInputModel": {
+            items: components["schemas"]["Bakabase.Abstractions.Models.Input.MarkResourcePlayed"][];
         };
         "Bakabase.Abstractions.Models.Input.MediaLibraryTemplateAddInputModel": {
             name: string;
@@ -9948,6 +10004,24 @@ export interface components {
             /** Format: date-time */
             readAt?: string;
         };
+        "Bakabase.Modules.Player.Abstractions.Components.BatchPlayPlaylistEntry": {
+            path: string;
+            /** Format: int32 */
+            resourceId?: number;
+        };
+        "Bakabase.Modules.Player.Abstractions.Components.BatchPlayPlaylistSnapshot": {
+            name: string;
+            entries: components["schemas"]["Bakabase.Modules.Player.Abstractions.Components.BatchPlayPlaylistEntry"][];
+        };
+        "Bakabase.Modules.Player.Abstractions.Components.BatchPlayResourceFiles": {
+            /** Format: int32 */
+            resourceId: number;
+            files: string[];
+        };
+        "Bakabase.Modules.Player.Abstractions.Components.BatchPlayResourceSnapshot": {
+            resources: components["schemas"]["Bakabase.Modules.Player.Abstractions.Components.BatchPlayResourceFiles"][];
+            configuredPlayers: components["schemas"]["Bakabase.Abstractions.Models.Domain.MediaLibraryPlayer"][];
+        };
         "Bakabase.Modules.Player.Abstractions.Models.Domain.BatchPlayCandidate": {
             key: string;
             type: components["schemas"]["Bakabase.Modules.Player.Abstractions.Models.Domain.Constants.BatchPlayCandidateType"];
@@ -12283,6 +12357,18 @@ export interface components {
             code: number;
             message?: string;
             data?: components["schemas"]["Bakabase.Modules.HealthScore.Models.View.HealthScoreProfileViewModel"];
+        };
+        "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.Player.Abstractions.Components.BatchPlayPlaylistSnapshot]": {
+            /** Format: int32 */
+            code: number;
+            message?: string;
+            data?: components["schemas"]["Bakabase.Modules.Player.Abstractions.Components.BatchPlayPlaylistSnapshot"];
+        };
+        "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.Player.Abstractions.Components.BatchPlayResourceSnapshot]": {
+            /** Format: int32 */
+            code: number;
+            message?: string;
+            data?: components["schemas"]["Bakabase.Modules.Player.Abstractions.Components.BatchPlayResourceSnapshot"];
         };
         "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.Player.Abstractions.Models.Domain.BatchPlayResult]": {
             /** Format: int32 */
@@ -22947,6 +23033,59 @@ export interface operations {
             };
         };
     };
+    GetBatchPlayResourceSnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json-patch+json": components["schemas"]["Bakabase.Modules.Player.Abstractions.Models.Input.BatchPlayCandidatesInputModel"];
+                "application/json": components["schemas"]["Bakabase.Modules.Player.Abstractions.Models.Input.BatchPlayCandidatesInputModel"];
+                "text/json": components["schemas"]["Bakabase.Modules.Player.Abstractions.Models.Input.BatchPlayCandidatesInputModel"];
+                "application/*+json": components["schemas"]["Bakabase.Modules.Player.Abstractions.Models.Input.BatchPlayCandidatesInputModel"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.Player.Abstractions.Components.BatchPlayResourceSnapshot]"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.Player.Abstractions.Components.BatchPlayResourceSnapshot]"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.Player.Abstractions.Components.BatchPlayResourceSnapshot]"];
+                };
+            };
+        };
+    };
+    GetBatchPlayPlaylistSnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                playlistId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.Player.Abstractions.Components.BatchPlayPlaylistSnapshot]"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.Player.Abstractions.Components.BatchPlayPlaylistSnapshot]"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Modules.Player.Abstractions.Components.BatchPlayPlaylistSnapshot]"];
+                };
+            };
+        };
+    };
     GetBatchPlayCandidates: {
         parameters: {
             query?: never;
@@ -24968,6 +25107,35 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                };
+            };
+        };
+    };
+    MarkResourcesAsPlayed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json-patch+json": components["schemas"]["Bakabase.Abstractions.Models.Input.MarkResourcesPlayedInputModel"];
+                "application/json": components["schemas"]["Bakabase.Abstractions.Models.Input.MarkResourcesPlayedInputModel"];
+                "text/json": components["schemas"]["Bakabase.Abstractions.Models.Input.MarkResourcesPlayedInputModel"];
+                "application/*+json": components["schemas"]["Bakabase.Abstractions.Models.Input.MarkResourcesPlayedInputModel"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {

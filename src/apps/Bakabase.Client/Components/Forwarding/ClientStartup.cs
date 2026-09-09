@@ -3,7 +3,11 @@ using Bakabase.Client.Abstractions;
 using Bakabase.Client.Components.Connection;
 using Bakabase.Client.Components.UserMachine;
 using Bakabase.Infrastructures.Components.App;
+using Bakabase.Client.Components.BatchPlay;
 using Bakabase.Modules.Player.Abstractions.Components;
+using Bakabase.Modules.Player.Abstractions.Models.Domain;
+using Bakabase.Modules.Player.Extensions;
+using Microsoft.Extensions.Options;
 using Bakabase.Modules.Player.Components;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -84,6 +88,28 @@ public class ClientStartup
         services.AddSingleton<IUserMachineHandler, PlayItemHandler>();
         services.AddSingleton<IUserMachineHandler, PlayResourceHandler>();
         services.AddSingleton<IUserMachineHandler, PlayRandomResourceHandler>();
+
+        // Batch play runs the server's own orchestration in this process, with the
+        // library read over HTTP and the files resolved against this machine. Registered
+        // ahead of AddPlayerModule, whose defaults assume both are local and which only
+        // fills in what nobody claimed.
+        services.TryAddScoped<IBatchPlayResourceSource, UpstreamBatchPlayResourceSource>();
+        services.TryAddScoped<IBatchPlayPlaylistSource, UpstreamBatchPlayPlaylistSource>();
+        services.TryAddSingleton<IBatchPlayFileResolver>(sp => new ClientBatchPlayFileResolver(
+            sp.GetRequiredService<ActiveConnection>(), sp.GetRequiredService<ILoopbackAddressProvider>()));
+        services.AddPlayerModule();
+
+        // Temp playlists go under this client's own AppData, not the all-in-one's — the
+        // two flavours never share a data directory.
+        services.AddSingleton<IConfigureOptions<PlayerModuleOptions>>(sp =>
+            new ConfigureOptions<PlayerModuleOptions>(o =>
+                o.TempPlaylistDirectory = sp.GetRequiredService<AppService>()
+                    .RequestAppDataDirectory("temp", "playlists")));
+
+        services.AddSingleton<IUserMachineHandler, BatchPlayCandidatesHandler>();
+        services.AddSingleton<IUserMachineHandler, BatchPlayResourcesHandler>();
+        services.AddSingleton<IUserMachineHandler, PlaylistBatchPlayCandidatesHandler>();
+        services.AddSingleton<IUserMachineHandler, PlaylistBatchPlayHandler>();
         services.AddSingleton<IUserMachineHandler, RecycleBinHandler>();
         services.AddSingleton<IUserMachineHandler, FileIconHandler>();
         services.AddSingleton<IUserMachineHandler, TampermonkeyInstallHandler>();

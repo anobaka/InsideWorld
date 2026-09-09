@@ -1,4 +1,5 @@
 using Bakabase.Abstractions.Models.Domain;
+using Bakabase.Modules.Player.Abstractions.Components;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -51,11 +52,35 @@ public interface IUpstreamApi
     /// when the server could not be asked at all.
     /// </summary>
     Task<UpstreamRandomPick?> PickRandomPlayableItemAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// What a selection of resources holds, for batch play. Null when the server did not
+    /// answer.
+    /// </summary>
+    Task<BatchPlayResourceSnapshot?> GetBatchPlayResourceSnapshotAsync(int[] resourceIds,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// A playlist resolved to the files it would play. Null when the server did not
+    /// answer; an answer carrying no snapshot means the playlist does not exist.
+    /// </summary>
+    Task<UpstreamPlaylistSnapshot?> GetBatchPlayPlaylistSnapshotAsync(int playlistId,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Records one played file per resource, in a single request. Throws when the server
+    /// could not be reached — the caller decides whether that matters.
+    /// </summary>
+    Task MarkManyPlayedAsync(IReadOnlyDictionary<int, string> playedByResourceId, CancellationToken ct = default);
 }
 
 /// <summary>The server's answer to "pick me something".</summary>
 /// <param name="Item">Null when it was asked and had nothing to play.</param>
 public sealed record UpstreamRandomPick(PlayableItemPick? Item);
+
+/// <summary>The server's answer about a playlist.</summary>
+/// <param name="Snapshot">Null when the playlist does not exist.</param>
+public sealed record UpstreamPlaylistSnapshot(BatchPlayPlaylistSnapshot? Snapshot);
 
 public sealed class UpstreamApi(HttpClient http, IUpstreamTarget target) : IUpstreamApi
 {
@@ -114,8 +139,72 @@ public sealed class UpstreamApi(HttpClient http, IUpstreamTarget target) : IUpst
         return envelope == null ? null : new UpstreamRandomPick(envelope.Data);
     }
 
+    public async Task<BatchPlayResourceSnapshot?> GetBatchPlayResourceSnapshotAsync(int[] resourceIds,
+        CancellationToken ct = default) =>
+        await PostAsync<BatchPlayResourceSnapshot>("/player/batch-play/resource-snapshot",
+            new {resourceIds}, ct);
+
+    public async Task<UpstreamPlaylistSnapshot?> GetBatchPlayPlaylistSnapshotAsync(int playlistId,
+        CancellationToken ct = default)
+    {
+        var envelope = await ReadEnvelopeAsync<BatchPlayPlaylistSnapshot>(
+            $"/player/playlist/{playlistId}/batch-play/snapshot", ct);
+
+        return envelope == null ? null : new UpstreamPlaylistSnapshot(envelope.Data);
+    }
+
+    public async Task MarkManyPlayedAsync(IReadOnlyDictionary<int, string> playedByResourceId,
+        CancellationToken ct = default)
+    {
+        var body = new
+        {
+            items = playedByResourceId.Select(kv => new {resourceId = kv.Key, item = kv.Value}).ToList()
+        };
+
+        var response = await http.PostAsync(new Uri(RootOrThrow(), "/resource/played-at/bulk"),
+            JsonContent(body), ct);
+
+        response.EnsureSuccessStatusCode();
+    }
+
     private async Task<T?> ReadAsync<T>(string pathAndQuery, CancellationToken ct) where T : class =>
         (await ReadEnvelopeAsync<T>(pathAndQuery, ct))?.Data;
+
+    private async Task<T?> PostAsync<T>(string pathAndQuery, object body, CancellationToken ct) where T : class
+    {
+        var destination = target.BaseAddress;
+
+        if (string.IsNullOrEmpty(destination) || !Uri.TryCreate(destination, UriKind.Absolute, out var root))
+        {
+            return null;
+        }
+
+        try
+        {
+            var response = await http.PostAsync(new Uri(root, pathAndQuery), JsonContent(body), ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            return (await JsonSerializer.DeserializeAsync<Envelope<T>>(
+                await response.Content.ReadAsStreamAsync(ct), Json, ct))?.Data;
+        }
+        catch (Exception e) when (e is HttpRequestException or JsonException or TaskCanceledException &&
+                                  !ct.IsCancellationRequested)
+        {
+            return null;
+        }
+    }
+
+    private Uri RootOrThrow() =>
+        Uri.TryCreate(target.BaseAddress, UriKind.Absolute, out var root)
+            ? root
+            : throw new InvalidOperationException("This client is not connected to a server.");
+
+    private static StringContent JsonContent(object body) =>
+        new(JsonSerializer.Serialize(body), System.Text.Encoding.UTF8, "application/json");
 
     private async Task<Envelope<T>?> ReadEnvelopeAsync<T>(string pathAndQuery, CancellationToken ct) where T : class
     {

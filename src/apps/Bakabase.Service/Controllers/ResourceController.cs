@@ -706,6 +706,31 @@ public class ResourceController(
         return BaseResponseBuilder.Ok;
     }
 
+    /// <summary>
+    /// Records that several resources were played, one file each.
+    /// </summary>
+    /// <remarks>
+    /// Batch play writes one history entry per resource, and a thin client that started
+    /// the players would otherwise make a request per resource for a selection that could
+    /// run to hundreds.
+    /// </remarks>
+    [HttpPost("played-at/bulk")]
+    [SwaggerOperation(OperationId = "MarkResourcesAsPlayed")]
+    [RemoteAccessible]
+    public async Task<BaseResponse> MarkManyAsPlayed([FromBody] MarkResourcesPlayedInputModel model)
+    {
+        var played = model.Items
+            .GroupBy(i => i.ResourceId)
+            .ToDictionary(g => g.Key, g => g.First().Item ?? string.Empty);
+
+        if (played.Count > 0)
+        {
+            await service.MarkPlayed(played);
+        }
+
+        return BaseResponseBuilder.Ok;
+    }
+
 
     [HttpGet("search/keyword-recommendation")]
     [SwaggerOperation(OperationId = "GetResourceSearchKeywordRecommendation")]
