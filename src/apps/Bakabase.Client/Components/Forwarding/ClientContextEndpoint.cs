@@ -6,21 +6,6 @@ using Microsoft.AspNetCore.Http;
 
 namespace Bakabase.Client.Components.Forwarding;
 
-/// <summary>
-/// Which flavour of Bakabase the frontend is talking to.
-/// </summary>
-public enum ClientMode
-{
-    /// <summary>The desktop app running its own server. What a missing field means, for old backends.</summary>
-    AllInOne = 0,
-
-    /// <summary>An ordinary browser pointed at a server over the network.</summary>
-    RemoteBrowser = 1,
-
-    /// <summary>This client: a local shell forwarding to a server elsewhere.</summary>
-    PureClient = 2
-}
-
 /// <summary>What the server said about itself, or null when it is not answering.</summary>
 public sealed record UpstreamContext(RemoteAccessMode Mode, bool Paired);
 

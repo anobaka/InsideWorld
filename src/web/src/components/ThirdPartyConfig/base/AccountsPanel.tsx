@@ -9,9 +9,8 @@ import { AiOutlinePlus, AiOutlineDelete, AiOutlineCheck, AiOutlineClose } from "
 
 import { notifyCookieCaptureDismissal } from "./notifyCookieCaptureDismissal";
 
-import { RuntimeMode } from "@/sdk/constants";
-import { useAppContextStore } from "@/stores/appContext";
 import BApi from "@/sdk/BApi";
+import { useCookieCaptureAvailable } from "@/stores/remoteAccess";
 
 export interface AccountField {
   key: string;
@@ -53,8 +52,13 @@ export default function AccountsPanel({
   customFieldRenderers,
 }: AccountsPanelProps) {
   const { t } = useTranslation();
-  const runtimeMode = useAppContextStore((s) => s.runtimeMode);
-  const isDesktopApp = runtimeMode !== RuntimeMode.Docker;
+  // Whether a sign-in capture window can open *here*. The server answers it —
+  // it needs a desktop and it needs to be this person's — which also covers the
+  // thin client, whose capture window belongs to its own process. The old test
+  // (runtime mode is not Docker) described the server's machine, so a browser on
+  // another device was offered a button that opened a window on someone else's
+  // screen.
+  const isDesktopApp = useCookieCaptureAvailable();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [saving, setSaving] = useState(false);
   const [validationStatus, setValidationStatus] = useState<

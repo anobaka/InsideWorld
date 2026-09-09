@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Bakabase.Abstractions.Models.Domain.Constants;
+using Bakabase.Infrastructures.Components.App;
 using Bakabase.Modules.RemoteAccess.Abstractions.Models;
 using Bakabase.Modules.RemoteAccess.Abstractions.Services;
 using Bakabase.Modules.Notification.Abstractions.Models.Input;
@@ -53,18 +54,29 @@ namespace Bakabase.Service.Controllers
         [HttpGet("context")]
         [SwaggerOperation(OperationId = "GetRemoteAccessContext")]
         [RemoteAccessible]
-        public SingletonResponse<RemoteAccessClientContextViewModel> GetContext()
+        public async Task<SingletonResponse<RemoteAccessClientContextViewModel>> GetContext()
         {
             var context = HttpContext.GetRemoteAccessContext();
+            var isLocal = context?.IsLoopback ?? true;
+            var descriptor = await remoteAccessService.GetServerDescriptorAsync();
 
             return new SingletonResponse<RemoteAccessClientContextViewModel>(
                 new RemoteAccessClientContextViewModel
                 {
-                    IsLocal = context?.IsLoopback ?? true,
+                    IsLocal = isLocal,
                     Mode = remoteAccessService.GetEffectiveMode(),
                     Paired = context?.IsPaired ?? false,
                     DeviceId = context?.Device?.Id,
-                    DeviceName = context?.Device?.Name
+                    DeviceName = context?.Device?.Name,
+                    // A caller reaching a server directly is either sitting at it or
+                    // browsing it. The third answer only ever comes from a client that
+                    // answers this endpoint itself.
+                    ClientMode = isLocal ? ClientMode.AllInOne : ClientMode.RemoteBrowser,
+                    ServerId = descriptor.Id,
+                    ServerName = descriptor.Name,
+                    // Needs a desktop, and needs it to be this person's. A container has
+                    // no screen, and a browser on another device is not sitting here.
+                    CookieCaptureAvailable = isLocal && AppService.RuntimeMode != RuntimeMode.Docker
                 });
         }
 

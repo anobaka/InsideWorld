@@ -157,6 +157,12 @@ export type BakabaseAbstractionsModelsDomainConstantsAppNotificationBehavior = 0
 export type BakabaseAbstractionsModelsDomainConstantsAppNotificationSeverity = 0 | 1 | 2 | 3;
 
 /**
+ * [0: AllInOne, 1: RemoteBrowser, 2: PureClient]
+ * @format int32
+ */
+export type BakabaseAbstractionsModelsDomainConstantsClientMode = 0 | 1 | 2;
+
+/**
  * [1: Manual, 2: FileSystem, 3: Steam, 4: DLsite, 5: ExHentai]
  * @format int32
  */
@@ -5171,6 +5177,13 @@ export interface BakabaseServiceModelsViewRemoteAccessClientContextViewModel {
   paired: boolean;
   deviceId?: string;
   deviceName?: string;
+  /** [0: AllInOne, 1: RemoteBrowser, 2: PureClient] */
+  clientMode: BakabaseAbstractionsModelsDomainConstantsClientMode;
+  serverReachable: boolean;
+  clientVersion?: string;
+  serverId?: string;
+  serverName?: string;
+  cookieCaptureAvailable: boolean;
 }
 
 export interface BakabaseServiceModelsViewRemoteAccessDeviceViewModel {

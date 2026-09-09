@@ -1486,6 +1486,24 @@ export const BTaskStatusLabel: Record<BTaskStatus, string> = {
   [BTaskStatus.Resuming]: 'Resuming'
 };
 
+export enum ClientMode {
+  AllInOne = 0,
+  RemoteBrowser = 1,
+  PureClient = 2
+}
+
+export const clientModes = [
+  { label: 'AllInOne', value: ClientMode.AllInOne },
+  { label: 'RemoteBrowser', value: ClientMode.RemoteBrowser },
+  { label: 'PureClient', value: ClientMode.PureClient }
+] as const;
+
+export const ClientModeLabel: Record<ClientMode, string> = {
+  [ClientMode.AllInOne]: 'AllInOne',
+  [ClientMode.RemoteBrowser]: 'RemoteBrowser',
+  [ClientMode.PureClient]: 'PureClient'
+};
+
 export enum DataOrigin {
   Manual = 1,
   FileSystem = 2,

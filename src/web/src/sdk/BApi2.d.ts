@@ -6838,6 +6838,12 @@ export interface components {
         "Bakabase.Abstractions.Models.Domain.Constants.AppNotificationSeverity": 0 | 1 | 2 | 3;
         /**
          * Format: int32
+         * @description [0: AllInOne, 1: RemoteBrowser, 2: PureClient]
+         * @enum {integer}
+         */
+        "Bakabase.Abstractions.Models.Domain.Constants.ClientMode": 0 | 1 | 2;
+        /**
+         * Format: int32
          * @description [1: Manual, 2: FileSystem, 3: Steam, 4: DLsite, 5: ExHentai]
          * @enum {integer}
          */
@@ -10947,6 +10953,12 @@ export interface components {
             paired: boolean;
             deviceId?: string;
             deviceName?: string;
+            clientMode: components["schemas"]["Bakabase.Abstractions.Models.Domain.Constants.ClientMode"];
+            serverReachable: boolean;
+            clientVersion?: string;
+            serverId?: string;
+            serverName?: string;
+            cookieCaptureAvailable: boolean;
         };
         "Bakabase.Service.Models.View.RemoteAccessDeviceViewModel": {
             id: string;
