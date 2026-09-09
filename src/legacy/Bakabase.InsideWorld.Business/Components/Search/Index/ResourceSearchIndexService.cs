@@ -547,6 +547,7 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
             var dbResourceMap = resourceDbModels.ToDictionary(r => r.Id, r => r);
             var mediaLibraryMappings = await mediaLibraryResourceMappingService
                 .GetMediaLibraryIdsByResourceIds(resourceIds);
+            var collectionMappings = await LoadCollectionMappings(scope.ServiceProvider, resourceIds);
 
             var sourceLinkService = scope.ServiceProvider
                 .GetRequiredService<IResourceSourceLinkService>();
@@ -580,7 +581,8 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
                 var dbModel = dbResourceMap.GetValueOrDefault(resourceId);
                 if (dbModel != null)
                 {
-                    IndexInternalProperties(resourceId, dbModel, mediaLibraryMappings, sourceLinkMappings, indexKeys);
+                    IndexInternalProperties(resourceId, dbModel, mediaLibraryMappings, sourceLinkMappings,
+                        collectionMappings, indexKeys);
                 }
 
                 // Index aggregated health score (sourced from the HealthScore module's in-memory cache).
@@ -676,6 +678,22 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
 
     #endregion
 
+    /// <summary>
+    /// Which collections each resource belongs to. Optional by design: a build without the
+    /// collection module indexes everything else exactly as before.
+    /// </summary>
+    private static async Task<Dictionary<int, List<int>>?> LoadCollectionMappings(
+        IServiceProvider services, int[] resourceIds)
+    {
+        var provider = services.GetService<ICollectionNameProvider>();
+
+        if (provider == null || resourceIds.Length == 0) return null;
+
+        var byResource = await provider.GetByResourceIdsAsync(resourceIds);
+
+        return byResource.ToDictionary(kv => kv.Key, kv => kv.Value.Select(c => c.Id).ToList());
+    }
+
     #region Index Building Methods
 
     private void IndexInternalProperties(
@@ -683,6 +701,7 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
         ResourceDbModel dbModel,
         Dictionary<int, HashSet<int>>? mediaLibraryMappings,
         Dictionary<int, HashSet<ResourceSource>>? sourceLinkMappings,
+        Dictionary<int, List<int>>? collectionMappings,
         HashSet<IndexKey> indexKeys)
     {
         // Filename
@@ -739,6 +758,18 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
         {
             AddToValueIndex(PropertyPool.Internal, (int)InternalProperty.ParentResource,
                 dbModel.ParentId.Value.ToString(), resourceId, indexKeys);
+        }
+
+        // Collections. Rule-matched memberships are in here too — the provider returns both — so
+        // "everything in this series" answers the same whether the series is a list or a rule.
+        if (collectionMappings?.TryGetValue(resourceId, out var collectionIds) == true &&
+            collectionIds.Count > 0)
+        {
+            foreach (var collectionId in collectionIds)
+            {
+                AddToValueIndex(PropertyPool.Internal, (int) InternalProperty.CollectionMulti,
+                    collectionId.ToString(), resourceId, indexKeys);
+            }
         }
 
         // Media library multi
@@ -990,6 +1021,7 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
             var allResourceIds = allResources.Select(r => r.Id).ToArray();
             var mediaLibraryMappings = await mediaLibraryResourceMappingService
                 .GetMediaLibraryIdsByResourceIds(allResourceIds);
+            var collectionMappings = await LoadCollectionMappings(scope.ServiceProvider, allResourceIds);
             _logger.LogInformation("Loaded media library mappings in {Ms}ms", sw.ElapsedMilliseconds);
 
             sw.Restart();
@@ -1021,7 +1053,8 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
 
                 var indexKeys = new HashSet<IndexKey>();
 
-                IndexInternalProperties(resource.Id, resource, mediaLibraryMappings, sourceLinkMappings, indexKeys);
+                IndexInternalProperties(resource.Id, resource, mediaLibraryMappings, sourceLinkMappings,
+                    collectionMappings, indexKeys);
 
                 if (reservedValuesByResource.TryGetValue(resource.Id, out var reserved))
                 {
