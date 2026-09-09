@@ -175,4 +175,39 @@ public class ClientPipelineTests
 
         Assert.IsFalse(Directory.Exists(_root));
     }
+
+    [TestMethod]
+    public async Task A_user_machine_route_is_intercepted_rather_than_forwarded()
+    {
+        // Playing a file is this machine's to do. Forwarding it would ask a server —
+        // possibly somebody else's — to start a player on a screen nobody is watching,
+        // and the answer would blame the server for something the client cannot do yet.
+        var response = await Send("/resource/42/play");
+
+        Assert.AreEqual(HttpStatusCode.NotImplemented, response.StatusCode);
+        Assert.AreEqual(nameof(ClientForwardingFailure.NeedsNewerClient),
+            response.Headers.GetValues("X-Bakabase-Client").First());
+    }
+
+    [TestMethod]
+    public async Task A_path_the_route_table_only_nearly_matches_still_goes_upstream()
+    {
+        // /resource/{id:int}/... has a constraint; a non-numeric segment is a different
+        // route on the server and must not be swallowed here.
+        var response = await Send("/player/playlist/latest/batch-play", method: HttpMethod.Post);
+
+        Assert.AreEqual(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.AreEqual(nameof(ClientForwardingFailure.NotConnected),
+            response.Headers.GetValues("X-Bakabase-Client").First());
+    }
+
+    [TestMethod]
+    public async Task Opening_a_link_refuses_anything_that_is_not_a_web_address()
+    {
+        // Reached the local handler rather than the forwarder, and stopped there.
+        var response = await Send("/gui/url?url=file%3A%2F%2F%2Fetc%2Fpasswd");
+
+        Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.IsFalse(response.Headers.Contains("X-Bakabase-Client"));
+    }
 }

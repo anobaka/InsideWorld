@@ -1,6 +1,7 @@
 using System.Net;
 using Bakabase.Client.Abstractions;
 using Bakabase.Client.Components.Connection;
+using Bakabase.Client.Components.UserMachine;
 using Bakabase.Infrastructures.Components.App;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -61,6 +62,12 @@ public class ClientStartup
             sp.GetRequiredService<IUpstreamContextProbe>(),
             AppService.CoreVersion.ToString()));
 
+        // Actions whose effect lands on whatever machine runs them. Anything declared in
+        // UserMachineRoutes without a handler here is answered as "this client is
+        // behind" rather than forwarded to a server that would only refuse it.
+        services.AddSingleton<IUserMachineHandler, OpenUrlHandler>();
+        services.TryAddSingleton<UserMachineDispatcher>();
+
         services.AddRouting();
     }
 
@@ -90,6 +97,18 @@ public class ClientStartup
             }
 
             await next();
+        });
+
+        // Ahead of routing, because these are the server's routes — the client is
+        // intercepting them, not defining its own.
+        app.Use(async (context, next) =>
+        {
+            var dispatcher = context.RequestServices.GetRequiredService<UserMachineDispatcher>();
+
+            if (!await dispatcher.TryHandleAsync(context))
+            {
+                await next();
+            }
         });
 
         app.UseRouting();
