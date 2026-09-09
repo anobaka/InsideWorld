@@ -146,11 +146,19 @@ namespace Bakabase.Service.Models.View
     {
         /// <summary>
         /// Present this to collect credentials once somebody approves. It is the only
-        /// thing identifying this request, so it is treated as a secret.
+        /// thing identifying this request, so it is treated as a secret. Null when
+        /// <see cref="Failure"/> says no request was filed.
         /// </summary>
-        public string RequestId { get; set; } = null!;
+        public string? RequestId { get; set; }
 
         public DateTime ExpiresAt { get; set; }
+
+        /// <summary>
+        /// Why no request was filed, if none was. Reported here rather than as a
+        /// transport error so a client has one place to look across all three pairing
+        /// endpoints.
+        /// </summary>
+        public PairingFailure Failure { get; set; }
     }
 
     /// <summary>

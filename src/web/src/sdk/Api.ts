@@ -4062,10 +4062,10 @@ export interface BakabaseModulesPropertyModelsViewPropertyViewModel {
 }
 
 /**
- * [0: None, 1: CodeRejected, 2: RequestRejected, 3: NotYetApproved]
+ * [0: None, 1: CodeRejected, 2: RequestRejected, 3: NotYetApproved, 4: TooManyAttempts]
  * @format int32
  */
-export type BakabaseModulesRemoteAccessAbstractionsModelsPairingFailure = 0 | 1 | 2 | 3;
+export type BakabaseModulesRemoteAccessAbstractionsModelsPairingFailure = 0 | 1 | 2 | 3 | 4;
 
 /**
  * [0: Unknown, 1: Windows, 2: MacOS, 3: Linux, 4: Android, 5: IOS]
@@ -5205,14 +5205,16 @@ export interface BakabaseServiceModelsViewRemoteAccessPairingCredentialsViewMode
 }
 
 export interface BakabaseServiceModelsViewRemoteAccessPairingRequestAcceptedViewModel {
-  requestId: string;
+  requestId?: string;
   /** @format date-time */
   expiresAt: string;
+  /** [0: None, 1: CodeRejected, 2: RequestRejected, 3: NotYetApproved, 4: TooManyAttempts] */
+  failure: BakabaseModulesRemoteAccessAbstractionsModelsPairingFailure;
 }
 
 export interface BakabaseServiceModelsViewRemoteAccessPairingResultViewModel {
   credentials?: BakabaseServiceModelsViewRemoteAccessPairingCredentialsViewModel;
-  /** [0: None, 1: CodeRejected, 2: RequestRejected, 3: NotYetApproved] */
+  /** [0: None, 1: CodeRejected, 2: RequestRejected, 3: NotYetApproved, 4: TooManyAttempts] */
   failure: BakabaseModulesRemoteAccessAbstractionsModelsPairingFailure;
 }
 

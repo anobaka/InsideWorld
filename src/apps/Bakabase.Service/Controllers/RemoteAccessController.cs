@@ -197,11 +197,8 @@ namespace Bakabase.Service.Controllers
             // so its budget is checked before anything happens rather than after.
             if (!rateLimiter.TryTake(remoteAddress))
             {
-                return new SingletonResponse<RemoteAccessPairingRequestAcceptedViewModel>
-                {
-                    Code = (int) ResponseCode.Unauthorized,
-                    Message = "Too many pairing attempts from this device. Wait a few minutes and try again."
-                };
+                return new SingletonResponse<RemoteAccessPairingRequestAcceptedViewModel>(
+                    new RemoteAccessPairingRequestAcceptedViewModel {Failure = PairingFailure.TooManyAttempts});
             }
 
             var request = await deviceService.RequestPairingAsync(model.DeviceName ?? string.Empty, model.Platform,

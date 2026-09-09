@@ -3914,21 +3914,24 @@ export enum PairingFailure {
   None = 0,
   CodeRejected = 1,
   RequestRejected = 2,
-  NotYetApproved = 3
+  NotYetApproved = 3,
+  TooManyAttempts = 4
 }
 
 export const pairingFailures = [
   { label: 'None', value: PairingFailure.None },
   { label: 'CodeRejected', value: PairingFailure.CodeRejected },
   { label: 'RequestRejected', value: PairingFailure.RequestRejected },
-  { label: 'NotYetApproved', value: PairingFailure.NotYetApproved }
+  { label: 'NotYetApproved', value: PairingFailure.NotYetApproved },
+  { label: 'TooManyAttempts', value: PairingFailure.TooManyAttempts }
 ] as const;
 
 export const PairingFailureLabel: Record<PairingFailure, string> = {
   [PairingFailure.None]: 'None',
   [PairingFailure.CodeRejected]: 'CodeRejected',
   [PairingFailure.RequestRejected]: 'RequestRejected',
-  [PairingFailure.NotYetApproved]: 'NotYetApproved'
+  [PairingFailure.NotYetApproved]: 'NotYetApproved',
+  [PairingFailure.TooManyAttempts]: 'TooManyAttempts'
 };
 
 export enum RemoteAccessDenialReason {

@@ -27,6 +27,13 @@ public sealed class ServerClock(Func<DateTime>? localNow = null)
     /// <summary>How far the server's clock sits ahead of this machine's.</summary>
     public TimeSpan Offset => TimeSpan.FromTicks(Interlocked.Read(ref _offsetTicks));
 
+    /// <summary>
+    /// This machine's own time, uncorrected. Exposed so everything that measures a round
+    /// trip reads the same source this class does — a caller that reached for
+    /// <c>DateTime.UtcNow</c> instead would be comparing two different clocks.
+    /// </summary>
+    public DateTime LocalNow => _localNow();
+
     /// <summary>The time to stamp on an outgoing signature.</summary>
     public DateTime Now => _localNow().Add(Offset);
 

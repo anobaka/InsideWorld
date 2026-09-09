@@ -10057,10 +10057,10 @@ export interface components {
         };
         /**
          * Format: int32
-         * @description [0: None, 1: CodeRejected, 2: RequestRejected, 3: NotYetApproved]
+         * @description [0: None, 1: CodeRejected, 2: RequestRejected, 3: NotYetApproved, 4: TooManyAttempts]
          * @enum {integer}
          */
-        "Bakabase.Modules.RemoteAccess.Abstractions.Models.PairingFailure": 0 | 1 | 2 | 3;
+        "Bakabase.Modules.RemoteAccess.Abstractions.Models.PairingFailure": 0 | 1 | 2 | 3 | 4;
         /**
          * Format: int32
          * @description [0: Unknown, 1: Windows, 2: MacOS, 3: Linux, 4: Android, 5: IOS]
@@ -10975,9 +10975,10 @@ export interface components {
             serverId: string;
         };
         "Bakabase.Service.Models.View.RemoteAccessPairingRequestAcceptedViewModel": {
-            requestId: string;
+            requestId?: string;
             /** Format: date-time */
             expiresAt: string;
+            failure: components["schemas"]["Bakabase.Modules.RemoteAccess.Abstractions.Models.PairingFailure"];
         };
         "Bakabase.Service.Models.View.RemoteAccessPairingResultViewModel": {
             credentials?: components["schemas"]["Bakabase.Service.Models.View.RemoteAccessPairingCredentialsViewModel"];

@@ -30,7 +30,14 @@ public enum PairingFailure
     RequestRejected = 2,
 
     /// <summary>Approved, but the requesting device has not collected its key yet.</summary>
-    NotYetApproved = 3
+    NotYetApproved = 3,
+
+    /// <summary>
+    /// Too many attempts from this device for now. Reported through the same channel as
+    /// the others rather than as a transport error, so a client has one place to look
+    /// for why it did not get credentials.
+    /// </summary>
+    TooManyAttempts = 4
 }
 
 /// <summary>
