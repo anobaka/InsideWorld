@@ -26,6 +26,15 @@ public interface IShellOpener
 
     /// <summary>Hands a file or a URL to whatever the OS associates with it.</summary>
     void Launch(string target);
+
+    /// <summary>
+    /// Starts a specific program with arguments, for when the user chose a player rather
+    /// than leaving it to the OS.
+    /// </summary>
+    /// <param name="useShellExecute">
+    /// True for a Windows shortcut, which the OS refuses to start any other way.
+    /// </param>
+    void LaunchProcess(string executable, string arguments, bool useShellExecute);
 }
 
 public sealed class OsShellOpener : IShellOpener
@@ -33,4 +42,11 @@ public sealed class OsShellOpener : IShellOpener
     public void Reveal(string path, bool inParentDirectory) => OsShell.Open(path, inParentDirectory);
 
     public void Launch(string target) => Process.Start(new ProcessStartInfo(target) {UseShellExecute = true});
+
+    public void LaunchProcess(string executable, string arguments, bool useShellExecute) =>
+        Process.Start(new ProcessStartInfo(executable)
+        {
+            Arguments = arguments,
+            UseShellExecute = useShellExecute
+        });
 }

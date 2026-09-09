@@ -6191,6 +6191,13 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstract
   data?: BakabaseAbstractionsModelsDomainResourceFileSystemCache;
 }
 
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainResourceProfilePlayerOptions {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseAbstractionsModelsDomainResourceProfilePlayerOptions;
+}
+
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainTextEntryValue {
   /** @format int32 */
   code: number;
@@ -13611,6 +13618,24 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         any
       >({
         path: `/resource/${id}/playable-items`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name GetResourceEffectivePlayerOptions
+     * @request GET:/resource/{id}/effective-player-options
+     */
+    getResourceEffectivePlayerOptions: (id: number, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainResourceProfilePlayerOptions,
+        any
+      >({
+        path: `/resource/${id}/effective-player-options`,
         method: "GET",
         format: "json",
         ...params,

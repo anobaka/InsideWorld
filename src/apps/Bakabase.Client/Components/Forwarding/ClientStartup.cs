@@ -3,6 +3,8 @@ using Bakabase.Client.Abstractions;
 using Bakabase.Client.Components.Connection;
 using Bakabase.Client.Components.UserMachine;
 using Bakabase.Infrastructures.Components.App;
+using Bakabase.Modules.Player.Abstractions.Components;
+using Bakabase.Modules.Player.Components;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -74,6 +76,11 @@ public class ClientStartup
         services.AddSingleton<IUserMachineHandler, OpenPathHandler>();
         services.AddSingleton<IUserMachineHandler, OpenFileHandler>();
         services.AddSingleton<IUserMachineHandler, OpenResourceDirectoryHandler>();
+        services.TryAddSingleton<IPlayerExecutableLocator, DefaultPlayerExecutableLocator>();
+        services.TryAddSingleton<LocalPlayerResolver>();
+        services.TryAddSingleton<ILoopbackAddressProvider>(sp =>
+            new LoopbackAddressProvider(ResolveListeningPort(sp.GetRequiredService<AppContext>())));
+        services.AddSingleton<IUserMachineHandler, PlayItemHandler>();
         services.TryAddSingleton<UserMachineDispatcher>();
 
         services.AddRouting();

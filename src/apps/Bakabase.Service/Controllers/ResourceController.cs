@@ -62,7 +62,8 @@ public class ResourceController(
     IBOptionsManager<FileSystemOptions> fsOptionsManager,
     IPropertyValueScopePreferenceService scopePreferenceService,
     Bakabase.Abstractions.Components.ResourceMove.ResourceMoveGuard resourceMoveGuard,
-    Bakabase.Abstractions.Components.Localization.IBakabaseLocalizer bakabaseLocalizer)
+    Bakabase.Abstractions.Components.Localization.IBakabaseLocalizer bakabaseLocalizer,
+    IResourceProfileService resourceProfileService)
     : Controller
 {
     [HttpGet("search-operation")]
@@ -562,6 +563,28 @@ public class ResourceController(
     {
         var items = await service.DiscoverPlayableItems(id, HttpContext.RequestAborted);
         return new ListResponse<PlayableItem>(items);
+    }
+
+    /// <summary>
+    /// The players configured for this resource, after profile inheritance is resolved.
+    /// </summary>
+    /// <remarks>
+    /// Read by the thin client, which starts the player itself and so needs to know
+    /// which one the user chose. The executable paths in here belong to whichever
+    /// machine configured them, so a client matches them to a known player and
+    /// substitutes its own installation rather than trying to run them as-is.
+    /// </remarks>
+    [HttpGet("{id:int}/effective-player-options")]
+    [SwaggerOperation(OperationId = "GetResourceEffectivePlayerOptions")]
+    [RemoteAccessible]
+    public async Task<SingletonResponse<ResourceProfilePlayerOptions?>> GetEffectivePlayerOptions(int id)
+    {
+        var resource = await service.Get(id, ResourceAdditionalItem.None);
+
+        return resource == null
+            ? new SingletonResponse<ResourceProfilePlayerOptions?>(null)
+            : new SingletonResponse<ResourceProfilePlayerOptions?>(
+                await resourceProfileService.GetEffectivePlayerOptions(resource));
     }
 
     [RunsOnUserMachine(Reason = "A player starts on the machine you are sitting at.")]

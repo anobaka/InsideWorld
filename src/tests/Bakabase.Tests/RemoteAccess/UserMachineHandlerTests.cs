@@ -47,6 +47,9 @@ public class UserMachineHandlerTests
 
         public void Reveal(string path, bool inParentDirectory) => Revealed.Add((path, inParentDirectory));
         public void Launch(string target) => Launched.Add(target);
+
+        public void LaunchProcess(string executable, string arguments, bool useShellExecute) =>
+            throw new NotSupportedException();
     }
 
     private sealed class StubUpstream : IUpstreamApi
@@ -55,6 +58,12 @@ public class UserMachineHandlerTests
 
         public Task<UpstreamResource?> GetResourceAsync(int id, CancellationToken ct = default) =>
             Task.FromResult(Resource);
+
+        public Task<Bakabase.Abstractions.Models.Domain.ResourceProfilePlayerOptions?>
+            GetEffectivePlayerOptionsAsync(int id, CancellationToken ct = default) =>
+            Task.FromResult<Bakabase.Abstractions.Models.Domain.ResourceProfilePlayerOptions?>(null);
+
+        public Task MarkPlayedAsync(int id, string item, CancellationToken ct = default) => Task.CompletedTask;
     }
 
     [TestInitialize]

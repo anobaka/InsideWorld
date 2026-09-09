@@ -23,6 +23,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\libs\Bakabase.Infrastructures\Bakabase.Infrastructures\Bakabase.Infrastructures.csproj" />
+        <ProjectReference Include="..\..\modules\Bakabase.Modules.Player\Bakabase.Modules.Player.csproj" />
         <ProjectReference Include="..\..\modules\Bakabase.Modules.RemoteAccess\Bakabase.Modules.RemoteAccess.csproj" />
     </ItemGroup>
 

@@ -1,3 +1,4 @@
+using Bakabase.Abstractions.Models.Domain;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -21,6 +22,20 @@ public interface IUpstreamApi
 {
     /// <summary>Null when the server did not answer or does not know that id.</summary>
     Task<UpstreamResource?> GetResourceAsync(int id, CancellationToken ct = default);
+
+    /// <summary>
+    /// The players configured for this resource. Null when the server did not answer;
+    /// a resource with none configured answers with an empty list, which is a different
+    /// thing and means "use the system default".
+    /// </summary>
+    Task<ResourceProfilePlayerOptions?> GetEffectivePlayerOptionsAsync(int id, CancellationToken ct = default);
+
+    /// <summary>
+    /// Tells the server something was played. Best effort: the file is already open by
+    /// then, and failing the play because history could not be written would be worse
+    /// than a missing history entry.
+    /// </summary>
+    Task MarkPlayedAsync(int id, string item, CancellationToken ct = default);
 }
 
 public sealed class UpstreamApi(HttpClient http, IUpstreamTarget target) : IUpstreamApi
@@ -38,6 +53,31 @@ public sealed class UpstreamApi(HttpClient http, IUpstreamTarget target) : IUpst
         var resources = await ReadAsync<List<UpstreamResource>>($"/resource/keys?ids={id}", ct);
 
         return resources?.FirstOrDefault(r => r.Id == id);
+    }
+
+    public async Task<ResourceProfilePlayerOptions?> GetEffectivePlayerOptionsAsync(int id,
+        CancellationToken ct = default) =>
+        await ReadAsync<ResourceProfilePlayerOptions>($"/resource/{id}/effective-player-options", ct);
+
+    public async Task MarkPlayedAsync(int id, string item, CancellationToken ct = default)
+    {
+        var destination = target.BaseAddress;
+
+        if (string.IsNullOrEmpty(destination) || !Uri.TryCreate(destination, UriKind.Absolute, out var root))
+        {
+            return;
+        }
+
+        try
+        {
+            await http.PostAsync(
+                new Uri(root, $"/resource/{id}/played-at?item={Uri.EscapeDataString(item)}"), null, ct);
+        }
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException && !ct.IsCancellationRequested)
+        {
+            // The player is already running. Losing a history row is not worth turning
+            // a successful play into a failure.
+        }
     }
 
     private async Task<T?> ReadAsync<T>(string pathAndQuery, CancellationToken ct) where T : class
