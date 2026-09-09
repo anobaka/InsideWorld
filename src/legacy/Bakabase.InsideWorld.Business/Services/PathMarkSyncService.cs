@@ -300,10 +300,13 @@ public class PathMarkSyncService : ScopedService
             await PersistEffects(ctx);
 
             // ===== Cleanup (95-100%) =====
+            // Property and mapping writes enqueue background index reads through a separate
+            // DbContext. Drain those reads before writing mark statuses so SQLite does not see
+            // a reader/writer race, and only report the marks as synced once search is current.
+            await _resourceSearchIndexService.WaitForPendingUpdatesAsync(ct);
+
             await ReportProgress(onProgressChange, onProcessChange, 95, "Updating mark statuses...");
             await BatchUpdateMarkStatuses(ctx, marksToDelete);
-
-            await _resourceSearchIndexService.WaitForPendingUpdatesAsync(ct);
 
             await ReportProgress(onProgressChange, onProcessChange, 100, _localizer.SyncPathMark_Complete());
         }
