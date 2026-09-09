@@ -177,18 +177,19 @@ footer{margin-top:36px;color:var(--dim);font-size:12px;border-top:1px solid var(
 </table>
 
 <h3>阶段一：服务端——执行位置、设备配对、签名地址</h3>
+<div class="rule ok"><b>进度（2026-09-09）</b>：前两项已完成并推送——<code class="i">RunsOnUserMachineAttribute</code> + 17 个动作标记 + <code class="i">UserMachineEndpointCatalog</code> + 快照测试；授权过滤器四步顺序（含 <code class="i">RunsOnUserMachine = 5</code> 拒绝原因）与 10 个顺序测试。<b>"远程浏览器让 Docker 服务器拉起播放器"这个洞已经堵上</b>。剩余：设备配对与存储、<code class="i">RequirePairing</code>、签名地址、控制器端点、前端。</div>
 <table>
 <tr><th style="width:44%">事项</th><th>验收</th></tr>
 <tr><td><code class="i">RunsOnUserMachineAttribute</code> + 约 16 个动作标记（<a href="#s510">§5.10</a> A、B 组）+ <code class="i">UserMachineEndpointCatalog</code></td><td>快照测试锁定集合；"依赖用户侧能力的动作必须标记"测试通过（<a href="#s6">§6</a>）</td></tr>
 <tr><td>授权过滤器四步顺序（<a href="#s53">§5.3</a>）；中间件设备识别与签名地址校验</td><td>回环请求不进入任何新增分支（用"一旦被调用就抛异常"的桩证明）；非回环 + Unrestricted + 标记 → 403</td></tr>
 <tr><td>设备存储 <code class="i">devices.json</code>（懒创建）、配对码、配对申请与批准、逐台撤销、请求签名验证、随机数缓存（<a href="#s54">§5.4</a>、<a href="#s55">§5.5</a>）</td><td>从 85e2c05^ 取回的约 20 个用例改写后全绿；一体版默认 Disabled 下数据目录<b>不出现</b> <code class="i">remote-access</code> 子目录</td></tr>
-<tr><td><code class="i">RequirePairing</code> 开关（决策 4）；<code class="i">GetInitialData</code> 对未配对连接过滤带凭据的选项（决策 5）</td><td>Enabled + 未配对连接收不到 cookie 字段；Unrestricted 不变</td></tr>
+<tr><td><code class="i">RequirePairing</code> 开关（决策 4）。<b><code class="i">GetInitialData</code> 的选项过滤不做</b>——决策 05 裁定暂不处理，局域网设备视为可信</td><td><code class="i">RequirePairing</code> 打开后未配对设备只剩配对握手可达；三种模式的默认行为不变</td></tr>
 <tr><td>签名地址：<code class="i">ISignedMediaUrlService</code>（取回）+ <b>新写</b>签发端点 <code class="i">GET /remote-access/signed-media-url</code>（旧树只有校验半边，没有签发端点，前端与移动端从未消费过）</td><td>旧的 9 个签名令牌测试 + 压缩包条目绑定、HEAD 放行、缩略图缓存键含 <code class="i">bkbt</code></td></tr>
 <tr><td><code class="i">RemoteAccessController</code>：<code class="i">context</code> 加 <code class="i">paired/deviceId/deviceName</code>；<code class="i">server-info</code> 加 <code class="i">pairingSupported/pairingProtocolVersion/serverTime</code>（<b>不升</b> <code class="i">CurrentVersion</code>，否则所有已装移动端会以"协议过新"拒绝连接）</td><td>移动端 <code class="i">maxSupportedProtocol=1</code> 仍能连</td></tr>
 <tr><td>前端：设置页配对码/待批准/设备表；<code class="i">UIHubConnection</code> 配对请求通知；<code class="i">yarn gen-sdk</code></td><td>一体版默认 Disabled 时设置页外观不变</td></tr>
 <tr><td><code class="i">/updater/*</code>、<code class="i">/app/restart</code>、<code class="i">/log/*</code>、<code class="i">/app/info</code> 定为"不打标记、客户端另开 <code class="i">/client/*</code>"（决策 8）</td><td>写进目录的覆盖表</td></tr>
 </table>
-<div class="rule ok">阶段一独立成立：即使后面全部不做，它也让"用浏览器打开服务器地址"从受限变成完整（配对后），并堵住 <code class="i">/hub/ui</code> 的凭据泄露。</div>
+<div class="rule ok">阶段一独立成立：即使后面全部不做，它也让"用浏览器打开服务器地址"从受限变成完整（配对后），并<b>堵住"远程浏览器让服务器拉起播放器"这个洞</b>。<code class="i">/hub/ui</code> 的凭据泄露<b>不在本阶段处理</b>（决策 05）；打开 <code class="i">RequirePairing</code> 可以顺带关上它。</div>
 
 <h3>阶段二：客户端骨架——能连上、能浏览、能播（流地址）</h3>
 <table>
