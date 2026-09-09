@@ -1,5 +1,6 @@
 using Avalonia;
 using Bakabase.Components;
+using Bakabase.Service.Components;
 using Bakabase.Infrastructures.Components.App;
 using Bakabase.Infrastructures.Components.App.Upgrade;
 using Velopack;
@@ -48,8 +49,13 @@ class Program
             .StartWithClassicDesktopLifetime(args);
     }
 
+    // Configure(Func<TApp>) rather than Configure<App>(): the shell takes the host
+    // it should run behind as a constructor argument, and picking BakabaseHost here
+    // is exactly what makes this build the all-in-one flavour.
     public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<App>()
+        => AppBuilder.Configure(() =>
+                new App((guiAdapter, systemService) =>
+                    new BakabaseShellHost(new BakabaseHost(guiAdapter, systemService))))
             .UsePlatformDetect()
             .LogToTrace();
 }

@@ -15,7 +15,7 @@
     mc:Ignorable="d">
 
     <Window.Styles>
-        <StyleInclude Source="avares://Bakabase/Styles/ExitStyles.axaml" />
+        <StyleInclude Source="avares://Bakabase.Shell/Styles/ExitStyles.axaml" />
     </Window.Styles>
 
     <DockPanel LastChildFill="True">

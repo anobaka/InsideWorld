@@ -10,7 +10,6 @@ using Avalonia.Threading;
 using Bakabase.Abstractions.Components.Gui;
 using Bakabase.Infrastructures.Components.Gui;
 using Bakabase.Infrastructures.Components.SystemService;
-using Bakabase.InsideWorld.Models.Models.Aos;
 using Bakabase.Controls;
 using Bakabase.Windows;
 using Bootstrap.Extensions;
@@ -99,7 +98,7 @@ public class AvaloniaGuiAdapter : GuiAdapter, ITrayIconController
                 {
                     var assetName = isRunning ? "tray-running" : "favicon";
                     icon = new WindowIcon(
-                        AssetLoader.Open(new Uri($"avares://Bakabase/Assets/{assetName}.ico")));
+                        AssetLoader.Open(new Uri($"avares://Bakabase.Shell/Assets/{assetName}.ico")));
                     _trayIcons[isRunning] = icon;
                 }
 

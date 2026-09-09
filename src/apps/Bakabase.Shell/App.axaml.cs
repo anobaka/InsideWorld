@@ -12,16 +12,28 @@ using Bakabase.Infrastructures.Components.App.Relocation;
 using Bakabase.Infrastructures.Components.Configurations.App;
 using Bakabase.Infrastructures.Components.Gui;
 using Bakabase.Infrastructures.Components.SystemService;
-using Bakabase.Service.Components;
 using Bakabase.Windows;
 
 namespace Bakabase;
 
 public partial class App : Application
 {
+    private readonly Func<IGuiAdapter, ISystemService, IShellHost> _hostFactory;
+
     private AvaloniaGuiAdapter _guiAdapter = null!;
     private ISystemService _systemService = null!;
-    public BakabaseHost? Host { get; private set; }
+    public IShellHost? Host { get; private set; }
+
+    /// <summary>
+    /// The entry project decides which host sits behind the shell — see
+    /// <see cref="IShellHost"/>. Avalonia builds the app through
+    /// <c>AppBuilder.Configure(Func&lt;TApp&gt;)</c>, which is what lets this take a
+    /// constructor argument at all.
+    /// </summary>
+    public App(Func<IGuiAdapter, ISystemService, IShellHost> hostFactory)
+    {
+        _hostFactory = hostFactory;
+    }
 
     /// <summary>
     /// Single owner of every user-initiated exit. Assigned alongside <see cref="Host"/>, which
@@ -66,7 +78,7 @@ public partial class App : Application
             var options = AppOptionsManager.Default.Value;
             AppService.SetCulture(options.Language);
 
-            Host = new BakabaseHost(_guiAdapter, _systemService);
+            Host = _hostFactory(_guiAdapter, _systemService);
             ExitCoordinator = new ExitCoordinator(this, _guiAdapter);
 
             // Wire up tray events now that Host is available

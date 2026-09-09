@@ -97,6 +97,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bakabase.Modules.RemoteAcce
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bakabase.Modules.Text", "modules\Bakabase.Modules.Text\Bakabase.Modules.Text.csproj", "{9ED1459F-6E9D-4AF0-A0B3-0C336FAF5412}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bakabase.Shell", "apps\Bakabase.Shell\Bakabase.Shell.csproj", "{59F9F19E-1178-4DEB-B41D-4C0B450C305B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Company|Any CPU = Company|Any CPU
@@ -830,6 +832,24 @@ Global
 		{9ED1459F-6E9D-4AF0-A0B3-0C336FAF5412}.Release|x64.Build.0 = Release|Any CPU
 		{9ED1459F-6E9D-4AF0-A0B3-0C336FAF5412}.Release|x86.ActiveCfg = Release|Any CPU
 		{9ED1459F-6E9D-4AF0-A0B3-0C336FAF5412}.Release|x86.Build.0 = Release|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Company|Any CPU.ActiveCfg = Debug|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Company|Any CPU.Build.0 = Debug|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Company|x64.ActiveCfg = Debug|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Company|x64.Build.0 = Debug|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Company|x86.ActiveCfg = Debug|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Company|x86.Build.0 = Debug|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Debug|x64.Build.0 = Debug|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Debug|x86.Build.0 = Debug|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Release|x64.ActiveCfg = Release|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Release|x64.Build.0 = Release|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Release|x86.ActiveCfg = Release|Any CPU
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -875,6 +895,7 @@ Global
 		{4033B5DE-9488-4E62-8A72-104EB27CD539} = {8B728E85-2F02-43E7-A3D1-32CDB437DFEC}
 		{0EBC88C9-04CD-4A00-96BD-4281EED00085} = {CA253913-39DE-BFD0-C9A3-4B7EC6FBDF17}
 		{9ED1459F-6E9D-4AF0-A0B3-0C336FAF5412} = {CA253913-39DE-BFD0-C9A3-4B7EC6FBDF17}
+		{59F9F19E-1178-4DEB-B41D-4C0B450C305B} = {CA558E6A-5009-445B-88C9-96FDA6583067}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0EDB2DE5-2794-4737-A47F-105A2CCFFD16}

@@ -1,11 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+    <!--
+      The all-in-one entry point. Everything visual lives in Bakabase.Shell; what
+      remains here is the process entry, the packaging inputs (icon, manifest,
+      Info.plist) and the one thing that makes this flavour the all-in-one — the
+      reference to Bakabase.Service, wrapped as an IShellHost.
+    -->
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <ApplicationIcon>Assets/favicon.ico</ApplicationIcon>
+        <ApplicationIcon>..\Bakabase.Shell\Assets\favicon.ico</ApplicationIcon>
         <AssemblyName>Bakabase</AssemblyName>
         <ApplicationManifest>app.manifest</ApplicationManifest>
     </PropertyGroup>
@@ -24,30 +30,24 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Bakabase.Shell\Bakabase.Shell.csproj" />
         <ProjectReference Include="..\Bakabase.Service\Bakabase.Service.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <AvaloniaResource Include="Assets\favicon.ico" />
-        <AvaloniaResource Include="Assets\favicon.png" />
-        <AvaloniaResource Include="Assets\loading.gif" />
-        <AvaloniaResource Include="Assets\tray-running.ico" />
     </ItemGroup>
 
     <!-- Copy favicon.png to output for macOS Dock icon -->
     <ItemGroup>
-        <None Include="Assets\dock-icon.png" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="..\Bakabase.Shell\Assets\dock-icon.png" CopyToOutputDirectory="PreserveNewest" Link="Assets\dock-icon.png" />
     </ItemGroup>
 
     <!-- Windows icon for Velopack packaging -->
     <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-        <None Include="Assets\favicon.ico" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="..\Bakabase.Shell\Assets\favicon.ico" CopyToOutputDirectory="PreserveNewest" Link="Assets\favicon.ico" />
     </ItemGroup>
 
     <!-- macOS app bundle configuration -->
     <ItemGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
         <Content Include="Info.plist" CopyToOutputDirectory="PreserveNewest" />
-        <Content Include="Assets\app.icns" CopyToOutputDirectory="PreserveNewest" />
+        <Content Include="..\Bakabase.Shell\Assets\app.icns" CopyToOutputDirectory="PreserveNewest" Link="Assets\app.icns" />
     </ItemGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

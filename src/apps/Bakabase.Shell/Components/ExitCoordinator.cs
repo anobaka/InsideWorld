@@ -10,7 +10,6 @@ using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Abstractions.Models.View;
 using Bakabase.Infrastructures.Components.Configurations.App;
 using Bakabase.Infrastructures.Components.Gui;
-using Bakabase.Service.Components;
 using Bakabase.Resources;
 using Bakabase.Windows;
 using Bootstrap.Components.Configuration.Abstractions;

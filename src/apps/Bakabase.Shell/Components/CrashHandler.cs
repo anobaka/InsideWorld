@@ -21,7 +21,7 @@ namespace Bakabase.Components;
 /// runs there is no transport to send on anyway. What this class adds is the two sinks Sentry
 /// cannot cover: the file log, and stderr.
 /// </summary>
-internal static class CrashHandler
+public static class CrashHandler
 {
     public static void Install()
     {

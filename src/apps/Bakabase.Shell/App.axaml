@@ -9,7 +9,7 @@
 
     <TrayIcon.Icons>
         <TrayIcons>
-            <TrayIcon Icon="avares://Bakabase/Assets/favicon.ico"
+            <TrayIcon Icon="avares://Bakabase.Shell/Assets/favicon.ico"
                       ToolTipText="Bakabase"
                       IsVisible="True">
                 <TrayIcon.Menu>
