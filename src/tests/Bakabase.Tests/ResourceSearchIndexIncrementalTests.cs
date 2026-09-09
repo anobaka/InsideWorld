@@ -1,19 +1,22 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Bakabase.Abstractions.Components.Events;
+using Bakabase.Abstractions.Components.Localization;
 using Bakabase.Abstractions.Models.Domain;
 using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Abstractions.Services;
+using Bakabase.InsideWorld.Business.Components.Search.Index;
 using Bakabase.InsideWorld.Business.Services;
 using Bakabase.InsideWorld.Models.Constants.Aos;
 using Bakabase.Modules.Property.Abstractions.Services;
 using Bakabase.TestKit.Utils;
 using Bootstrap.Components.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace Bakabase.Tests;
@@ -82,20 +85,13 @@ public sealed class ResourceSearchIndexIncrementalTests
         var idx = Index();
         await idx.RebuildAllAsync(CancellationToken.None);
         await idx.WaitForReadyAsync(TimeSpan.FromSeconds(10));
-        // Let invalidations queued during seeding drain before assertions.
-        await Task.Delay(800);
+        await idx.WaitForPendingUpdatesAsync(CancellationToken.None);
     }
 
-    /// <summary>Polls the indexed-resource count until it reaches <paramref name="expected"/>.</summary>
-    private async Task WaitForIndexedCount(int expected)
+    private async Task WaitForPendingUpdatesAndAssertCount(int expected)
     {
-        var sw = Stopwatch.StartNew();
-        while (sw.Elapsed < TimeSpan.FromSeconds(8))
-        {
-            if (Index().GetStatus().TotalResourceCount == expected) return;
-            await Task.Delay(50);
-        }
-        Assert.AreEqual(expected, Index().GetStatus().TotalResourceCount, "indexed count did not converge");
+        await Index().WaitForPendingUpdatesAsync(CancellationToken.None);
+        Assert.AreEqual(expected, Index().GetStatus().TotalResourceCount);
     }
 
     private async Task<int> ResourceId(string filename)
@@ -133,7 +129,7 @@ public sealed class ResourceSearchIndexIncrementalTests
         Assert.AreEqual(3, Index().GetStatus().TotalResourceCount);
 
         Index().RemoveResource(await ResourceId("a"));
-        await WaitForIndexedCount(2);
+        await WaitForPendingUpdatesAndAssertCount(2);
     }
 
     [TestMethod]
@@ -144,7 +140,7 @@ public sealed class ResourceSearchIndexIncrementalTests
         Assert.AreEqual(1, await SearchCountByFilename("apple"));
 
         Index().RemoveResource(await ResourceId("apple"));
-        await WaitForIndexedCount(1);
+        await WaitForPendingUpdatesAndAssertCount(1);
 
         Assert.AreEqual(0, await SearchCountByFilename("apple"));
     }
@@ -156,7 +152,7 @@ public sealed class ResourceSearchIndexIncrementalTests
         await BuildIndex();
 
         Index().RemoveResources([await ResourceId("a"), await ResourceId("b")]);
-        await WaitForIndexedCount(1);
+        await WaitForPendingUpdatesAndAssertCount(1);
     }
 
     [TestMethod]
@@ -166,7 +162,7 @@ public sealed class ResourceSearchIndexIncrementalTests
         await BuildIndex();
 
         Index().RemoveResource(await ResourceId("apple"));
-        await WaitForIndexedCount(1);
+        await WaitForPendingUpdatesAndAssertCount(1);
 
         Assert.AreEqual(1, await SearchCountByFilename("banana"));
     }
@@ -179,11 +175,11 @@ public sealed class ResourceSearchIndexIncrementalTests
         var id = await ResourceId("a");
 
         Index().RemoveResource(id);
-        await WaitForIndexedCount(1);
+        await WaitForPendingUpdatesAndAssertCount(1);
 
         // The resource still exists in the database; invalidation must re-read and re-index it.
         Index().InvalidateResource(id);
-        await WaitForIndexedCount(2);
+        await WaitForPendingUpdatesAndAssertCount(2);
     }
 
     [TestMethod]
@@ -194,8 +190,104 @@ public sealed class ResourceSearchIndexIncrementalTests
         var versionBefore = Index().Version;
 
         Index().RemoveResource(await ResourceId("a"));
-        await WaitForIndexedCount(1);
+        await WaitForPendingUpdatesAndAssertCount(1);
 
         Assert.IsTrue(Index().Version > versionBefore);
+    }
+
+    [TestMethod]
+    public async Task WaitForPendingUpdates_WaitsAcrossBatchBoundary()
+    {
+        await Seed("a", "b");
+        await BuildIndex();
+        var id = await ResourceId("a");
+
+        for (var i = 0; i < 100; i++)
+        {
+            Index().InvalidateResource(id);
+        }
+        Index().RemoveResource(id);
+
+        // The remove is the 101st operation, so it must be processed in the batch after
+        // the first 100 invalidations before the FIFO barrier can complete.
+        await WaitForPendingUpdatesAndAssertCount(1);
+        Assert.AreEqual(0, await SearchCountByFilename("a"));
+    }
+
+    [TestMethod]
+    public async Task IncrementalBatch_RetriesThenFallsBackUntilSuccessfulRebuild()
+    {
+        await Seed("a");
+        var scopeFactory = new FailNextScopeFactory(_sp.GetRequiredService<IServiceScopeFactory>());
+        var index = new ResourceSearchIndexService(
+            scopeFactory,
+            _sp.GetRequiredService<IResourceDataChangeEvent>(),
+            _sp.GetRequiredService<ILogger<ResourceSearchIndexService>>(),
+            _sp.GetRequiredService<IBakabaseLocalizer>());
+
+        await index.RebuildAllAsync(CancellationToken.None);
+        var versionBeforeRetry = index.Version;
+        scopeFactory.FailNext(2);
+
+        index.InvalidateResource(await ResourceId("a"));
+        await index.WaitForPendingUpdatesAsync(CancellationToken.None);
+
+        Assert.IsTrue(index.IsReady);
+        Assert.AreEqual(versionBeforeRetry + 1, index.Version,
+            "two failed attempts followed by a successful retry must advance the version once");
+
+        var versionBeforeFailure = index.Version;
+        scopeFactory.FailNext(3);
+
+        index.InvalidateResource(await ResourceId("a"));
+        await Assert.ThrowsExceptionAsync<InvalidOperationException>(
+            () => index.WaitForPendingUpdatesAsync(CancellationToken.None));
+
+        Assert.IsFalse(index.IsReady);
+        Assert.AreEqual(versionBeforeFailure, index.Version,
+            "a failed batch must not advance the observable index version");
+
+        var filter = new ResourceSearchFilterGroup
+        {
+            Combinator = SearchCombinator.And,
+            Filters =
+            [
+                new ResourceSearchFilter
+                {
+                    PropertyPool = PropertyPool.Internal,
+                    PropertyId = (int)InternalProperty.Filename,
+                    Operation = SearchOperation.Equals,
+                    DbValue = "a",
+                    Property = _filenameProperty
+                }
+            ]
+        };
+        Assert.IsNull(await index.SearchResourceIdsAsync(filter),
+            "an index with an unrecovered batch failure must force the caller to full-scan");
+
+        await index.RebuildAllAsync(CancellationToken.None);
+        await index.WaitForReadyAsync(TimeSpan.FromSeconds(10));
+
+        Assert.IsTrue(index.IsReady);
+        CollectionAssert.AreEqual(
+            new[] {await ResourceId("a")},
+            (await index.SearchResourceIdsAsync(filter))!.OrderBy(x => x).ToArray());
+    }
+
+    private sealed class FailNextScopeFactory(IServiceScopeFactory inner) : IServiceScopeFactory
+    {
+        private int _remainingFailures;
+
+        public void FailNext(int count) => Volatile.Write(ref _remainingFailures, count);
+
+        public IServiceScope CreateScope()
+        {
+            if (Interlocked.Decrement(ref _remainingFailures) >= 0)
+            {
+                throw new InvalidOperationException("Injected scope creation failure");
+            }
+
+            return inner.CreateScope();
+        }
     }
 }

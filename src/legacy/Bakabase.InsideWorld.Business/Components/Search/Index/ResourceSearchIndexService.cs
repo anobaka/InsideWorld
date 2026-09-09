@@ -38,8 +38,8 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
     private readonly ResourceSearchIndex _index = new();
 
     // Channel for async batch updates
-    private readonly Channel<IndexOperation> _operationChannel =
-        Channel.CreateUnbounded<IndexOperation>(new UnboundedChannelOptions
+    private readonly Channel<IndexQueueItem> _operationChannel =
+        Channel.CreateUnbounded<IndexQueueItem>(new UnboundedChannelOptions
         {
             SingleReader = true,
             SingleWriter = false
@@ -49,12 +49,22 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
     private const int BatchSize = 100;
     private const int MaxDelayMs = 500;
     private const int MinBatchIntervalMs = 50;
+    private const int MaxBatchAttempts = 3;
 
     // State management
+    private readonly SemaphoreSlim _mutationGate = new(1, 1);
+    private readonly object _stateLock = new();
     private volatile bool _isReady;
     private TaskCompletionSource _readyTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private Exception? _unrecoveredIndexFailure;
     private readonly CancellationTokenSource _backgroundCts = new();
     private Task? _backgroundTask;
+
+    private abstract record IndexQueueItem;
+
+    private sealed record OperationQueueItem(IndexOperation Operation) : IndexQueueItem;
+
+    private sealed record BarrierQueueItem(TaskCompletionSource Completion) : IndexQueueItem;
 
     public bool IsReady => _isReady;
     public long Version => _index.Version;
@@ -78,6 +88,76 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
         _backgroundTask = ProcessOperationsAsync(_backgroundCts.Token);
     }
 
+    private static TaskCompletionSource CreateReadyCompletionSource() =>
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    private Exception? GetUnrecoveredIndexFailure()
+    {
+        lock (_stateLock)
+        {
+            return _unrecoveredIndexFailure;
+        }
+    }
+
+    private void MarkIndexUnavailable(Exception failure)
+    {
+        TaskCompletionSource readyTcs;
+        lock (_stateLock)
+        {
+            _unrecoveredIndexFailure ??= failure;
+            _isReady = false;
+            if (_readyTcs.Task.IsCompleted)
+            {
+                _readyTcs = CreateReadyCompletionSource();
+            }
+            readyTcs = _readyTcs;
+        }
+
+        readyTcs.TrySetException(new InvalidOperationException("Resource search index update failed", failure));
+    }
+
+    private void BeginRebuild()
+    {
+        lock (_stateLock)
+        {
+            _isReady = false;
+            if (_readyTcs.Task.IsCompleted)
+            {
+                _readyTcs = CreateReadyCompletionSource();
+            }
+        }
+    }
+
+    private void CompleteRebuild()
+    {
+        TaskCompletionSource readyTcs;
+        lock (_stateLock)
+        {
+            _unrecoveredIndexFailure = null;
+            _isReady = true;
+            readyTcs = _readyTcs;
+        }
+
+        readyTcs.TrySetResult();
+    }
+
+    private void FailRebuild(Exception failure)
+    {
+        TaskCompletionSource readyTcs;
+        lock (_stateLock)
+        {
+            _unrecoveredIndexFailure = failure;
+            _isReady = false;
+            if (_readyTcs.Task.IsCompleted)
+            {
+                _readyTcs = CreateReadyCompletionSource();
+            }
+            readyTcs = _readyTcs;
+        }
+
+        readyTcs.TrySetException(new InvalidOperationException("Index rebuild failed", failure));
+    }
+
     private void OnResourceDataChanged(ResourceDataChangedEventArgs args)
     {
         InvalidateResources(args.ResourceIds);
@@ -92,27 +172,54 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
 
     public void InvalidateResource(int resourceId)
     {
-        _operationChannel.Writer.TryWrite(new IndexOperation(IndexOperationType.Update, resourceId));
+        EnqueueOperation(new IndexOperation(IndexOperationType.Update, resourceId));
     }
 
     public void InvalidateResources(IEnumerable<int> resourceIds)
     {
         foreach (var resourceId in resourceIds)
         {
-            _operationChannel.Writer.TryWrite(new IndexOperation(IndexOperationType.Update, resourceId));
+            EnqueueOperation(new IndexOperation(IndexOperationType.Update, resourceId));
         }
     }
 
     public void RemoveResource(int resourceId)
     {
-        _operationChannel.Writer.TryWrite(new IndexOperation(IndexOperationType.Remove, resourceId));
+        EnqueueOperation(new IndexOperation(IndexOperationType.Remove, resourceId));
     }
 
     public void RemoveResources(IEnumerable<int> resourceIds)
     {
         foreach (var resourceId in resourceIds)
         {
-            _operationChannel.Writer.TryWrite(new IndexOperation(IndexOperationType.Remove, resourceId));
+            EnqueueOperation(new IndexOperation(IndexOperationType.Remove, resourceId));
+        }
+    }
+
+    public async Task WaitForPendingUpdatesAsync(CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (!_operationChannel.Writer.TryWrite(new BarrierQueueItem(completion)))
+        {
+            throw new InvalidOperationException("The resource search index update queue is not accepting work");
+        }
+
+        using var registration = ct.Register(() => completion.TrySetCanceled(ct));
+        await completion.Task;
+    }
+
+    private void EnqueueOperation(IndexOperation operation)
+    {
+        if (!_operationChannel.Writer.TryWrite(new OperationQueueItem(operation)))
+        {
+            _logger.LogError(
+                "Failed to enqueue {OperationType} operation for resource {ResourceId}",
+                operation.Type,
+                operation.ResourceId);
+            MarkIndexUnavailable(new InvalidOperationException(
+                $"Failed to enqueue {operation.Type} operation for resource {operation.ResourceId}"));
         }
     }
 
@@ -128,28 +235,51 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
         {
             try
             {
-                batch.Clear();
-
                 // Wait for the first operation
-                if (await _operationChannel.Reader.WaitToReadAsync(ct))
+                if (!await _operationChannel.Reader.WaitToReadAsync(ct))
                 {
-                    // Collect a batch of operations (max wait MaxDelayMs)
-                    var deadline = DateTime.UtcNow.AddMilliseconds(MaxDelayMs);
+                    break;
+                }
 
-                    while (batch.Count < BatchSize &&
-                           DateTime.UtcNow < deadline &&
-                           _operationChannel.Reader.TryRead(out var op))
+                batch.Clear();
+                var deadline = DateTime.UtcNow.AddMilliseconds(MaxDelayMs);
+                var processedOperations = false;
+
+                while (batch.Count < BatchSize &&
+                       DateTime.UtcNow < deadline &&
+                       _operationChannel.Reader.TryRead(out var item))
+                {
+                    if (item is OperationQueueItem operationItem)
                     {
-                        batch.Add(op);
+                        batch.Add(operationItem.Operation);
+                        continue;
                     }
 
+                    var barrier = (BarrierQueueItem)item;
+
+                    // A batch must never cross a barrier. Apply everything collected before
+                    // it, then complete the barrier before reading any subsequent work.
                     if (batch.Count > 0)
                     {
-                        await ProcessBatchAsync(batch, ct);
-
-                        // Brief pause between batches to avoid resource overuse
-                        await Task.Delay(MinBatchIntervalMs, ct);
+                        await ProcessBatchWithRetryAsync(batch, ct);
+                        batch.Clear();
+                        processedOperations = true;
                     }
+
+                    await CompleteBarrierAsync(barrier, ct);
+                    break;
+                }
+
+                if (batch.Count > 0)
+                {
+                    await ProcessBatchWithRetryAsync(batch, ct);
+                    processedOperations = true;
+                }
+
+                if (processedOperations)
+                {
+                    // Brief pause between batches to avoid resource overuse
+                    await Task.Delay(MinBatchIntervalMs, ct);
                 }
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -161,6 +291,85 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
                 _logger.LogError(ex, "Error processing index operations batch");
                 await Task.Delay(1000, ct); // Wait before retrying
             }
+        }
+    }
+
+    private async Task ProcessBatchWithRetryAsync(List<IndexOperation> operations, CancellationToken ct)
+    {
+        Exception? lastError = null;
+
+        await _mutationGate.WaitAsync(ct);
+        try
+        {
+            for (var attempt = 1; attempt <= MaxBatchAttempts; attempt++)
+            {
+                ct.ThrowIfCancellationRequested();
+                try
+                {
+                    await ProcessBatchAsync(operations, ct);
+                    return;
+                }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    lastError = ex;
+                    _logger.LogWarning(ex,
+                        "Resource search index batch failed on attempt {Attempt}/{MaxAttempts}",
+                        attempt,
+                        MaxBatchAttempts);
+                }
+
+                if (attempt < MaxBatchAttempts)
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(100 * attempt), ct);
+                }
+            }
+
+            var failure = new InvalidOperationException(
+                $"Resource search index batch failed after {MaxBatchAttempts} attempts",
+                lastError);
+            MarkIndexUnavailable(failure);
+            _logger.LogError(failure, "Resource search index is unavailable until a full rebuild succeeds");
+        }
+        finally
+        {
+            _mutationGate.Release();
+        }
+    }
+
+    private async Task CompleteBarrierAsync(BarrierQueueItem barrier, CancellationToken ct)
+    {
+        try
+        {
+            // Even an empty barrier must pass through the writer gate so it cannot complete
+            // while a full rebuild is still mutating the index.
+            await _mutationGate.WaitAsync(ct);
+            try
+            {
+                var failure = GetUnrecoveredIndexFailure();
+                if (failure == null)
+                {
+                    barrier.Completion.TrySetResult();
+                }
+                else
+                {
+                    barrier.Completion.TrySetException(new InvalidOperationException(
+                        "A resource search index update before this barrier failed",
+                        failure));
+                }
+            }
+            finally
+            {
+                _mutationGate.Release();
+            }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            barrier.Completion.TrySetCanceled(ct);
+            throw;
         }
     }
 
@@ -261,6 +470,9 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
 
                 // 2. Build new index
                 var indexKeys = new HashSet<IndexKey>();
+                // Register the live key set before adding entries so a retry can remove
+                // everything written by a partially completed attempt.
+                _index.ResourceIndexKeys[resourceId] = indexKeys;
 
                 // Index internal properties
                 var dbModel = dbResourceMap.GetValueOrDefault(resourceId);
@@ -298,8 +510,7 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
                     }
                 }
 
-                // 3. Save index key mapping
-                _index.ResourceIndexKeys[resourceId] = indexKeys;
+                // 3. Mark the resource as fully indexed
                 lock (_index.AllResourceIdsLock)
                 {
                     _index.AllResourceIds.Add(resourceId);
@@ -310,6 +521,7 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
         {
             _logger.LogError(ex, "Error updating index for resources: {ResourceIds}",
                 string.Join(",", resourceIds.Take(10)));
+            throw;
         }
     }
 
@@ -611,11 +823,10 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
     /// <param name="ct">取消令牌</param>
     public async Task RebuildAllAsync(Func<int, string?, Task>? progressCallback, CancellationToken ct = default)
     {
-        _isReady = false;
-        _readyTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
+        await _mutationGate.WaitAsync(ct);
         try
         {
+            BeginRebuild();
             var sw = Stopwatch.StartNew();
             using var scope = _scopeFactory.CreateScope();
 
@@ -717,7 +928,10 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
                 }
 
                 _index.ResourceIndexKeys[resource.Id] = indexKeys;
-                _index.AllResourceIds.Add(resource.Id);
+                lock (_index.AllResourceIdsLock)
+                {
+                    _index.AllResourceIds.Add(resource.Id);
+                }
                 indexedCount++;
 
                 // Report progress every 5%
@@ -734,11 +948,6 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
 
             _logger.LogInformation("Indexed {Count} resources in {Ms}ms", indexedCount, sw.ElapsedMilliseconds);
 
-            _index.Version++;
-            _index.LastUpdatedAt = DateTime.UtcNow;
-            _isReady = true;
-            _readyTcs.TrySetResult();
-
             await ReportProgress(progressCallback, 100, _localizer.SearchIndex_Completed(indexedCount));
 
             _logger.LogInformation(
@@ -746,11 +955,19 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
                 _index.AllResourceIds.Count,
                 _index.GetValueIndexEntryCount(),
                 _index.GetRangeIndexEntryCount());
+
+            _index.Version++;
+            _index.LastUpdatedAt = DateTime.UtcNow;
+            CompleteRebuild();
         }
         catch (Exception ex)
         {
-            _readyTcs.TrySetException(new InvalidOperationException("Index rebuild failed", ex));
+            FailRebuild(ex);
             throw;
+        }
+        finally
+        {
+            _mutationGate.Release();
         }
     }
 
@@ -764,9 +981,20 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
 
     public async Task WaitForReadyAsync(TimeSpan? timeout = null)
     {
-        if (_isReady) return;
+        Task task;
+        Exception? failure;
+        lock (_stateLock)
+        {
+            if (_isReady) return;
+            failure = _unrecoveredIndexFailure;
+            task = _readyTcs.Task;
+        }
 
-        var task = _readyTcs.Task;
+        if (failure != null)
+        {
+            throw new InvalidOperationException("The resource search index is unavailable", failure);
+        }
+
         if (timeout.HasValue)
         {
             using var cts = new CancellationTokenSource(timeout.Value);
@@ -836,6 +1064,11 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
             return null; // No filter, return null to indicate "all"
         }
 
+        if (GetUnrecoveredIndexFailure() != null)
+        {
+            return null; // A failed incremental update makes the index unsafe; use the full scan.
+        }
+
         if (!IsReady)
         {
             // Wait up to 1 second for index to be ready
@@ -848,6 +1081,17 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
                 _logger.LogWarning("Search index not ready, falling back to full scan");
                 return null; // Fallback to full search
             }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Search index unavailable, falling back to full scan");
+                return null;
+            }
+        }
+
+        // The state may have changed while readiness was being awaited.
+        if (!IsReady || GetUnrecoveredIndexFailure() != null)
+        {
+            return null;
         }
 
         return EvaluateFilterGroup(group);

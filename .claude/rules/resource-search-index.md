@@ -113,7 +113,8 @@ Values are indexed in both:
 
 When `SearchResourceIdsAsync` returns `null`:
 1. Index not ready (during rebuild)
-2. No filter specified
+2. An incremental update failed and no successful full rebuild has recovered the index
+3. No filter specified
 
 The caller (ResourceService) falls back to full-scan search at `ResourceService.cs:188-218`.
 
@@ -132,6 +133,17 @@ RemoveResources(IEnumerable<int> resourceIds)
 ```
 
 Batch processing: 100 items max, 500ms max delay.
+
+`WaitForPendingUpdatesAsync` adds a FIFO barrier to the same channel. It completes only
+after every update queued before it has been applied; work queued after the barrier does
+not delay that wait. Workflows that promise immediately searchable results (for example,
+path-mark synchronization) must enqueue all affected resource IDs and await one barrier
+before reporting completion.
+
+Full rebuilds and incremental batches share a mutation gate so they cannot write the index
+at the same time. Incremental batches are retried up to three times. A permanently failed
+batch does not advance the index version, faults subsequent barriers, marks the index
+unavailable, and forces searches to use the full-scan fallback until a full rebuild succeeds.
 
 ## Key Files
 

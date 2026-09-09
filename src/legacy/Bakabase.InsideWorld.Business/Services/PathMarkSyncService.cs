@@ -47,6 +47,7 @@ public class PathMarkSyncService : ScopedService
 {
     private readonly IPathMarkService _pathMarkService;
     private readonly IResourceService _resourceService;
+    private readonly IResourceSearchIndexService _resourceSearchIndexService;
     private readonly IMediaLibraryResourceMappingService _mappingService;
     private readonly IMediaLibraryV2Service _mediaLibraryV2Service;
     private readonly ICustomPropertyValueService _customPropertyValueService;
@@ -60,6 +61,7 @@ public class PathMarkSyncService : ScopedService
         IServiceProvider serviceProvider,
         IPathMarkService pathMarkService,
         IResourceService resourceService,
+        IResourceSearchIndexService resourceSearchIndexService,
         IMediaLibraryResourceMappingService mappingService,
         IMediaLibraryV2Service mediaLibraryV2Service,
         ICustomPropertyValueService customPropertyValueService,
@@ -71,6 +73,7 @@ public class PathMarkSyncService : ScopedService
     {
         _pathMarkService = pathMarkService;
         _resourceService = resourceService;
+        _resourceSearchIndexService = resourceSearchIndexService;
         _mappingService = mappingService;
         _mediaLibraryV2Service = mediaLibraryV2Service;
         _customPropertyValueService = customPropertyValueService;
@@ -295,6 +298,8 @@ public class PathMarkSyncService : ScopedService
             // ===== Cleanup (95-100%) =====
             await ReportProgress(onProgressChange, onProcessChange, 95, "Updating mark statuses...");
             await BatchUpdateMarkStatuses(ctx, marksToDelete);
+
+            await _resourceSearchIndexService.WaitForPendingUpdatesAsync(ct);
 
             await ReportProgress(onProgressChange, onProcessChange, 100, _localizer.SyncPathMark_Complete());
         }
@@ -956,6 +961,7 @@ public class PathMarkSyncService : ScopedService
         var distinctDeletes = ctx.PropertyValuesToDelete.Distinct().ToList();
         if (distinctDeletes.Count > 0)
         {
+            var deletedResourceIds = new HashSet<int>();
             foreach (var (resourceId, propertyId) in distinctDeletes)
             {
                 ct.ThrowIfCancellationRequested();
@@ -963,6 +969,14 @@ public class PathMarkSyncService : ScopedService
                     x.ResourceId == resourceId &&
                     x.PropertyId == propertyId &&
                     x.Scope == (int)PropertyValueScope.Synchronization);
+                // Reindex even when the delete was already idempotently satisfied: an
+                // older failed update may still have left this value in the index.
+                deletedResourceIds.Add(resourceId);
+            }
+
+            if (deletedResourceIds.Count > 0)
+            {
+                _resourceSearchIndexService.InvalidateResources(deletedResourceIds);
             }
 
             deleted = distinctDeletes.Count;
