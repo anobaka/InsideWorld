@@ -166,6 +166,7 @@ footer{margin-top:36px;color:var(--dim);font-size:12px;border-top:1px solid var(
 <p>与设计文档相比多了一个"阶段零"，并把三件事提前：客户端日志与更新器（阶段二，否则发布的客户端没有日志也没有升级通道）、用户主动登录态采集（阶段二，它不需要转交通道）、<code class="i">/updater/*</code> 与 <code class="i">/app/restart</code> 的执行位置定案（阶段一，否则阶段二的客户端一打开就会开始更新服务器）。</p>
 
 <h3>阶段零：准备（一体版行为零变化的清理）</h3>
+<div class="rule ok"><b>进度（2026-09-09）</b>：外壳搬移、死注入与死代码清理、持续集成补测试工程、子模块地址、规则文件，均已完成并推送。发布产物对比：571 → 573 个文件，差异只有 <code class="i">Bakabase.Shell.dll</code>、其调试符号，以及本地化资源随外壳改名；总体积不变，全量测试 1409 通过。剩下<b>按 §7 修订设计文档</b>一项未做。</div>
 <table>
 <tr><th style="width:44%">事项</th><th>验收</th></tr>
 <tr><td><b>外壳搬移</b>：把 <a href="#s3">§3.1</a> 列出的窗口、托盘、退出协调、内嵌浏览器、图形适配器从 <code class="i">src/apps/Bakabase/</code> 搬进新的 <code class="i">Bakabase.Shell</code>，引入 <code class="i">IShellHost</code> 接缝。<b>不改任何行为</b>，只搬文件与加接口</td><td><code class="i">-p:RuntimeMode=WINFORMS</code> 发布产物与搬移前<b>文件清单一致、各程序集大小无异常变化</b>；一体版手工冒烟：启动、托盘、退出协调、登录态采集窗口</td></tr>
@@ -679,7 +680,7 @@ sig = HMAC-SHA256(deviceKey, 规范串)
 
 <h4>其二：封面不带尺寸参数</h4>
 
-<p>前端取封面时不传宽高，服务端在没有宽高时就直接原样返回文件。自动生成的封面上限是 600×600，但手动设置或增强器抓来的封面是<b>原始分辨率</b>。在回环上这是零成本的偷懒；过网之后，它会成为首屏的主要字节开销。缩略图端点本来就支持宽高参数，前端传上就行。</p>
+<p>前端取封面时不传宽高，服务端在没有宽高时就直接原样返回文件。自动生成的封面上限是 600×600，但手动设置或增强器抓来的封面是<b>原始分辨率</b>。在回环上这是零成本的偷懒；过网之后，它会成为首屏的主要字节开销。</p><div class="rule warn"><b>更正：只在前端传宽高会让情况更糟，实现时才发现。</b>一旦带上宽高，服务端会解码成 <code class="i">Argb32</code> 并<b>无条件重新编码成 PNG</b>——即使根本不需要缩放。对照片类封面，PNG 会比源 JPEG 大好几倍。而且 <code class="i">ImageExtensions</code> 里含 <code class="i">.svg</code> 与 <code class="i">.ico</code>，这条路径上会直接抛异常。<br><br>正确的做法是先改服务端：不重新编码的格式（<code class="i">.svg</code>、<code class="i">.ico</code>、<code class="i">.gif</code>、<code class="i">.bmp</code>、<code class="i">.tiff</code>）一律原样透传；其余先只读图片头，已经够小就透传原文件，确实需要缩放时才解码，并<b>按源格式重新编码</b>以保持内容类型。压缩包内的缩略图同理。改完之后前端再传 600×600 才是安全的——自动生成的封面本来就没超过这个尺寸，会原样透传，字节与今天完全一致。</div>
 
 <p class="note">这一项改完，一体版、手机端、远程浏览器同样受益，且不改变任何行为，属于可以在阶段零就做掉的清理。</p>
 
