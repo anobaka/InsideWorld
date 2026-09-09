@@ -215,20 +215,6 @@ public class SteamResolver : IResourceResolver
         ];
     }
 
-    public Task PlayAsync(Resource resource, PlayableItem item, CancellationToken ct)
-    {
-        var uri = $"steam://rungameid/{item.Key}";
-        var process = new System.Diagnostics.Process
-        {
-            StartInfo = new System.Diagnostics.ProcessStartInfo(uri)
-            {
-                UseShellExecute = true
-            }
-        };
-        process.Start();
-        return Task.CompletedTask;
-    }
-
     public List<SourceMetadataFieldInfo> GetPredefinedMetadataFields() =>
     [
         new(nameof(SteamMetadataField.Type), StandardValueType.String),

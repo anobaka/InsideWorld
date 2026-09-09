@@ -34,19 +34,17 @@ namespace Bakabase.Service.Controllers;
 public class DownloadTaskController : Controller
 {
     private readonly IBOptions<ExHentaiOptions> _exhentaiOptions;
-    private readonly IGuiAdapter _guiAdapter;
     private readonly IStringLocalizer<SharedResource> _localizer;
     private readonly DownloadTaskService _service;
     private readonly DownloadRecordService _recordService;
     private readonly IDownloaderFactory _downloaderFactory;
 
     public DownloadTaskController(DownloadTaskService service, IStringLocalizer<SharedResource> localizer,
-        IGuiAdapter guiAdapter, IBOptions<ExHentaiOptions> exhentaiOptions,
+        IBOptions<ExHentaiOptions> exhentaiOptions,
         IDownloaderFactory downloaderFactory, DownloadRecordService recordService)
     {
         _service = service;
         _localizer = localizer;
-        _guiAdapter = guiAdapter;
         _exhentaiOptions = exhentaiOptions;
         _downloaderFactory = downloaderFactory;
         _recordService = recordService;

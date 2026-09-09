@@ -75,7 +75,6 @@ namespace Bakabase.Service.Controllers
         private readonly FfMpegService _ffMpegService;
         private readonly HardwareAccelerationService _hardwareAccelerationService;
 
-        private readonly ISystemPlayer _systemPlayer;
         private readonly IFileManager _fileManager;
         private readonly AppService _appService;
         private readonly Bakabase.Service.Services.FileSystemEntryGroupingService _groupingService;
@@ -85,7 +84,7 @@ namespace Bakabase.Service.Controllers
             IwFsWatcher fileProcessorWatcher, PasswordService passwordService, ILogger<FileController> logger,
             BakabaseLocalizer localizer, BTaskManager taskManager, IGuiAdapter guiAdapter,
             FfMpegService ffMpegService, HardwareAccelerationService hardwareAccelerationService,
-            ISystemPlayer systemPlayer, IFileManager fileManager, AppService appService,
+            IFileManager fileManager, AppService appService,
             Bakabase.Service.Services.FileSystemEntryGroupingService groupingService)
         {
             _textOps = textOps;
@@ -100,7 +99,6 @@ namespace Bakabase.Service.Controllers
             _guiAdapter = guiAdapter;
             _ffMpegService = ffMpegService;
             _hardwareAccelerationService = hardwareAccelerationService;
-            _systemPlayer = systemPlayer;
             _fileManager = fileManager;
             _appService = appService;
             _groupingService = groupingService;

@@ -25,7 +25,7 @@ using Bakabase.Service.Components.RemoteAccess;
 namespace Bakabase.Service.Controllers
 {
     [Route("~/play-history")]
-    public class PlayHistoryController(IPlayHistoryService service, IGuiAdapter guiAdapter) : Controller
+    public class PlayHistoryController(IPlayHistoryService service) : Controller
     {
         [SwaggerOperation(OperationId = "SearchPlayHistories")]
         [RemoteAccessible]

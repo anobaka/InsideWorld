@@ -135,21 +135,6 @@ public class ExHentaiResolver : IResourceResolver
         ];
     }
 
-    public Task PlayAsync(Resource resource, PlayableItem item, CancellationToken ct)
-    {
-        // Open ExHentai gallery page
-        var url = $"https://exhentai.org/g/{item.Key}/";
-        var process = new System.Diagnostics.Process
-        {
-            StartInfo = new System.Diagnostics.ProcessStartInfo(url)
-            {
-                UseShellExecute = true
-            }
-        };
-        process.Start();
-        return Task.CompletedTask;
-    }
-
     public List<SourceMetadataFieldInfo> GetPredefinedMetadataFields() =>
     [
         new(nameof(ExHentaiMetadataField.RawName), StandardValueType.String),

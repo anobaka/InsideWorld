@@ -168,21 +168,6 @@ public class DLsiteResolver : IResourceResolver
         ];
     }
 
-    public Task PlayAsync(Resource resource, PlayableItem item, CancellationToken ct)
-    {
-        // Open DLsite product page
-        var url = $"https://www.dlsite.com/maniax/work/=/product_id/{item.Key}.html";
-        var process = new System.Diagnostics.Process
-        {
-            StartInfo = new System.Diagnostics.ProcessStartInfo(url)
-            {
-                UseShellExecute = true
-            }
-        };
-        process.Start();
-        return Task.CompletedTask;
-    }
-
     public List<SourceMetadataFieldInfo> GetPredefinedMetadataFields() =>
     [
         new(nameof(DLsiteMetadataField.Introduction), StandardValueType.String),

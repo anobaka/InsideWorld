@@ -50,8 +50,7 @@ public class MediaLibraryV2Service<TDbContext>(
     IBOptions<ResourceOptions> resourceOptions,
     BTaskManager btm,
     IBakabaseLocalizer localizer,
-    IServiceProvider serviceProvider,
-    ISystemService systemService
+    IServiceProvider serviceProvider
 )
     : ScopedService(serviceProvider), IMediaLibraryV2Service where TDbContext : DbContext
 {
