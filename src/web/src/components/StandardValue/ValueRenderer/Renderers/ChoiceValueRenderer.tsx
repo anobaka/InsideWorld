@@ -199,7 +199,11 @@ const ChoiceValueRenderer = (props: ChoiceValueRendererProps) => {
             label={
               <>
                 {item.label}
-                <ReferenceValueCount count={resourceCounts?.[item.value]} />
+                <ReferenceValueCount
+                  count={resourceCounts?.[item.value]}
+                  source={resourceCountsSource}
+                  valueId={item.value}
+                />
               </>
             }
             size={size}

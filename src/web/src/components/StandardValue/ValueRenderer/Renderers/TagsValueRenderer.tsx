@@ -188,7 +188,11 @@ const TagsValueRenderer = (props: TagsValueRendererProps) => {
             label={
               <>
                 {getTagLabel(item)}
-                <ReferenceValueCount count={resourceCounts?.[item.value]} />
+                <ReferenceValueCount
+                  count={resourceCounts?.[item.value]}
+                  source={resourceCountsSource}
+                  valueId={item.value}
+                />
               </>
             }
             size={size}

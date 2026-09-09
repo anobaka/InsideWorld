@@ -229,7 +229,11 @@ const MultilevelValueRenderer = ({
             label={
               <>
                 {opt.label}
-                <ReferenceValueCount count={resourceCounts?.[opt.path[opt.path.length - 1]]} />
+                <ReferenceValueCount
+                  count={resourceCounts?.[opt.path[opt.path.length - 1]]}
+                  source={resourceCountsSource}
+                  valueId={opt.path[opt.path.length - 1]}
+                />
               </>
             }
             size={size}

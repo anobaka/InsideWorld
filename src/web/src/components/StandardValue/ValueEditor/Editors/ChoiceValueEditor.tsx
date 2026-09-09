@@ -15,7 +15,9 @@ import {
   useDisabledChoiceKeys,
   type DisabledChoiceKeysSource,
 } from "@/hooks/useDisabledChoiceKeys";
-import ReferenceValueCount from "@/components/Property/components/ReferenceValueCount";
+import ReferenceValueCount, {
+  ReferenceValueCountsStatus,
+} from "@/components/Property/components/ReferenceValueCount";
 import { Button, Input, Modal } from "@/components/bakaui";
 import { buildLogger } from "@/components/utils";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
@@ -95,6 +97,7 @@ const ChoiceValueEditor = (props: ChoiceValueEditorProps) => {
           }}
         />
       </div>
+      <ReferenceValueCountsStatus source={resourceCountsSource} />
       <div className={"flex flex-wrap gap-1"}>
         {dataSource.length == 0
           ? t<string>("No choices available, please check your configurations")
@@ -127,7 +130,11 @@ const ChoiceValueEditor = (props: ChoiceValueEditorProps) => {
                     }}
                   >
                     {d.label}
-                    <ReferenceValueCount count={resourceCounts?.[d.value]} />
+                    <ReferenceValueCount
+                      count={resourceCounts?.[d.value]}
+                      source={resourceCountsSource}
+                      valueId={d.value}
+                    />
                   </Button>
                 );
               })}

@@ -17,7 +17,9 @@ import {
   useDisabledChoiceKeys,
   type DisabledChoiceKeysSource,
 } from "@/hooks/useDisabledChoiceKeys";
-import ReferenceValueCount from "@/components/Property/components/ReferenceValueCount";
+import ReferenceValueCount, {
+  ReferenceValueCountsStatus,
+} from "@/components/Property/components/ReferenceValueCount";
 import { Button, Input, Modal } from "@/components/bakaui";
 import { autoBackgroundColor, buildLogger } from "@/components/utils";
 
@@ -127,7 +129,11 @@ const TagsValueEditor = (props: TagsValueEditorProps) => {
         onPress={() => toggleTag(tag.value)}
       >
         {tag.name}
-        <ReferenceValueCount count={resourceCounts?.[tag.value]} />
+        <ReferenceValueCount
+          count={resourceCounts?.[tag.value]}
+          source={resourceCountsSource}
+          valueId={tag.value}
+        />
       </Button>
     );
   };
@@ -167,6 +173,7 @@ const TagsValueEditor = (props: TagsValueEditorProps) => {
           />
         </div>
 
+        <ReferenceValueCountsStatus source={resourceCountsSource} />
         <div className={"flex flex-col gap-3 min-h-0 overflow-y-auto"}>
           {dataSource.length === 0 ? (
             <div className={"text-default-400 text-center py-4"}>

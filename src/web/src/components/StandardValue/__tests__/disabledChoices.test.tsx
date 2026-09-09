@@ -1,5 +1,6 @@
 import type { ComponentType, ReactNode } from "react";
 import type { DisabledChoiceKeysSource } from "@/hooks/useDisabledChoiceKeys";
+import type { ResourceCountsSource } from "@/hooks/useResourceCountsSource";
 
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
@@ -12,6 +13,7 @@ import MultilevelValueRenderer from "../ValueRenderer/Renderers/MultilevelValueR
 import MultilevelValueEditor from "../ValueEditor/Editors/MultilevelValueEditor";
 
 import { createDisabledChoiceKeysSource } from "@/hooks/useDisabledChoiceKeys";
+import { createResourceCountsSource } from "@/hooks/useResourceCountsSource";
 
 const { createPortal, optionsThreshold } = vi.hoisted(() => ({
   createPortal: vi.fn(),
@@ -80,6 +82,7 @@ type ScenarioProps = {
   selected?: string[];
   disabledKeys?: ReadonlySet<string>;
   disabledKeysSource?: DisabledChoiceKeysSource;
+  resourceCountsSource?: ResourceCountsSource;
   onValueChange: ReturnType<typeof vi.fn>;
 };
 
@@ -268,6 +271,37 @@ describe.each(scenarios)("disabled $name", ({ render: renderRenderer }) => {
     expect(unused).toBeDisabled();
     await click(button("Apply", dialog));
     expect(onValueChange).toHaveBeenCalledWith([], []);
+  });
+
+  it("keeps the count slot and update status connected in an open full editor", async () => {
+    optionsThreshold.current = 1;
+    const source = createResourceCountsSource();
+    const reservedWidths = { "unused-id": 7, "used-id": 4 };
+
+    source.publish({ "unused-id": 9, "used-id": 1 }, { reservedWidths });
+    await render(renderRenderer({ resourceCountsSource: source, onValueChange: vi.fn() }));
+    await click(button(/common.action.more/));
+    const dialog = openedDialog();
+    const choice = button("Unused(9)", dialog);
+    const badge = choice.querySelector('span[style*="width: 7ch"]')!;
+
+    expect(badge).not.toBeNull();
+    expect(dialog.querySelectorAll('[role="status"]')).toHaveLength(1);
+    act(() => source.publish({ "unused-id": 9 }, { reservedWidths, loading: true, stale: true }));
+    expect(badge.textContent).toBe("(9)");
+    expect(badge.className).toContain("opacity-40");
+    expect(dialog.querySelector('[role="status"]')?.textContent).toBe(
+      "property.reference.updatingCounts",
+    );
+    expect(choice).toBeEnabled();
+
+    act(() => source.publish({ "unused-id": 0 }, { reservedWidths }));
+    expect(choice.querySelector('span[style*="width: 7ch"]')).toBe(badge);
+    expect(badge.textContent).toBe("");
+    expect(badge.getAttribute("aria-hidden")).toBe("true");
+    expect(choice).toBeEnabled();
+    expect(dialog.querySelector('[role="status"]')?.textContent).toBe("");
+    expect(createPortal).toHaveBeenCalledTimes(1);
   });
 });
 

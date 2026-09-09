@@ -18,7 +18,9 @@ import {
   useDisabledChoiceKeys,
   type DisabledChoiceKeysSource,
 } from "@/hooks/useDisabledChoiceKeys";
-import ReferenceValueCount from "@/components/Property/components/ReferenceValueCount";
+import ReferenceValueCount, {
+  ReferenceValueCountsStatus,
+} from "@/components/Property/components/ReferenceValueCount";
 import { Button, Input, Modal } from "@/components/bakaui";
 import {
   filterMultilevelData,
@@ -172,7 +174,11 @@ const MultilevelValueEditor = <V = string,>(props: MultilevelValueEditorProps<V>
             >
               <span className="truncate">
                 {item.label}
-                <ReferenceValueCount count={resourceCounts?.[String(item.value)]} />
+                <ReferenceValueCount
+                  count={resourceCounts?.[String(item.value)]}
+                  source={resourceCountsSource}
+                  valueId={String(item.value)}
+                />
               </span>
               {hasChildren && <RightOutlined className="text-xs flex-shrink-0" />}
             </Button>
@@ -217,6 +223,8 @@ const MultilevelValueEditor = <V = string,>(props: MultilevelValueEditorProps<V>
             onValueChange={(v) => setKeyword(v)}
           />
         </div>
+
+        <ReferenceValueCountsStatus source={resourceCountsSource} />
 
         {/* Selected items display */}
         {selectedLabels.length > 0 && (

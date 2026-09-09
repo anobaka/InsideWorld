@@ -74,30 +74,36 @@ export function useReferenceValueResourceCounts(property?: ReferenceProperty, se
       [InternalProperty.ParentResource, InternalProperty.MediaLibraryV2].includes(property.id)
     );
   const criteria = JSON.stringify(referenceValueCountsCriteria(search));
-  const key = enabled ? `${property.pool}:${property.id}:${property.type}:${criteria}` : "";
+  const propertyKey = enabled ? `${property.pool}:${property.id}:${property.type}` : "";
+  const key = enabled ? `${propertyKey}:${criteria}` : "";
+  const [refreshRequest, setRefreshRequest] = useState({
+    revision: 0,
+    debouncePropertyKey: "",
+  });
+  const requestToken = useMemo(() => ({}), [key, refreshRequest.revision]);
   const [result, setResult] = useState<{
-    key: string;
+    propertyKey: string;
+    requestToken: object;
     counts?: ReferenceValueResourceCounts;
     error?: boolean;
   }>();
-  const [revision, setRevision] = useState(0);
   const source = useMemo(createResourceCountsSource, []);
 
   useEffect(() => {
     if (!enabled) return;
-    let timer: ReturnType<typeof setTimeout>;
-    const unsubscribe = resourceChangedChannel.subscribe(() => {
-      clearTimeout(timer);
-      timer = setTimeout(() => setRevision((value) => value + 1), 1000);
-    });
 
-    return () => {
-      unsubscribe();
-      clearTimeout(timer);
-    };
-  }, [enabled]);
+    return resourceChangedChannel.subscribe(() => {
+      // Mark the counts stale immediately; the request effect coalesces bursts.
+      setRefreshRequest(({ revision }) => ({
+        revision: revision + 1,
+        debouncePropertyKey: propertyKey,
+      }));
+    });
+  }, [enabled, propertyKey]);
 
   useEffect(() => {
+    // Never retain another property's counts, including across disabled periods.
+    setResult((previous) => (previous?.propertyKey === propertyKey ? previous : undefined));
     if (!enabled || !property) return;
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
@@ -107,36 +113,48 @@ export function useReferenceValueResourceCounts(property?: ReferenceProperty, se
 
         if (cancelled) return;
         if (response.isReady) {
-          setResult({ key, counts: response.counts });
+          setResult({ propertyKey, requestToken, counts: response.counts });
         } else {
           // Index warming must not be presented as zero resources.
           timer = setTimeout(run, 2000);
         }
       } catch {
-        if (!cancelled) setResult({ key, error: true });
+        if (!cancelled)
+          setResult((previous) => ({
+            propertyKey,
+            requestToken,
+            counts: previous?.propertyKey === propertyKey ? previous.counts : undefined,
+            error: true,
+          }));
       }
     };
 
-    timer = setTimeout(run, search ? 1000 : 0);
+    timer = setTimeout(
+      run,
+      search || refreshRequest.debouncePropertyKey === propertyKey ? 1000 : 0,
+    );
 
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [key, enabled, revision]);
+  }, [requestToken]);
 
-  const current = result?.key === key ? result : undefined;
+  const current = enabled && result?.propertyKey === propertyKey ? result : undefined;
+  const settled = current?.requestToken === requestToken;
+  const loading = enabled && !settled;
+  const error = enabled && settled && !!current?.error;
 
   useEffect(() => source.publish(current?.counts), [source, current?.counts]);
 
   return {
     source,
     counts: current?.counts,
-    error: current?.error ?? false,
-    loading: enabled && !current?.counts && !current?.error,
+    error,
+    loading,
+    stale: current?.counts !== undefined && (loading || error),
     refresh: () => {
-      setResult(undefined);
-      setRevision((value) => value + 1);
+      setRefreshRequest(({ revision }) => ({ revision: revision + 1, debouncePropertyKey: "" }));
     },
   };
 }

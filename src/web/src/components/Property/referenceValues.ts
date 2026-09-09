@@ -8,6 +8,27 @@ import { serializeStandardValue } from "@/components/StandardValue/helpers";
 export type ReferenceProperty = Pick<IProperty, "id" | "pool" | "type" | "name">;
 export type ReferenceValueResourceCounts = Record<string, number>;
 
+/** Reserve global count widths; never shrink slots while a filter stays mounted. */
+export function reserveReferenceValueCountWidths(
+  previous: Readonly<Record<string, number>>,
+  ...counts: (ReferenceValueResourceCounts | undefined)[]
+): Readonly<Record<string, number>> {
+  let widths = previous;
+
+  for (const values of counts) {
+    for (const [id, count] of Object.entries(values ?? {})) {
+      if (count <= 0) continue;
+      const width = count.toLocaleString().length + 2;
+
+      if (width <= (widths[id] ?? 0)) continue;
+      if (widths === previous) widths = { ...previous };
+      (widths as Record<string, number>)[id] = width;
+    }
+  }
+
+  return widths;
+}
+
 /** Only explicit global zeros mean an option has no referencing resources. */
 export function getUnreferencedValueIds(
   counts?: ReferenceValueResourceCounts,
