@@ -69,6 +69,22 @@ public class PendingPairingRequest
 
     public DateTime RequestedAt { get; set; }
     public DateTime ExpiresAt { get; set; }
+
+    /// <summary>
+    /// Set when an already-paired device approves this request. The credentials wait
+    /// here until the requesting device collects them, because that device has nothing
+    /// to authenticate with yet — its request id is the only thing it can present.
+    /// </summary>
+    public string? ApprovedDeviceId { get; set; }
+
+    /// <summary>base64url of the key generated at approval time. Handed over once, then gone.</summary>
+    public string? ApprovedKey { get; set; }
+
+    public string? ApprovedByDeviceId { get; set; }
+
+    public bool IsApproved => ApprovedKey != null;
+
+    public static readonly TimeSpan DefaultLifetime = TimeSpan.FromMinutes(10);
 }
 
 /// <summary>
