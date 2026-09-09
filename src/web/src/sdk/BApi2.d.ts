@@ -500,6 +500,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/aigc/artifacts/{id}/path": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetAigcArtifactPath"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/aigc/artifacts/{id}/open": {
         parameters: {
             query?: never;
@@ -14189,6 +14205,30 @@ export interface operations {
                     "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
                     "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
                     "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                };
+            };
+        };
+    };
+    GetAigcArtifactPath: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[System.String]"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[System.String]"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[System.String]"];
                 };
             };
         };

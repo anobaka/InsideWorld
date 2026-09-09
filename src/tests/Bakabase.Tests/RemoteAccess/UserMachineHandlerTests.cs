@@ -64,6 +64,9 @@ public class UserMachineHandlerTests
             Task.FromResult<Bakabase.Abstractions.Models.Domain.ResourceProfilePlayerOptions?>(null);
 
         public Task MarkPlayedAsync(int id, string item, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task<string?> GetAigcArtifactPathAsync(int id, CancellationToken ct = default) =>
+            Task.FromResult<string?>(null);
     }
 
     [TestInitialize]

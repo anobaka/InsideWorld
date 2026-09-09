@@ -81,6 +81,10 @@ public class ClientStartup
         services.TryAddSingleton<ILoopbackAddressProvider>(sp =>
             new LoopbackAddressProvider(ResolveListeningPort(sp.GetRequiredService<AppContext>())));
         services.AddSingleton<IUserMachineHandler, PlayItemHandler>();
+        services.AddSingleton<IUserMachineHandler, RecycleBinHandler>();
+        services.AddSingleton<IUserMachineHandler, FileIconHandler>();
+        services.AddSingleton<IUserMachineHandler, TampermonkeyInstallHandler>();
+        services.AddSingleton<IUserMachineHandler, OpenAigcArtifactHandler>();
         services.TryAddSingleton<UserMachineDispatcher>();
 
         services.AddRouting();

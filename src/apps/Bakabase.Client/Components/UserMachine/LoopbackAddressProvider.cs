@@ -15,4 +15,7 @@ public sealed class LoopbackAddressProvider(int port) : ILoopbackAddressProvider
 
     public string BuildRawFileUrl(string serverPath) =>
         $"{BaseAddress}/file/raw?fullname={Uri.EscapeDataString(serverPath)}";
+
+    public string BuildUrl(string pathAndQuery) =>
+        $"{BaseAddress}/{pathAndQuery.TrimStart('/')}";
 }

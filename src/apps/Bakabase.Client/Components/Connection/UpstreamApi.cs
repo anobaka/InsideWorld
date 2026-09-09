@@ -36,6 +36,9 @@ public interface IUpstreamApi
     /// than a missing history entry.
     /// </summary>
     Task MarkPlayedAsync(int id, string item, CancellationToken ct = default);
+
+    /// <summary>Where an AIGC artifact's file is, as the server sees it.</summary>
+    Task<string?> GetAigcArtifactPathAsync(int id, CancellationToken ct = default);
 }
 
 public sealed class UpstreamApi(HttpClient http, IUpstreamTarget target) : IUpstreamApi
@@ -79,6 +82,9 @@ public sealed class UpstreamApi(HttpClient http, IUpstreamTarget target) : IUpst
             // a successful play into a failure.
         }
     }
+
+    public async Task<string?> GetAigcArtifactPathAsync(int id, CancellationToken ct = default) =>
+        await ReadAsync<string>($"/aigc/artifacts/{id}/path", ct);
 
     private async Task<T?> ReadAsync<T>(string pathAndQuery, CancellationToken ct) where T : class
     {

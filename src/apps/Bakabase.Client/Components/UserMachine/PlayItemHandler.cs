@@ -167,4 +167,7 @@ public interface ILoopbackAddressProvider
     /// and the device key never leaves this process.
     /// </summary>
     string BuildRawFileUrl(string serverPath);
+
+    /// <summary>A URL on this client for any server path, e.g. a userscript to install.</summary>
+    string BuildUrl(string pathAndQuery);
 }

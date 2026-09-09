@@ -11,6 +11,7 @@ using Bootstrap.Models.ResponseModels;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using Bakabase.Modules.RemoteAccess.Abstractions.Components;
+using Bakabase.Service.Components.RemoteAccess;
 
 namespace Bakabase.Service.Controllers;
 
@@ -129,6 +130,20 @@ public class AigcController(
         await artifactService.DeleteArtifactAsync(id, ct);
         return BaseResponseBuilder.Ok;
     }
+
+    /// <summary>
+    /// Where an artifact's file is, as this server sees it.
+    /// </summary>
+    /// <remarks>
+    /// Read by the thin client, which opens the file itself and so has to translate the
+    /// path onto its own machine first. Opening is the user-machine action; knowing
+    /// where the file is is ordinary data the server owns.
+    /// </remarks>
+    [HttpGet("artifacts/{id:int}/path")]
+    [SwaggerOperation(OperationId = "GetAigcArtifactPath")]
+    [RemoteAccessible]
+    public async Task<SingletonResponse<string?>> GetArtifactPath(int id, CancellationToken ct) =>
+        new(await artifactService.GetArtifactAbsolutePathAsync(id, ct));
 
     [RunsOnUserMachine(Reason = "Opening the generated file happens on the machine you are sitting at.")]
     [HttpPost("artifacts/{id:int}/open")]

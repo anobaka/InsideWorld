@@ -9111,6 +9111,21 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * No description
      *
      * @tags Aigc
+     * @name GetAigcArtifactPath
+     * @request GET:/aigc/artifacts/{id}/path
+     */
+    getAigcArtifactPath: (id: number, params: RequestParams = {}) =>
+      this.request<BootstrapModelsResponseModelsSingletonResponse1SystemString, any>({
+        path: `/aigc/artifacts/${id}/path`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Aigc
      * @name OpenAigcArtifact
      * @request POST:/aigc/artifacts/{id}/open
      */

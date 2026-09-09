@@ -66,6 +66,9 @@ public class PlayItemHandlerTests
 
             return Task.CompletedTask;
         }
+
+        public Task<string?> GetAigcArtifactPathAsync(int id, CancellationToken ct = default) =>
+            Task.FromResult<string?>(null);
     }
 
     /// <summary>Stands in for this machine's installed players.</summary>
@@ -81,6 +84,8 @@ public class PlayItemHandlerTests
     {
         public string BuildRawFileUrl(string serverPath) =>
             $"http://127.0.0.1:34568/file/raw?fullname={Uri.EscapeDataString(serverPath)}";
+
+        public string BuildUrl(string pathAndQuery) => $"http://127.0.0.1:34568/{pathAndQuery.TrimStart('/')}";
     }
 
     [TestInitialize]
