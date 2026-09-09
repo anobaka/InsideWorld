@@ -1,7 +1,5 @@
-using System.Diagnostics;
 using System.Net;
 using Bakabase.Client.Components.Connection;
-using Bakabase.Infrastructures.Components.App;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -10,8 +8,8 @@ namespace Bakabase.Client.Components.UserMachine;
 /// <summary>
 /// Opens a file or folder in this machine's file manager, or reveals it in its parent.
 /// </summary>
-public sealed class OpenPathHandler(ActiveConnection connection, ILogger<OpenPathHandler> logger)
-    : PathHandlerBase(connection)
+public sealed class OpenPathHandler(ActiveConnection connection, IShellOpener shell,
+    ILogger<OpenPathHandler> logger) : PathHandlerBase(connection)
 {
     public override string RouteKey => "GET /tool/open";
 
@@ -29,7 +27,7 @@ public sealed class OpenPathHandler(ActiveConnection connection, ILogger<OpenPat
 
         try
         {
-            OsShell.Open(localPath, openInDirectory);
+            shell.Reveal(localPath, openInDirectory);
             await WriteAsync(context, HttpStatusCode.OK, null);
         }
         catch (Exception e)
@@ -51,8 +49,8 @@ public sealed class OpenPathHandler(ActiveConnection connection, ILogger<OpenPat
 /// that check, a mapping pointed at the wrong root turns "open this video" into starting
 /// whatever program happens to sit at the resulting path.
 /// </remarks>
-public sealed class OpenFileHandler(ActiveConnection connection, ILogger<OpenFileHandler> logger)
-    : PathHandlerBase(connection)
+public sealed class OpenFileHandler(ActiveConnection connection, IShellOpener shell,
+    ILogger<OpenFileHandler> logger) : PathHandlerBase(connection)
 {
     public override string RouteKey => "GET /tool/open-file";
 
@@ -76,7 +74,7 @@ public sealed class OpenFileHandler(ActiveConnection connection, ILogger<OpenFil
 
         try
         {
-            Process.Start(new ProcessStartInfo(localPath) {UseShellExecute = true});
+            shell.Launch(localPath);
             await WriteAsync(context, HttpStatusCode.OK, null);
         }
         catch (Exception e)

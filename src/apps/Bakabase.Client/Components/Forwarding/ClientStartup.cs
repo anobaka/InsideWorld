@@ -54,6 +54,10 @@ public class ClientStartup
             .AddHttpMessageHandler(sp => new DeviceSigningHandler(
                 sp.GetRequiredService<IClientCredentialProvider>(), sp.GetRequiredService<ServerClock>()));
 
+        services.AddHttpClient<IUpstreamApi, UpstreamApi>()
+            .AddHttpMessageHandler(sp => new DeviceSigningHandler(
+                sp.GetRequiredService<IClientCredentialProvider>(), sp.GetRequiredService<ServerClock>()));
+
         services.AddHttpClient<IServerConnector, ServerConnector>();
         services.AddHttpClient<IClientPairingService, ClientPairingService>();
 
@@ -65,9 +69,11 @@ public class ClientStartup
         // Actions whose effect lands on whatever machine runs them. Anything declared in
         // UserMachineRoutes without a handler here is answered as "this client is
         // behind" rather than forwarded to a server that would only refuse it.
+        services.TryAddSingleton<IShellOpener, OsShellOpener>();
         services.AddSingleton<IUserMachineHandler, OpenUrlHandler>();
         services.AddSingleton<IUserMachineHandler, OpenPathHandler>();
         services.AddSingleton<IUserMachineHandler, OpenFileHandler>();
+        services.AddSingleton<IUserMachineHandler, OpenResourceDirectoryHandler>();
         services.TryAddSingleton<UserMachineDispatcher>();
 
         services.AddRouting();

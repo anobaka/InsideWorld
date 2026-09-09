@@ -106,6 +106,33 @@ public sealed class ActiveConnection(IClientConnectionStore store) : IUpstreamTa
         }, ct);
 
     /// <summary>
+    /// Replaces where one server's libraries are on this machine.
+    /// </summary>
+    /// <remarks>
+    /// Per server, and set as a whole rather than appended to, because the settings page
+    /// edits the list as a table: a save that merged would leave a row the user deleted
+    /// still mapping.
+    /// </remarks>
+    public async Task<bool> SetPathMappingsAsync(string serverId, IEnumerable<ClientPathMapping> mappings,
+        CancellationToken ct = default) =>
+        await store.MutateAsync(data =>
+        {
+            var server = data.Servers.FirstOrDefault(s =>
+                string.Equals(s.ServerId, serverId, StringComparison.Ordinal));
+
+            if (server == null)
+            {
+                return false;
+            }
+
+            server.PathMappings = mappings
+                .Where(m => !string.IsNullOrWhiteSpace(m.ServerPath) && !string.IsNullOrWhiteSpace(m.LocalPath))
+                .ToList();
+
+            return true;
+        }, ct);
+
+    /// <summary>
     /// Notes that the server answered. Written at most once every
     /// <see cref="LastConnectedPersistenceInterval"/>, so an active session does not
     /// rewrite the file on every request.

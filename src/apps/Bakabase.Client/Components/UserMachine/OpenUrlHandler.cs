@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
@@ -23,7 +22,7 @@ namespace Bakabase.Client.Components.UserMachine;
 /// could treat as its own now crosses a machine boundary.
 /// </para>
 /// </remarks>
-public sealed class OpenUrlHandler(ILogger<OpenUrlHandler> logger) : IUserMachineHandler
+public sealed class OpenUrlHandler(IShellOpener shell, ILogger<OpenUrlHandler> logger) : IUserMachineHandler
 {
     public string RouteKey => "GET /gui/url";
 
@@ -41,7 +40,7 @@ public sealed class OpenUrlHandler(ILogger<OpenUrlHandler> logger) : IUserMachin
 
         try
         {
-            Process.Start(new ProcessStartInfo(url) {UseShellExecute = true});
+            shell.Launch(url);
             await WriteAsync(context, HttpStatusCode.OK, null);
         }
         catch (Exception e)

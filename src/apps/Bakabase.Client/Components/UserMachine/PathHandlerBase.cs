@@ -18,6 +18,9 @@ namespace Bakabase.Client.Components.UserMachine;
 /// </remarks>
 public abstract class PathHandlerBase(ActiveConnection connection) : IUserMachineHandler
 {
+    /// <summary>The server in use, and with it the mappings that apply to its paths.</summary>
+    protected ActiveConnection Connection => connection;
+
     public abstract string RouteKey { get; }
 
     public abstract Task HandleAsync(HttpContext context, IReadOnlyDictionary<string, string> routeValues);
