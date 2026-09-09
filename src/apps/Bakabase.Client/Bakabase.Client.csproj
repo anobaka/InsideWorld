@@ -13,6 +13,12 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <!--
+          The shipped executable is Bakabase.Client, and two assemblies cannot share a
+          name. The entry project takes it; this one carries the folder and namespaces
+          and gives the assembly a suffix.
+        -->
+        <AssemblyName>Bakabase.Client.Core</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>

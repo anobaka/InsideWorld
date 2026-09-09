@@ -1,0 +1,144 @@
+using System.Net;
+using Bakabase.Client.Abstractions;
+using Bakabase.Client.Components.Connection;
+using Bakabase.Infrastructures.Components.App;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
+using AppContext = Bakabase.Infrastructures.Components.App.AppContext;
+
+namespace Bakabase.Client.Components.Forwarding;
+
+/// <summary>
+/// The client's HTTP pipeline: a loopback listener the embedded browser talks to, which
+/// signs and relays to the real server.
+/// </summary>
+/// <remarks>
+/// <para>
+/// It exists so the frontend needs no notion of being remote. Everything it loads comes
+/// from one origin on this machine, which keeps browser storage, the cover-sharding
+/// trick and the hub connection working exactly as they do in the all-in-one — while the
+/// device key stays in this process and never reaches a page.
+/// </para>
+/// <para>
+/// Deliberately thin: no response caching, no compression, no buffering, no static
+/// files. Each of those would sit between a video stream and the player, and the one
+/// thing this layer must not do is get in the way of bytes it is only passing along.
+/// </para>
+/// </remarks>
+public class ClientStartup
+{
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddHttpForwarder();
+
+        services.TryAddSingleton<IClientDataDirectory>(sp =>
+            new AppServiceClientDataDirectory(sp.GetRequiredService<AppService>()));
+        services.TryAddSingleton<IClientConnectionStore, ClientConnectionStore>();
+        services.TryAddSingleton<ServerClock>();
+        services.TryAddSingleton<ActiveConnection>();
+        services.TryAddSingleton<IUpstreamTarget>(sp => sp.GetRequiredService<ActiveConnection>());
+        services.TryAddSingleton<IClientCredentialProvider>(sp => sp.GetRequiredService<ActiveConnection>());
+        services.TryAddSingleton<UpstreamTransformer>();
+        services.TryAddSingleton(_ => CreateUpstreamInvoker());
+        services.TryAddSingleton<UpstreamForwarder>();
+
+        // Its own signed client, for the few calls the client makes on its own behalf
+        // rather than on the browser's.
+        services.AddHttpClient<IUpstreamContextProbe, UpstreamContextProbe>()
+            .AddHttpMessageHandler(sp => new DeviceSigningHandler(
+                sp.GetRequiredService<IClientCredentialProvider>(), sp.GetRequiredService<ServerClock>()));
+
+        services.AddHttpClient<IServerConnector, ServerConnector>();
+        services.AddHttpClient<IClientPairingService, ClientPairingService>();
+
+        services.TryAddSingleton(sp => new ClientContextEndpoint(
+            sp.GetRequiredService<ActiveConnection>(),
+            sp.GetRequiredService<IUpstreamContextProbe>(),
+            AppService.CoreVersion.ToString()));
+
+        services.AddRouting();
+    }
+
+    public void Configure(IApplicationBuilder app, AppContext appContext, ILogger<ClientStartup> logger)
+    {
+        // The port comes from the address the host actually bound, not from a second
+        // copy of the same decision — the guard has to be right about it or it either
+        // refuses everything or protects nothing.
+        var port = ResolveListeningPort(appContext);
+        var guard = new LoopbackOriginGuard(port);
+
+        app.Use(async (context, next) =>
+        {
+            var verdict = guard.Evaluate(context.Request.Host.Value, context.Request.Headers.Origin.ToString(),
+                context.Request.Method);
+
+            if (verdict != LoopbackGuardVerdict.Allowed)
+            {
+                logger.LogWarning("Refused {Verdict} request {Method} {Path} (Host: {Host}, Origin: {Origin})",
+                    verdict, context.Request.Method, context.Request.Path, context.Request.Host.Value,
+                    context.Request.Headers.Origin.ToString());
+
+                context.Response.StatusCode = (int) HttpStatusCode.BadRequest;
+                context.Response.Headers["X-Bakabase-Client"] = ClientForwardingFailure.ForeignCaller.ToString();
+                await context.Response.WriteAsync("This address only serves Bakabase's own window.");
+                return;
+            }
+
+            await next();
+        });
+
+        app.UseRouting();
+
+        app.UseEndpoints(endpoints =>
+        {
+            // Answered here rather than upstream: the question is about the client, and
+            // only the client knows the answer.
+            endpoints.MapGet(ClientContextEndpoint.Path,
+                (HttpContext context, ClientContextEndpoint endpoint) => endpoint.WriteAsync(context));
+
+            // Everything else is the server's. Actions that have to run on this machine
+            // are still refused upstream, with a reason saying so, until the client
+            // learns to run them itself — so nothing silently happens on the wrong
+            // computer in the meantime.
+            endpoints.MapFallback((HttpContext context, UpstreamForwarder forwarder) =>
+                forwarder.ForwardAsync(context));
+        });
+    }
+
+    private static int ResolveListeningPort(AppContext appContext)
+    {
+        var address = appContext.ListeningAddresses?.FirstOrDefault();
+
+        if (address != null && Uri.TryCreate(address, UriKind.Absolute, out var parsed) && parsed.Port > 0)
+        {
+            return parsed.Port;
+        }
+
+        throw new InvalidOperationException(
+            "The client host reported no listening address, so the loopback guard cannot be armed.");
+    }
+
+    /// <summary>
+    /// The invoker YARP relays through. Everything that would normally be helpful is
+    /// turned off: automatic decompression would break a byte-range video, cookies would
+    /// mix the browser's with the client's, and following redirects would hide the
+    /// server's own answer.
+    /// </summary>
+    private static HttpMessageInvoker CreateUpstreamInvoker() =>
+        new(new SocketsHttpHandler
+        {
+            UseProxy = false,
+            AllowAutoRedirect = false,
+            AutomaticDecompression = DecompressionMethods.None,
+            UseCookies = false,
+            ConnectTimeout = TimeSpan.FromSeconds(15),
+            // Long-lived by design: this carries the hub connection and video streams.
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            ActivityHeadersPropagator = null
+        });
+}

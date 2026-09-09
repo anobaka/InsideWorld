@@ -246,6 +246,8 @@ src/apps/
   <span class="new">Bakabase.Client.App/</span>  客户端入口。引用 Shell + Client。<span class="new">程序集名 Bakabase.Client</span>
   Bakabase.Service/     <span class="have">不变</span>
   <span class="new">Bakabase.Client/</span>       转发层、连接、播放、路径映射（不含 Avalonia）
+                        <span class="warn">程序集名 Bakabase.Client.Core</span>：发布出去的可执行文件叫
+                        Bakabase.Client，两个程序集不能同名，入口拿走这个名字
 
 <span class="cm">── 两个 Program.cs ──────────────────────────────────────────</span>
 Bakabase/Program.cs                          <span class="have">[逐字不变]</span>
