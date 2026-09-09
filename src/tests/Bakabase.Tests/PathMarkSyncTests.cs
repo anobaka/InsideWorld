@@ -1778,9 +1778,8 @@ public class PathMarkSyncTests
     /// 对于引用类型（多选、单选、标签、多级），同步必须把文本转成选项并写入选项 id，
     /// 否则属性上一个选项都没有，资源筛选器里也就没有可选值。
     ///
-    /// 注意资源详情看起来是正常的：descriptor 读到无法匹配的 db value 会返回 null，
-    /// 但 Resource.Property.PropertyValue 会回退成原始 db value，于是原始文本被当成
-    /// 标签显示了出来 —— 这也是这个 bug 看起来只影响筛选器的原因。
+    /// 旧读取链路曾在 descriptor 无法匹配时回退成原始 db value，所以最初看起来
+    /// 只影响筛选器；移除该回退后，同一类表示错位也会直接显示成 UUID 标签。
     /// </summary>
     [TestMethod]
     public async Task PropertyMark_MultipleChoice_CreatesChoicesAndStoresChoiceIds()
