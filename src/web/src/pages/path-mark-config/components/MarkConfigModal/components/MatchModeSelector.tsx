@@ -38,7 +38,14 @@ const MatchModeSelector = ({ config, updateConfig, t, markType }: Props) => {
           orientation="horizontal"
           size="sm"
           value={String(config.matchMode)}
-          onValueChange={(value) => updateConfig({ matchMode: Number(value) })}
+          onValueChange={(value) => {
+            const matchMode = Number(value) as PathMatchMode;
+
+            updateConfig({
+              matchMode,
+              ...(matchMode === PathMatchMode.Layer && config.layer == null ? { layer: 0 } : {}),
+            });
+          }}
         >
           <Radio value={String(PathMatchMode.Layer)}>{t("pathMarkConfig.label.layer")}</Radio>
           <Radio value={String(PathMatchMode.Regex)}>{t("pathMarkConfig.label.regex")}</Radio>

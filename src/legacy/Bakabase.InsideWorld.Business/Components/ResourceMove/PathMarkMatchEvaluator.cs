@@ -1,6 +1,7 @@
 using System;
 using System.Text.RegularExpressions;
 using Bakabase.Abstractions.Extensions;
+using Bakabase.Abstractions.Models.Domain;
 using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.InsideWorld.Business.Extensions;
 
@@ -16,6 +17,13 @@ namespace Bakabase.InsideWorld.Business.Components.ResourceMove;
 /// </summary>
 internal static class PathMarkMatchEvaluator
 {
+    public static bool Matches(PropertyMarkConfig config, string markPath, string candidatePath)
+    {
+        var applicability = config.GetEffectiveApplicability();
+        return Matches(applicability.MatchMode, applicability.Layer, applicability.Regex,
+            applicability.ApplyScope, markPath, candidatePath);
+    }
+
     public static bool Matches(PathMatchMode matchMode, int? layer, string? regexPattern,
         PathMarkApplyScope applyScope, string markPath, string candidatePath)
     {

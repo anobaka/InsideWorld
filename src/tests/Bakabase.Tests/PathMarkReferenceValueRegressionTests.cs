@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Bakabase.Abstractions.Components.Tasks;
+using Bakabase.Abstractions.Extensions;
 using Bakabase.Abstractions.Models.Domain;
 using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Abstractions.Models.Dto;
@@ -22,6 +23,7 @@ using Bakabase.Modules.Property.Components.Properties.Multilevel;
 using Bakabase.Modules.Property.Components.Properties.Tags;
 using Bakabase.Modules.Property.Extensions;
 using Bakabase.Modules.StandardValue.Extensions;
+using Bakabase.Service.Controllers;
 using Bakabase.Service.Extensions;
 using Bakabase.Service.Models.Input;
 using Bakabase.TestKit.Utils;
@@ -550,6 +552,427 @@ public sealed class PathMarkReferenceValueRegressionTests
         preservedResourceValue.BizValue.Should().Be(guidLabel);
     }
 
+    [TestMethod]
+    public async Task Sync_V220SelectorlessPropertyMarks_ApplyToChildResource_AndAreImmediatelySearchable()
+    {
+        var avPath = Path.Combine(_testRoot, "TBD", "AV");
+        var resourcePath = Path.Combine(avPath, "Work-001");
+        Directory.CreateDirectory(resourcePath);
+
+        var pathMarkService = _sp.GetRequiredService<IPathMarkService>();
+        var resourceService = _sp.GetRequiredService<IResourceService>();
+        var propertyService = _sp.GetRequiredService<ICustomPropertyService>();
+        var propertyValueService = _sp.GetRequiredService<ICustomPropertyValueService>();
+        var effectService = _sp.GetRequiredService<IPathMarkEffectService>();
+
+        var statusProperty = await AddProperty("Status", PropertyType.SingleChoice);
+        var textProperty = await AddProperty("Status text", PropertyType.SingleLineText);
+        var legacyRegexProperty = await AddProperty("Legacy resource code", PropertyType.SingleLineText);
+        var migratedRegexProperty = await AddProperty("Migrated resource code", PropertyType.SingleLineText);
+        var modernRegexProperty = await AddProperty("Modern mark code", PropertyType.SingleLineText);
+
+        await pathMarkService.Add(new PathMark
+        {
+            Path = avPath,
+            Type = PathMarkType.Resource,
+            ConfigJson = JsonConvert.SerializeObject(new ResourceMarkConfig
+            {
+                MatchMode = PathMatchMode.Layer,
+                Layer = 1,
+                FsTypeFilter = PathFilterFsType.Directory,
+                ApplyScope = PathMarkApplyScope.MatchedOnly
+            }),
+            Priority = 0
+        });
+
+        // This is the exact shape emitted by V220: the applicability selector has
+        // matchMode=Layer, but both layer and regex are absent. ValueLayer=-1 means
+        // the parent of AV (TBD) is the dynamic business value.
+        var statusMark = await pathMarkService.Add(new PathMark
+        {
+            Path = avPath,
+            Type = PathMarkType.Property,
+            ConfigJson = BuildV220SelectorlessPropertyConfig(statusProperty.Id),
+            Priority = 100
+        });
+        var textMark = await pathMarkService.Add(new PathMark
+        {
+            Path = avPath,
+            Type = PathMarkType.Property,
+            ConfigJson = BuildV220SelectorlessPropertyConfig(textProperty.Id),
+            Priority = 100
+        });
+        var regexMark = await pathMarkService.Add(new PathMark
+        {
+            Path = avPath,
+            Type = PathMarkType.Property,
+            ConfigJson = BuildV220SelectorlessRegexPropertyConfig(legacyRegexProperty.Id, @"^(Work)-(?:\d+)$"),
+            Priority = 100
+        });
+        var migratedRegexMark = await pathMarkService.Add(new PathMark
+        {
+            Path = avPath,
+            Type = PathMarkType.Property,
+            ConfigJson = JsonConvert.SerializeObject(new PropertyMarkConfig
+            {
+                MatchMode = PathMatchMode.Layer,
+                Layer = 0,
+                Pool = PropertyPool.Custom,
+                PropertyId = migratedRegexProperty.Id,
+                ValueType = PropertyValueType.Dynamic,
+                ValueRegex = @"^(Work)-(?:\d+)$",
+                ValueRegexMatchesResourcePath = true,
+                ApplyScope = PathMarkApplyScope.MatchedAndSubdirectories
+            }),
+            Priority = 100
+        });
+        var modernRegexMark = await pathMarkService.Add(new PathMark
+        {
+            Path = avPath,
+            Type = PathMarkType.Property,
+            ConfigJson = JsonConvert.SerializeObject(new PropertyMarkConfig
+            {
+                MatchMode = PathMatchMode.Layer,
+                Layer = 0,
+                Pool = PropertyPool.Custom,
+                PropertyId = modernRegexProperty.Id,
+                ValueType = PropertyValueType.Dynamic,
+                ValueRegex = "^(AV)$",
+                ApplyScope = PathMarkApplyScope.MatchedAndSubdirectories
+            }),
+            Priority = 100
+        });
+
+        await SyncPendingResources();
+
+        var resource = (await resourceService.GetAll()).Should()
+            .ContainSingle(r => r.Path == resourcePath).Subject;
+        resource.Status.Should().Be(ResourceStatus.Active);
+
+        // Keep the index ready before property sync. Assertions below intentionally run
+        // immediately after SyncMarks returns, without a rebuild, delay, or polling.
+        await RebuildSearchIndex();
+        await SyncPendingPropertyMarks();
+
+        var statusEffect = (await effectService.GetPropertyEffectsByMarkId(statusMark.Id))
+            .Should().ContainSingle().Subject;
+        statusEffect.ResourceId.Should().Be(resource.Id);
+        statusEffect.Value.Should().Be("TBD",
+            "path-mark effects store the extracted business label, not a reference id");
+
+        var textEffect = (await effectService.GetPropertyEffectsByMarkId(textMark.Id))
+            .Should().ContainSingle().Subject;
+        textEffect.ResourceId.Should().Be(resource.Id);
+        textEffect.Value.Should().Be("TBD",
+            "selector compatibility must apply before property-type conversion");
+
+        var regexEffect = (await effectService.GetPropertyEffectsByMarkId(regexMark.Id))
+            .Should().ContainSingle().Subject;
+        regexEffect.ResourceId.Should().Be(resource.Id);
+        regexEffect.Value.Should().Be("Work",
+            "a V220 regex locator extracts each resource's path relative to the old media-library root");
+        (await effectService.GetPropertyEffectsByMarkId(migratedRegexMark.Id))
+            .Should().ContainSingle().Which.Value.Should().Be("Work",
+                "the corrected V220 representation must retain resource-relative regex semantics");
+        (await effectService.GetPropertyEffectsByMarkId(modernRegexMark.Id))
+            .Should().ContainSingle().Which.Value.Should().Be("AV",
+                "modern property regex extraction remains relative to the mark directory");
+
+        var refreshedStatus = await propertyService.GetByKey(statusProperty.Id);
+        var choice = refreshedStatus.Options.Should().BeOfType<SingleChoicePropertyOptions>()
+            .Subject.Choices.Should().ContainSingle().Subject;
+        choice.Label.Should().Be("TBD");
+        Guid.TryParse(choice.Value, out _).Should().BeTrue("reference values are stored as generated UUIDs");
+        choice.Value.Should().NotBe(choice.Label);
+
+        var statusValue = (await propertyValueService.GetAllDbModels(v =>
+                v.ResourceId == resource.Id &&
+                v.PropertyId == statusProperty.Id &&
+                v.Scope == (int) PropertyValueScope.Synchronization))
+            .Should().ContainSingle().Subject;
+        statusValue.Value.Should().Be(choice.Value);
+
+        var textValue = (await propertyValueService.GetAllDbModels(v =>
+                v.ResourceId == resource.Id &&
+                v.PropertyId == textProperty.Id &&
+                v.Scope == (int) PropertyValueScope.Synchronization))
+            .Should().ContainSingle().Subject;
+        textValue.Value.Should().Be("TBD");
+
+        var regexValue = (await propertyValueService.GetAllDbModels(v =>
+                v.ResourceId == resource.Id &&
+                v.PropertyId == legacyRegexProperty.Id &&
+                v.Scope == (int) PropertyValueScope.Synchronization))
+            .Should().ContainSingle().Subject;
+        regexValue.Value.Should().Be("Work");
+        (await propertyValueService.GetAllDbModels(v =>
+                v.ResourceId == resource.Id &&
+                v.PropertyId == migratedRegexProperty.Id &&
+                v.Scope == (int) PropertyValueScope.Synchronization))
+            .Should().ContainSingle().Which.Value.Should().Be("Work");
+        (await propertyValueService.GetAllDbModels(v =>
+                v.ResourceId == resource.Id &&
+                v.PropertyId == modernRegexProperty.Id &&
+                v.Scope == (int) PropertyValueScope.Synchronization))
+            .Should().ContainSingle().Which.Value.Should().Be("AV");
+
+        await AssertSingleChoiceInSearchMatches(resource.Id, statusProperty.Id, choice.Value);
+
+        var countResponse = await ActivatorUtilities.CreateInstance<PropertyController>(_sp)
+            .GetValueResourceCounts(PropertyPool.Custom, statusProperty.Id, new ResourceSearchInputModel());
+        countResponse.Data.Should().NotBeNull();
+        countResponse.Data!.IsReady.Should().BeTrue();
+        countResponse.Data.Counts.Should().ContainKey(choice.Value);
+        countResponse.Data.Counts[choice.Value].Should().Be(1);
+    }
+
+    [TestMethod]
+    public async Task Sync_LegacyPropertyFallback_DoesNotExpandExplicitPropertyOrMediaLibrarySelectors()
+    {
+        var avPath = Path.Combine(_testRoot, "TBD", "AV");
+        var resourcePath = Path.Combine(avPath, "Work-001");
+        Directory.CreateDirectory(resourcePath);
+
+        var pathMarkService = _sp.GetRequiredService<IPathMarkService>();
+        var resourceService = _sp.GetRequiredService<IResourceService>();
+        var propertyValueService = _sp.GetRequiredService<ICustomPropertyValueService>();
+        var effectService = _sp.GetRequiredService<IPathMarkEffectService>();
+        var mediaLibraryService = _sp.GetRequiredService<IMediaLibraryV2Service>();
+        var mappingService = _sp.GetRequiredService<IMediaLibraryResourceMappingService>();
+
+        var explicitProperty = await AddProperty("Explicit current-layer property", PropertyType.SingleLineText);
+        var fixedSelectorlessProperty = await AddProperty("Malformed fixed property", PropertyType.SingleLineText);
+        var dynamicSelectorlessProperty = await AddProperty(
+            "Malformed dynamic property without extractor", PropertyType.SingleLineText);
+        var explicitMissingExtractorProperty = await AddProperty(
+            "Explicit dynamic property without extractor", PropertyType.SingleLineText);
+        var migratedRegexProperty = await AddProperty("Migrated regex property", PropertyType.SingleLineText);
+        var currentDirectoryLibrary = await mediaLibraryService.Add(
+            new MediaLibraryV2AddOrPutInputModel("Current directory only", []));
+        var childDirectoryLibrary = await mediaLibraryService.Add(
+            new MediaLibraryV2AddOrPutInputModel("Direct children", []));
+        var selectorlessLibrary = await mediaLibraryService.Add(
+            new MediaLibraryV2AddOrPutInputModel("Malformed selectorless media library", []));
+
+        await pathMarkService.Add(new PathMark
+        {
+            Path = avPath,
+            Type = PathMarkType.Resource,
+            ConfigJson = JsonConvert.SerializeObject(new ResourceMarkConfig
+            {
+                MatchMode = PathMatchMode.Layer,
+                Layer = 1,
+                FsTypeFilter = PathFilterFsType.Directory,
+                ApplyScope = PathMarkApplyScope.MatchedOnly
+            }),
+            Priority = 0
+        });
+
+        var explicitPropertyMark = await pathMarkService.Add(new PathMark
+        {
+            Path = avPath,
+            Type = PathMarkType.Property,
+            ConfigJson = JsonConvert.SerializeObject(new PropertyMarkConfig
+            {
+                MatchMode = PathMatchMode.Layer,
+                Layer = 0,
+                Pool = PropertyPool.Custom,
+                PropertyId = explicitProperty.Id,
+                ValueType = PropertyValueType.Fixed,
+                FixedValue = "must-not-reach-child",
+                ApplyScope = PathMarkApplyScope.MatchedOnly
+            }),
+            Priority = 100
+        });
+        var fixedSelectorlessPropertyMark = await pathMarkService.Add(new PathMark
+        {
+            Path = avPath,
+            Type = PathMarkType.Property,
+            ConfigJson = BuildSelectorlessFixedPropertyConfig(
+                fixedSelectorlessProperty.Id, "must-not-use-legacy-fallback"),
+            Priority = 100
+        });
+        var dynamicSelectorlessPropertyMark = await pathMarkService.Add(new PathMark
+        {
+            Path = avPath,
+            Type = PathMarkType.Property,
+            ConfigJson = BuildSelectorlessDynamicPropertyWithoutExtractorConfig(dynamicSelectorlessProperty.Id),
+            Priority = 100
+        });
+        var explicitMissingExtractorMark = await pathMarkService.Add(new PathMark
+        {
+            Path = avPath,
+            Type = PathMarkType.Property,
+            ConfigJson = JsonConvert.SerializeObject(new PropertyMarkConfig
+            {
+                MatchMode = PathMatchMode.Layer,
+                Layer = 0,
+                Pool = PropertyPool.Custom,
+                PropertyId = explicitMissingExtractorProperty.Id,
+                ValueType = PropertyValueType.Dynamic,
+                ApplyScope = PathMarkApplyScope.MatchedAndSubdirectories
+            }),
+            Priority = 100
+        });
+        var migratedRegexMark = await pathMarkService.Add(new PathMark
+        {
+            Path = avPath,
+            Type = PathMarkType.Property,
+            ConfigJson = JsonConvert.SerializeObject(new PropertyMarkConfig
+            {
+                MatchMode = PathMatchMode.Layer,
+                Layer = 0,
+                Pool = PropertyPool.Custom,
+                PropertyId = migratedRegexProperty.Id,
+                ValueType = PropertyValueType.Dynamic,
+                ValueRegex = @"^(Work)",
+                ValueRegexMatchesResourcePath = true,
+                ApplyScope = PathMarkApplyScope.MatchedAndSubdirectories
+            }),
+            Priority = 100
+        });
+        var currentDirectoryMediaMark = await pathMarkService.Add(new PathMark
+        {
+            Path = avPath,
+            Type = PathMarkType.MediaLibrary,
+            ConfigJson = JsonConvert.SerializeObject(new MediaLibraryMarkConfig
+            {
+                MatchMode = PathMatchMode.Layer,
+                Layer = 0,
+                ValueType = PropertyValueType.Fixed,
+                MediaLibraryId = currentDirectoryLibrary.Id,
+                ApplyScope = PathMarkApplyScope.MatchedOnly
+            }),
+            Priority = 100
+        });
+        var childDirectoryMediaMark = await pathMarkService.Add(new PathMark
+        {
+            Path = avPath,
+            Type = PathMarkType.MediaLibrary,
+            ConfigJson = JsonConvert.SerializeObject(new MediaLibraryMarkConfig
+            {
+                MatchMode = PathMatchMode.Layer,
+                Layer = 1,
+                ValueType = PropertyValueType.Fixed,
+                MediaLibraryId = childDirectoryLibrary.Id,
+                ApplyScope = PathMarkApplyScope.MatchedOnly
+            }),
+            Priority = 100
+        });
+        var selectorlessMediaMark = await pathMarkService.Add(new PathMark
+        {
+            Path = avPath,
+            Type = PathMarkType.MediaLibrary,
+            ConfigJson = BuildSelectorlessFixedMediaLibraryConfig(selectorlessLibrary.Id),
+            Priority = 100
+        });
+
+        await SyncPendingResources();
+        await SyncPendingPropertyMarks();
+
+        var resource = (await resourceService.GetAll()).Should()
+            .ContainSingle(r => r.Path == resourcePath).Subject;
+        (await effectService.GetPropertyEffectsByMarkId(migratedRegexMark.Id))
+            .Should().ContainSingle().Which.Value.Should().Be("Work");
+        (await propertyValueService.GetAllDbModels(v =>
+                v.ResourceId == resource.Id && v.PropertyId == migratedRegexProperty.Id))
+            .Should().ContainSingle().Which.Value.Should().Be("Work");
+
+        var markWithClearedRegex = (await pathMarkService.Get(migratedRegexMark.Id))!;
+        markWithClearedRegex.ConfigJson = JsonConvert.SerializeObject(new PropertyMarkConfig
+        {
+            MatchMode = PathMatchMode.Layer,
+            Layer = 0,
+            Pool = PropertyPool.Custom,
+            PropertyId = migratedRegexProperty.Id,
+            ValueType = PropertyValueType.Dynamic,
+            ValueLayer = -1,
+            ValueRegex = string.Empty,
+            ValueRegexMatchesResourcePath = true,
+            ApplyScope = PathMarkApplyScope.MatchedAndSubdirectories
+        });
+        await pathMarkService.Update(markWithClearedRegex);
+        await SyncPendingPropertyMarks();
+
+        (await effectService.GetPropertyEffectsByMarkId(explicitPropertyMark.Id)).Should().BeEmpty(
+            "an explicit layer=0 + MatchedOnly property mark must not expand to child resources");
+        (await propertyValueService.GetAllDbModels(v =>
+                v.ResourceId == resource.Id && v.PropertyId == explicitProperty.Id))
+            .Should().BeEmpty();
+        (await effectService.GetPropertyEffectsByMarkId(fixedSelectorlessPropertyMark.Id)).Should().BeEmpty(
+            "only V220 dynamic locators qualify for selectorless compatibility");
+        (await propertyValueService.GetAllDbModels(v =>
+                v.ResourceId == resource.Id && v.PropertyId == fixedSelectorlessProperty.Id))
+            .Should().BeEmpty();
+        (await effectService.GetPropertyEffectsByMarkId(dynamicSelectorlessPropertyMark.Id)).Should().BeEmpty(
+            "a dynamic mark without a value layer or value regex is malformed, not a V220 locator");
+        (await propertyValueService.GetAllDbModels(v =>
+                v.ResourceId == resource.Id && v.PropertyId == dynamicSelectorlessProperty.Id))
+            .Should().BeEmpty();
+        (await effectService.GetPropertyEffectsByMarkId(explicitMissingExtractorMark.Id)).Should().BeEmpty(
+            "a missing dynamic extractor must not silently fall back to layer zero");
+        (await propertyValueService.GetAllDbModels(v =>
+                v.ResourceId == resource.Id && v.PropertyId == explicitMissingExtractorProperty.Id))
+            .Should().BeEmpty();
+        (await effectService.GetPropertyEffectsByMarkId(migratedRegexMark.Id)).Should().BeEmpty(
+            "a cleared migrated regex must not silently fall back to its stale value layer");
+        (await propertyValueService.GetAllDbModels(v =>
+                v.ResourceId == resource.Id && v.PropertyId == migratedRegexProperty.Id))
+            .Should().BeEmpty();
+
+        (await effectService.GetPropertyEffectsByMarkId(currentDirectoryMediaMark.Id)).Should().BeEmpty(
+            "legacy compatibility is property-specific and must not change media-library selectors");
+        (await effectService.GetPropertyEffectsByMarkId(selectorlessMediaMark.Id)).Should().BeEmpty(
+            "a selectorless media-library mark is malformed, not a V220 property locator");
+        var childMediaEffect = (await effectService.GetPropertyEffectsByMarkId(childDirectoryMediaMark.Id))
+            .Should().ContainSingle().Subject;
+        childMediaEffect.ResourceId.Should().Be(resource.Id);
+        childMediaEffect.Value.Should().Be(childDirectoryLibrary.Id.ToString());
+
+        var mediaLibraryIds = await mappingService.GetMediaLibraryIdsByResourceId(resource.Id);
+        mediaLibraryIds.Should().BeEquivalentTo([childDirectoryLibrary.Id]);
+    }
+
+    [TestMethod]
+    public void LegacyWildcardApplicability_RequiresTheV220MatchModeAndExtractorPair()
+    {
+        var baseConfig = new PropertyMarkConfig
+        {
+            MatchMode = PathMatchMode.Layer,
+            Pool = PropertyPool.Custom,
+            PropertyId = 1,
+            ValueType = PropertyValueType.Dynamic,
+            ValueLayer = -1,
+            ApplyScope = PathMarkApplyScope.MatchedOnly
+        };
+
+        baseConfig.UsesLegacyV220WildcardApplicability().Should().BeTrue();
+
+        new PropertyMarkConfig
+        {
+            MatchMode = (PathMatchMode) 0,
+            ValueType = PropertyValueType.Dynamic,
+            ValueLayer = -1,
+            ApplyScope = PathMarkApplyScope.MatchedOnly
+        }.UsesLegacyV220WildcardApplicability().Should().BeFalse();
+
+        new PropertyMarkConfig
+        {
+            MatchMode = PathMatchMode.Regex,
+            ValueType = PropertyValueType.Dynamic,
+            ValueLayer = -1,
+            ApplyScope = PathMarkApplyScope.MatchedOnly
+        }.UsesLegacyV220WildcardApplicability().Should().BeFalse();
+
+        new PropertyMarkConfig
+        {
+            MatchMode = PathMatchMode.Layer,
+            ValueType = PropertyValueType.Dynamic,
+            ValueRegex = "^(AV)$",
+            ApplyScope = PathMarkApplyScope.MatchedOnly
+        }.UsesLegacyV220WildcardApplicability().Should().BeFalse();
+    }
+
     private async Task<CustomProperty> AddProperty(string name, PropertyType type, object? options = null)
     {
         return await _sp.GetRequiredService<ICustomPropertyService>().Add(new CustomPropertyAddOrPutDto
@@ -603,6 +1026,45 @@ public sealed class PathMarkReferenceValueRegressionTests
             FixedValue = fixedValue,
             ApplyScope = PathMarkApplyScope.MatchedOnly
         });
+    }
+
+    private static string BuildV220SelectorlessPropertyConfig(int propertyId)
+    {
+        return $"{{\"matchMode\":1,\"pool\":4,\"propertyId\":{propertyId},\"valueType\":2," +
+               "\"valueLayer\":-1,\"applyScope\":1}";
+    }
+
+    private static string BuildV220SelectorlessRegexPropertyConfig(int propertyId, string valueRegex)
+    {
+        return $"{{\"matchMode\":2,\"pool\":4,\"propertyId\":{propertyId},\"valueType\":2," +
+               $"\"valueRegex\":{JsonConvert.SerializeObject(valueRegex)},\"applyScope\":1}}";
+    }
+
+    private static string BuildSelectorlessFixedPropertyConfig(int propertyId, string fixedValue)
+    {
+        return $"{{\"matchMode\":1,\"pool\":4,\"propertyId\":{propertyId},\"valueType\":1," +
+               $"\"fixedValue\":{JsonConvert.SerializeObject(fixedValue)},\"applyScope\":1}}";
+    }
+
+    private static string BuildSelectorlessDynamicPropertyWithoutExtractorConfig(int propertyId)
+    {
+        return $"{{\"matchMode\":1,\"pool\":4,\"propertyId\":{propertyId},\"valueType\":2," +
+               "\"applyScope\":1}";
+    }
+
+    private static string BuildSelectorlessFixedMediaLibraryConfig(int mediaLibraryId)
+    {
+        return $"{{\"matchMode\":1,\"valueType\":1,\"mediaLibraryId\":{mediaLibraryId},\"applyScope\":1}}";
+    }
+
+    private async Task SyncPendingResources()
+    {
+        await _sp.GetRequiredService<ResourceSyncService>().SyncResources(
+            ResourceSource.PathMark,
+            null,
+            null,
+            new PauseToken(),
+            CancellationToken.None);
     }
 
     private async Task SyncPendingPropertyMarks()

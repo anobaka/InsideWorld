@@ -15,6 +15,9 @@ using Bakabase.Abstractions.Services;
 using Bakabase.InsideWorld.Business.Components.Configurations.Models.Domain;
 using Bakabase.InsideWorld.Business.Components.Gui;
 using Bakabase.Modules.Property.Abstractions.Services;
+using Bakabase.Modules.Property.Extensions;
+using Bakabase.Modules.StandardValue.Abstractions.Services;
+using Bakabase.Modules.StandardValue.Extensions;
 using Bootstrap.Components.Configuration.Abstractions;
 using Bootstrap.Components.DependencyInjection;
 using Bootstrap.Components.Orm;
@@ -521,6 +524,9 @@ public class PathMarkService<TDbContext>(
         object? fixedValue = null;
         int? valueLayer = null;
         string? valueRegex = null;
+        PropertyMarkConfig? propertyConfig = null;
+        CustomProperty? propertyValueDefinition = null;
+        IStandardValueService? propertyValueConverter = null;
 
         switch (request.Type)
         {
@@ -542,14 +548,20 @@ public class PathMarkService<TDbContext>(
                 var config = JsonConvert.DeserializeObject<PropertyMarkConfig>(request.ConfigJson);
                 if (config == null) return results;
 
-                matchMode = config.MatchMode;
-                layer = config.Layer;
-                regex = config.Regex;
-                applyScope = config.ApplyScope;
+                propertyConfig = config;
+                (matchMode, layer, regex, applyScope) = config.GetEffectiveApplicability();
                 valueType = config.ValueType;
                 fixedValue = config.FixedValue;
                 valueLayer = config.ValueLayer;
                 valueRegex = config.ValueRegex;
+                if (config.Pool == PropertyPool.Custom &&
+                    config.UsesResourceRelativeValueRegex() &&
+                    !string.IsNullOrEmpty(config.ValueRegex))
+                {
+                    propertyValueDefinition = await serviceProvider.GetRequiredService<ICustomPropertyService>()
+                        .GetByKey(config.PropertyId);
+                    propertyValueConverter = serviceProvider.GetRequiredService<IStandardValueService>();
+                }
                 break;
             }
             case PathMarkType.MediaLibrary:
@@ -574,6 +586,15 @@ public class PathMarkService<TDbContext>(
         // Step 3: Get matched paths using common logic
         var matchedPaths = GetMatchingPaths(rootPath, matchMode, layer, regex, ct, applyScope, fsTypeFilter,
             extensions);
+        if (request.Type == PathMarkType.Property && matchMode == PathMatchMode.Layer && layer != -1 &&
+            applyScope == PathMarkApplyScope.MatchedAndSubdirectories)
+        {
+            foreach (var match in matchedPaths.Where(Directory.Exists).ToList())
+            {
+                ct.ThrowIfCancellationRequested();
+                matchedPaths.AddRange(GetAllEntries(match, fsTypeFilter, extensions, ct));
+            }
+        }
 
         var rootSegments = rootPath.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar },
             StringSplitOptions.RemoveEmptyEntries);
@@ -592,9 +613,14 @@ public class PathMarkService<TDbContext>(
                 (result.ResourceLayerIndex, result.ResourceSegmentName) = CalculateResourceLayerInfo(
                     rootPath, matchedPath, rootSegments, matchedSegments, matchMode, layer, regex);
             }
-            else if (request.Type == PathMarkType.Property || request.Type == PathMarkType.MediaLibrary)
+            else if (request.Type == PathMarkType.Property)
             {
-                // For Property and MediaLibrary: calculate value
+                result.PropertyValue = await CalculatePropertyMarkValue(
+                    rootPath, matchedPath, rootSegments, matchedSegments,
+                    propertyConfig!, propertyValueDefinition, propertyValueConverter);
+            }
+            else if (request.Type == PathMarkType.MediaLibrary)
+            {
                 result.PropertyValue = CalculatePropertyValue(
                     rootPath, matchedPath, rootSegments, matchedSegments,
                     valueType, fixedValue, valueLayer, valueRegex);
@@ -750,7 +776,87 @@ public class PathMarkService<TDbContext>(
     }
 
     /// <summary>
-    /// Calculate property value for Property and MediaLibrary mark types
+    /// Calculate a property-mark value independently from its applicability selector.
+    /// </summary>
+    private async Task<string?> CalculatePropertyMarkValue(
+        string rootPath, string matchedPath, string[] rootSegments, string[] matchedSegments,
+        PropertyMarkConfig config, CustomProperty? customProperty, IStandardValueService? valueConverter)
+    {
+        if (config.ValueType == PropertyValueType.Fixed)
+        {
+            return config.FixedValue?.ToString();
+        }
+
+        if (config.ValueType != PropertyValueType.Dynamic)
+        {
+            return null;
+        }
+
+        if (config.UsesResourceRelativeValueRegex())
+        {
+            if (string.IsNullOrEmpty(config.ValueRegex) || customProperty == null || valueConverter == null)
+            {
+                return null;
+            }
+
+            var relativePath = matchedPath.Length <= rootPath.Length
+                ? string.Empty
+                : matchedPath[rootPath.Length..]
+                    .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var values = Regex.Matches(relativePath, config.ValueRegex)
+                .SelectMany(match => match.Groups.Values.Skip(1).Select(group => group.Value))
+                .Where(value => !string.IsNullOrEmpty(value))
+                .Distinct()
+                .ToList();
+            var bizValue = values.Count == 0
+                ? null
+                : await valueConverter.Convert(
+                    values, StandardValueType.ListString, customProperty.Type.GetBizValueType());
+
+            return bizValue?.SerializeAsStandardValue(customProperty.Type.GetBizValueType());
+        }
+
+        // Modern property regex extraction is intentionally mark-relative. It remains independent
+        // from the applicability selector, which may use a layer at the same time.
+        if (!string.IsNullOrEmpty(config.ValueRegex))
+        {
+            var markDirectoryName = Path.GetFileName(rootPath);
+            var regex = new Regex(config.ValueRegex, RegexOptions.IgnoreCase);
+            var match = regex.Match(markDirectoryName);
+            if (match.Success && match.Groups.Count > 1)
+            {
+                return match.Groups[1].Value;
+            }
+            if (match.Success)
+            {
+                return match.Value;
+            }
+
+            return null;
+        }
+
+        if (!config.ValueLayer.HasValue)
+        {
+            return null;
+        }
+
+        var layer = config.ValueLayer.Value;
+        if (layer == 0)
+        {
+            return Path.GetFileName(rootPath);
+        }
+
+        // Positive = forward from root, negative = backward
+        var targetIndex = rootSegments.Length + layer - 1;
+        if (targetIndex >= 0 && targetIndex < matchedSegments.Length)
+        {
+            return matchedSegments[targetIndex];
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Calculate media-library mark values using the existing extraction semantics.
     /// </summary>
     private string? CalculatePropertyValue(
         string rootPath, string matchedPath, string[] rootSegments, string[] matchedSegments,

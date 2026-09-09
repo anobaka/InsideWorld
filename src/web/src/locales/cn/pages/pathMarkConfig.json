@@ -102,6 +102,8 @@
   "pathMarkConfig.tip.zeroEqualsMatchedItem": "0 = 匹配项",
   "pathMarkConfig.label.valueRegex": "值正则表达式",
   "pathMarkConfig.tip.regexExample": "例如：\\\\[(.+?)\\\\]",
+  "pathMarkConfig.error.valueLayerRequired": "请选择用于提取属性值的层级",
+  "pathMarkConfig.error.valueRegexRequired": "请输入用于提取属性值的正则表达式",
   "pathMarkConfig.label.mediaLibrarySettings": "媒体库设置",
   "pathMarkConfig.label.targetMediaLibrary": "目标媒体库",
   "pathMarkConfig.empty.noMediaLibrarySelected": "未选择媒体库",

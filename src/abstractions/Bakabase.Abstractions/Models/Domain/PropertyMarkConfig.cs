@@ -67,6 +67,12 @@ public class PropertyMarkConfig
     public string? ValueRegex { get; set; }
 
     /// <summary>
+    /// 是否对每个资源相对于标记路径的路径应用 ValueRegex。
+    /// 仅用于保留 V220 之前媒体库模板中正则属性提取器的语义；新建标记默认为 false。
+    /// </summary>
+    public bool ValueRegexMatchesResourcePath { get; set; }
+
+    /// <summary>
     /// 应用范围
     /// MatchedOnly = 仅对匹配的路径生效
     /// MatchedAndSubdirectories = 对匹配的路径及其所有子目录生效

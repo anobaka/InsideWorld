@@ -21,6 +21,7 @@ using Bakabase.Modules.Property.Abstractions.Models.Db;
 using Bakabase.Modules.Property.Abstractions.Services;
 using Bakabase.Modules.Property.Extensions;
 using Bakabase.Modules.StandardValue;
+using Bakabase.Modules.StandardValue.Abstractions.Services;
 using Bakabase.Modules.StandardValue.Extensions;
 using Bootstrap.Components.Configuration.Abstractions;
 using CustomProperty = Bakabase.Abstractions.Models.Domain.CustomProperty;
@@ -52,6 +53,7 @@ public class PathMarkSyncService : ScopedService
     private readonly IMediaLibraryV2Service _mediaLibraryV2Service;
     private readonly ICustomPropertyValueService _customPropertyValueService;
     private readonly ICustomPropertyService _customPropertyService;
+    private readonly IStandardValueService _standardValueService;
     private readonly IPathMarkEffectService _effectService;
     private readonly IResourceSourceLinkService _sourceLinkService;
     private readonly IBakabaseLocalizer _localizer;
@@ -66,6 +68,7 @@ public class PathMarkSyncService : ScopedService
         IMediaLibraryV2Service mediaLibraryV2Service,
         ICustomPropertyValueService customPropertyValueService,
         ICustomPropertyService customPropertyService,
+        IStandardValueService standardValueService,
         IPathMarkEffectService effectService,
         IResourceSourceLinkService sourceLinkService,
         IBakabaseLocalizer localizer,
@@ -78,6 +81,7 @@ public class PathMarkSyncService : ScopedService
         _mediaLibraryV2Service = mediaLibraryV2Service;
         _customPropertyValueService = customPropertyValueService;
         _customPropertyService = customPropertyService;
+        _standardValueService = standardValueService;
         _effectService = effectService;
         _sourceLinkService = sourceLinkService;
         _localizer = localizer;
@@ -335,40 +339,56 @@ public class PathMarkSyncService : ScopedService
     /// <summary>
     /// Collects property effects from a mark WITHOUT setting any property values.
     /// </summary>
-    private Task CollectPropertyEffects(PathMark mark, SyncContext ctx, CancellationToken ct)
+    private async Task CollectPropertyEffects(PathMark mark, SyncContext ctx, CancellationToken ct)
     {
         var config = JsonConvert.DeserializeObject<PropertyMarkConfig>(mark.ConfigJson);
-        if (config == null) return Task.CompletedTask;
+        if (config == null) return;
 
         // Only support Custom properties for now
-        if (config.Pool != PropertyPool.Custom) return Task.CompletedTask;
+        if (config.Pool != PropertyPool.Custom) return;
+
+        if (config.ValueType == PropertyValueType.Dynamic &&
+            ((config.ValueRegexMatchesResourcePath && string.IsNullOrEmpty(config.ValueRegex)) ||
+             (string.IsNullOrEmpty(config.ValueRegex) && !config.ValueLayer.HasValue)))
+        {
+            // An incomplete regex extractor must never silently turn into layer 0. Besides being
+            // surprising for modern marks, that fallback could overwrite an entire migrated tree.
+            return;
+        }
+
+        // V220 regex locators operated on each resource-relative path and converted all
+        // capture groups to the target property's business value type.
+        CustomProperty? valueProperty = null;
+        if (config.UsesResourceRelativeValueRegex())
+        {
+            valueProperty = await _customPropertyService.GetByKey(config.PropertyId);
+        }
 
         // Use cached resources - match ALL resources under this mark's path
         var matchedResources = ctx.AllResources
             .Where(r => ctx.IsPathUnderParent(r.Path, mark.Path))
             .ToList();
 
-        if (matchedResources.Count == 0) return Task.CompletedTask;
+        if (matchedResources.Count == 0) return;
 
         var filteredResources = FilterResourcesByMarkConfig(matchedResources, mark.Path, config, ctx);
-        if (filteredResources.Count == 0) return Task.CompletedTask;
+        if (filteredResources.Count == 0) return;
 
         var valueType = config.ValueType;
-        var valueLayer = config.ValueLayer;
-        var needsPerResourceExtraction =
-            valueType == PropertyValueType.Dynamic && valueLayer.HasValue && valueLayer.Value > 0;
+        var needsPerResourceExtraction = valueType == PropertyValueType.Dynamic &&
+                                         PropertyDynamicValueDependsOnResource(config);
 
         // For fixed values or dynamic values with valueLayer <= 0, extract once
         object? sharedValue = null;
         if (valueType == PropertyValueType.Fixed)
         {
             sharedValue = config.FixedValue;
-            if (sharedValue == null) return Task.CompletedTask;
+            if (sharedValue == null) return;
         }
         else if (!needsPerResourceExtraction)
         {
-            sharedValue = ExtractDynamicValue(mark.Path, null, config.MatchMode, valueLayer, config.ValueRegex, ctx);
-            if (sharedValue == null) return Task.CompletedTask;
+            sharedValue = ExtractPropertyDynamicValue(mark.Path, null, config, valueProperty, ctx);
+            if (sharedValue == null) return;
         }
 
         foreach (var resource in filteredResources)
@@ -378,8 +398,10 @@ public class PathMarkSyncService : ScopedService
             object? value;
             if (needsPerResourceExtraction)
             {
-                value = ExtractDynamicValue(mark.Path, resource.Path, config.MatchMode, valueLayer, config.ValueRegex,
-                    ctx);
+                value = config.UsesResourceRelativeValueRegex()
+                    ? await ExtractResourceRelativeRegexValueAsync(
+                        mark.Path, resource.Path, config.ValueRegex!, valueProperty!, ctx)
+                    : ExtractPropertyDynamicValue(mark.Path, resource.Path, config, valueProperty, ctx);
                 if (value == null) continue;
             }
             else
@@ -402,7 +424,6 @@ public class PathMarkSyncService : ScopedService
             ctx.CurrentPropertyEffectKeys.Add((mark.Id, config.Pool, config.PropertyId, resource.Id));
         }
 
-        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -709,7 +730,7 @@ public class PathMarkSyncService : ScopedService
             // This is the same applicability/extraction path used by CollectPropertyEffects.
             // If it succeeds there is no representation guess: persist exactly what a fresh
             // collection would have produced.
-            if (TryExtractCurrentBusinessValue(effect, ctx, out var extractedBizValue))
+            if (TryExtractCurrentBusinessValue(effect, customProperty, ctx, out var extractedBizValue))
             {
                 if (effect.Value != extractedBizValue)
                 {
@@ -751,6 +772,7 @@ public class PathMarkSyncService : ScopedService
     /// </summary>
     private bool TryExtractCurrentBusinessValue(
         PropertyMarkEffect effect,
+        CustomProperty customProperty,
         SyncContext ctx,
         out string businessValue)
     {
@@ -786,9 +808,10 @@ public class PathMarkSyncService : ScopedService
             }
             else
             {
-                var resourcePath = config.ValueLayer is > 0 ? resource.Path : null;
-                extractedValue = ExtractDynamicValue(mark.Path, resourcePath, config.MatchMode,
-                    config.ValueLayer, config.ValueRegex, ctx);
+                var resourcePath = PropertyDynamicValueDependsOnResource(config)
+                    ? resource.Path
+                    : null;
+                extractedValue = ExtractPropertyDynamicValue(mark.Path, resourcePath, config, customProperty, ctx);
             }
 
             if (extractedValue == null)
@@ -1190,7 +1213,96 @@ public class PathMarkSyncService : ScopedService
     }
 
     /// <summary>
-    /// Unified dynamic value extraction method for both Property and MediaLibrary marks.
+    /// Positive layer extraction and legacy resource-relative regex extraction need the concrete
+    /// resource path; mark-relative layers and modern regex extraction are shared by every resource.
+    /// </summary>
+    private static bool PropertyDynamicValueDependsOnResource(PropertyMarkConfig config) =>
+        config.UsesResourceRelativeValueRegex() ||
+        (string.IsNullOrEmpty(config.ValueRegex) && config.ValueLayer is > 0);
+
+    /// <summary>
+    /// Property value extraction has its own selector. It must not inherit the applicability
+    /// MatchMode: a property may cover resources by layer while extracting a regex capture,
+    /// which is also the explicit shape emitted by the corrected V220 converter.
+    /// </summary>
+    private object? ExtractPropertyDynamicValue(
+        string markPath,
+        string? resourcePath,
+        PropertyMarkConfig config,
+        CustomProperty? customProperty,
+        SyncContext ctx) =>
+        config.UsesResourceRelativeValueRegex()
+            ? string.IsNullOrEmpty(config.ValueRegex) || customProperty == null
+                ? null
+                : ExtractResourceRelativeRegexValue(markPath, resourcePath, config.ValueRegex, customProperty, ctx)
+            : !string.IsNullOrEmpty(config.ValueRegex)
+                ? ExtractMarkDirectoryRegexValue(markPath, config.ValueRegex, ctx)
+                : config.ValueLayer.HasValue
+                    ? ExtractDynamicValue(markPath, resourcePath, PathMatchMode.Layer, config.ValueLayer, null, ctx)
+                    : null;
+
+    private static object? ExtractResourceRelativeRegexValue(
+        string markPath,
+        string? resourcePath,
+        string valueRegex,
+        CustomProperty customProperty,
+        SyncContext ctx)
+    {
+        var values = ExtractResourceRelativeRegexCaptures(markPath, resourcePath, valueRegex, ctx);
+
+        if (values.Count == 0) return null;
+
+        var bizValueType = customProperty.Type.GetBizValueType();
+        return StandardValueSystem.Convert(values, StandardValueType.ListString, bizValueType)
+            ?.SerializeAsStandardValue(bizValueType);
+    }
+
+    private async Task<object?> ExtractResourceRelativeRegexValueAsync(
+        string markPath,
+        string? resourcePath,
+        string valueRegex,
+        CustomProperty customProperty,
+        SyncContext ctx)
+    {
+        var values = ExtractResourceRelativeRegexCaptures(markPath, resourcePath, valueRegex, ctx);
+        if (values.Count == 0) return null;
+
+        var bizValueType = customProperty.Type.GetBizValueType();
+        return (await _standardValueService.Convert(values, StandardValueType.ListString, bizValueType))
+            ?.SerializeAsStandardValue(bizValueType);
+    }
+
+    private static List<string> ExtractResourceRelativeRegexCaptures(
+        string markPath,
+        string? resourcePath,
+        string valueRegex,
+        SyncContext ctx)
+    {
+        if (string.IsNullOrEmpty(resourcePath)) return [];
+
+        var normalizedMarkPath = ctx.GetStandardizedPath(markPath);
+        var normalizedResourcePath = ctx.GetStandardizedPath(resourcePath);
+        var relativePath = normalizedResourcePath.Length <= normalizedMarkPath.Length
+            ? string.Empty
+            : normalizedResourcePath[normalizedMarkPath.Length..]
+                .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return Regex.Matches(relativePath, valueRegex)
+            .SelectMany(match => match.Groups.Values.Skip(1).Select(group => group.Value))
+            .Where(value => !string.IsNullOrEmpty(value))
+            .Distinct()
+            .ToList();
+    }
+
+    private static string? ExtractMarkDirectoryRegexValue(string markPath, string valueRegex, SyncContext ctx)
+    {
+        var markDirectoryName = Path.GetFileName(ctx.GetStandardizedPath(markPath));
+        var match = ctx.GetOrCreateRegex(valueRegex).Match(markDirectoryName);
+        return match.Success ? match.Groups.Count > 1 ? match.Groups[1].Value : match.Value : null;
+    }
+
+    /// <summary>
+    /// Low-level extractor retained for media-library marks, whose existing behavior selects
+    /// the extraction strategy through their applicability MatchMode.
     /// </summary>
     private string? ExtractDynamicValue(
         string markPath,
@@ -1355,10 +1467,7 @@ public class PathMarkSyncService : ScopedService
 
         if (config is PropertyMarkConfig pmc)
         {
-            matchMode = pmc.MatchMode;
-            layer = pmc.Layer;
-            regex = pmc.Regex;
-            applyScope = pmc.ApplyScope;
+            (matchMode, layer, regex, applyScope) = pmc.GetEffectiveApplicability();
         }
         else if (config is MediaLibraryMarkConfig mlmc)
         {

@@ -5,6 +5,8 @@ import type { BakabaseAbstractionsModelsDomainPathMark } from "@/sdk/Api";
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
+import { normalizeLegacyPropertyMarkConfig } from "./MarkConfigModal/utils";
+
 import {
   PathMarkType,
   PropertyValueType,
@@ -26,11 +28,14 @@ const MarkDescription = ({ mark, className, label, priority }: Props) => {
 
   const config = useMemo(() => {
     try {
-      return JSON.parse(mark.configJson || "{}");
+      return normalizeLegacyPropertyMarkConfig(
+        JSON.parse(mark.configJson || "{}"),
+        mark.type as PathMarkType,
+      );
     } catch {
       return {};
     }
-  }, [mark.configJson]);
+  }, [mark.configJson, mark.type]);
 
   const getDescription = (): string => {
     try {
@@ -66,9 +71,11 @@ const MarkDescription = ({ mark, className, label, priority }: Props) => {
       const includesSubdirs = applyScope === PathMarkApplyScope.MatchedAndSubdirectories;
 
       if (matchMode === PathMatchMode.Layer) {
-        const layer = config.layer ?? 0;
+        const layer = config.layer;
 
-        if (layer === 0) {
+        if (layer === undefined || layer === null) {
+          parts.push(t("markDescription.invalid"));
+        } else if (layer === 0) {
           if (includesSubdirs) {
             parts.push(t("markDescription.layer.currentAndSubdirs"));
           } else {
@@ -88,13 +95,19 @@ const MarkDescription = ({ mark, className, label, priority }: Props) => {
           );
         }
       } else if (matchMode === PathMatchMode.Regex) {
-        const regex = config.regex ?? "";
-        const regexText = t("markDescription.regex", { regex });
+        const regex = config.regex;
 
-        parts.push(includesSubdirs ? `${regexText}${t("markDescription.andSubdirs")}` : regexText);
-      } else if (includesSubdirs) {
-        // No match mode but has subdirs scope
-        parts.push(t("markDescription.layer.currentAndSubdirs"));
+        if (regex) {
+          const regexText = t("markDescription.regex", { regex });
+
+          parts.push(
+            includesSubdirs ? `${regexText}${t("markDescription.andSubdirs")}` : regexText,
+          );
+        } else {
+          parts.push(t("markDescription.invalid"));
+        }
+      } else {
+        parts.push(t("markDescription.invalid"));
       }
 
       // For property marks - value info
