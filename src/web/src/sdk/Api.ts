@@ -717,6 +717,7 @@ export interface BakabaseAbstractionsModelsDomainResource {
   fileName?: string;
   directory?: string;
   path?: string;
+  hasLocalPath: boolean;
   displayName?: string;
   /** @format int32 */
   parentId?: number;

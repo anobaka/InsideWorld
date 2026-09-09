@@ -7413,6 +7413,7 @@ export interface components {
             readonly fileName?: string;
             readonly directory?: string;
             path?: string;
+            readonly hasLocalPath: boolean;
             displayName?: string;
             /** Format: int32 */
             parentId?: number;

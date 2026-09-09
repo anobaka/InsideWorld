@@ -475,7 +475,7 @@ public class FileSystemResolver : IResourceResolver
     {
         var items = new List<PlayableItem>();
 
-        if (string.IsNullOrEmpty(resource.Path))
+        if (!resource.HasLocalPath)
             return items;
 
         // For file resources, the file itself is playable
@@ -487,7 +487,7 @@ public class FileSystemResolver : IResourceResolver
                 {
                     Origin = DataOrigin.FileSystem,
                     Key = resource.Path.StandardizePath()!,
-                    DisplayName = Path.GetFileName(resource.Path)
+                    DisplayName = Path.GetFileName(resource.Path!)
                 });
             }
             return items;

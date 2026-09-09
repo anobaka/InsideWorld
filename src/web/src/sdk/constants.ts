@@ -1676,7 +1676,8 @@ export enum InternalProperty {
   MediaLibraryV2 = 24,
   MediaLibraryV2Multi = 25,
   Source = 26,
-  HealthScore = 28
+  HealthScore = 28,
+  HasLocalPath = 30
 }
 
 export const internalProperties = [
@@ -1692,7 +1693,8 @@ export const internalProperties = [
   { label: 'MediaLibraryV2', value: InternalProperty.MediaLibraryV2 },
   { label: 'MediaLibraryV2Multi', value: InternalProperty.MediaLibraryV2Multi },
   { label: 'Source', value: InternalProperty.Source },
-  { label: 'HealthScore', value: InternalProperty.HealthScore }
+  { label: 'HealthScore', value: InternalProperty.HealthScore },
+  { label: 'HasLocalPath', value: InternalProperty.HasLocalPath }
 ] as const;
 
 export const InternalPropertyLabel: Record<InternalProperty, string> = {
@@ -1708,7 +1710,8 @@ export const InternalPropertyLabel: Record<InternalProperty, string> = {
   [InternalProperty.MediaLibraryV2]: 'MediaLibraryV2',
   [InternalProperty.MediaLibraryV2Multi]: 'MediaLibraryV2Multi',
   [InternalProperty.Source]: 'Source',
-  [InternalProperty.HealthScore]: 'HealthScore'
+  [InternalProperty.HealthScore]: 'HealthScore',
+  [InternalProperty.HasLocalPath]: 'HasLocalPath'
 };
 
 export enum MediaLibraryTemplateAdditionalItem {
@@ -2689,7 +2692,8 @@ export enum ResourceProperty {
   MediaLibraryV2Multi = 25,
   Source = 26,
   Name = 27,
-  HealthScore = 28
+  HealthScore = 28,
+  HasLocalPath = 30
 }
 
 export const resourceProperties = [
@@ -2710,7 +2714,8 @@ export const resourceProperties = [
   { label: 'MediaLibraryV2Multi', value: ResourceProperty.MediaLibraryV2Multi },
   { label: 'Source', value: ResourceProperty.Source },
   { label: 'Name', value: ResourceProperty.Name },
-  { label: 'HealthScore', value: ResourceProperty.HealthScore }
+  { label: 'HealthScore', value: ResourceProperty.HealthScore },
+  { label: 'HasLocalPath', value: ResourceProperty.HasLocalPath }
 ] as const;
 
 export const ResourcePropertyLabel: Record<ResourceProperty, string> = {
@@ -2731,7 +2736,8 @@ export const ResourcePropertyLabel: Record<ResourceProperty, string> = {
   [ResourceProperty.MediaLibraryV2Multi]: 'MediaLibraryV2Multi',
   [ResourceProperty.Source]: 'Source',
   [ResourceProperty.Name]: 'Name',
-  [ResourceProperty.HealthScore]: 'HealthScore'
+  [ResourceProperty.HealthScore]: 'HealthScore',
+  [ResourceProperty.HasLocalPath]: 'HasLocalPath'
 };
 
 export enum SearchableReservedProperty {
@@ -2746,7 +2752,8 @@ export enum SearchableReservedProperty {
   MediaLibraryV2 = 24,
   MediaLibraryV2Multi = 25,
   Source = 26,
-  Name = 27
+  Name = 27,
+  HasLocalPath = 30
 }
 
 export const searchableReservedProperties = [
@@ -2761,7 +2768,8 @@ export const searchableReservedProperties = [
   { label: 'MediaLibraryV2', value: SearchableReservedProperty.MediaLibraryV2 },
   { label: 'MediaLibraryV2Multi', value: SearchableReservedProperty.MediaLibraryV2Multi },
   { label: 'Source', value: SearchableReservedProperty.Source },
-  { label: 'Name', value: SearchableReservedProperty.Name }
+  { label: 'Name', value: SearchableReservedProperty.Name },
+  { label: 'HasLocalPath', value: SearchableReservedProperty.HasLocalPath }
 ] as const;
 
 export const SearchableReservedPropertyLabel: Record<SearchableReservedProperty, string> = {
@@ -2776,7 +2784,8 @@ export const SearchableReservedPropertyLabel: Record<SearchableReservedProperty,
   [SearchableReservedProperty.MediaLibraryV2]: 'MediaLibraryV2',
   [SearchableReservedProperty.MediaLibraryV2Multi]: 'MediaLibraryV2Multi',
   [SearchableReservedProperty.Source]: 'Source',
-  [SearchableReservedProperty.Name]: 'Name'
+  [SearchableReservedProperty.Name]: 'Name',
+  [SearchableReservedProperty.HasLocalPath]: 'HasLocalPath'
 };
 
 export enum StartupPage {
