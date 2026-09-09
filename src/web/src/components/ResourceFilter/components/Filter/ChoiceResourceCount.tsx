@@ -1,32 +1,30 @@
+import type {
+  ChoiceResourceCountsState,
+  ChoiceResourceCountsStore,
+} from "../../hooks/choiceResourceCountsStore";
+
 import { useTranslation } from "react-i18next";
 
-import {
-  useResourceCountsPresentation,
-  type ResourceCountsPresentation,
-  type ResourceCountsSource,
-} from "@/hooks/useResourceCountsSource";
+import { useChoiceResourceCounts } from "../../hooks/choiceResourceCountsStore";
 
-function getStatusKey(presentation?: ResourceCountsPresentation) {
-  if (presentation?.error) {
-    return presentation.stale
+function getStatusKey(state: ChoiceResourceCountsState) {
+  if (state.error) {
+    return state.stale
       ? "property.reference.countsUpdateFailed"
       : "property.reference.countsLoadFailed";
   }
 
-  if (presentation?.loading || presentation?.stale) {
-    return presentation.stale
-      ? "property.reference.updatingCounts"
-      : "property.reference.loadingCounts";
+  if (state.loading || state.stale) {
+    return state.stale ? "property.reference.updatingCounts" : "property.reference.loadingCounts";
   }
 }
 
-export function ReferenceValueCountsStatus({ source }: { source?: ResourceCountsSource }) {
+export function ChoiceResourceCountsStatus({ store }: { store: ChoiceResourceCountsStore }) {
   const { t } = useTranslation();
-  const presentation = useResourceCountsPresentation(source);
+  const state = useChoiceResourceCounts(store);
 
-  if (!presentation) return null;
-
-  const statusKey = getStatusKey(presentation);
+  if (state.counts === undefined && !state.loading && !state.error) return null;
+  const statusKey = getStatusKey(state);
   const message = statusKey ? t(statusKey) : undefined;
 
   return (
@@ -43,28 +41,27 @@ export function ReferenceValueCountsStatus({ source }: { source?: ResourceCounts
   );
 }
 
-export default function ReferenceValueCount({
-  count,
-  source,
-  valueId,
+/** A read-only extra label supplied by ResourceFilter, including its own live subscription. */
+export default function ChoiceResourceCount({
+  choiceId,
+  store,
 }: {
-  count?: number;
-  source?: ResourceCountsSource;
-  valueId?: string;
+  choiceId: string;
+  store: ChoiceResourceCountsStore;
 }) {
   const { t } = useTranslation();
-  const presentation = useResourceCountsPresentation(source);
-  const reservedWidth = valueId === undefined ? undefined : presentation?.reservedWidths?.[valueId];
+  const state = useChoiceResourceCounts(store);
+  const count = state.counts?.[choiceId];
+  const reservedWidth = state.reservedWidths?.[choiceId];
   const hasCount = count !== undefined && count > 0;
 
   if (!hasCount && reservedWidth === undefined) return null;
-
-  const statusKey = getStatusKey(presentation);
+  const statusKey = getStatusKey(state);
 
   return (
     <span
       aria-hidden={!hasCount}
-      className={`ml-1 text-xs tabular-nums ${presentation?.loading || presentation?.stale ? "opacity-40" : "opacity-70"}`}
+      className={`ml-1 text-xs tabular-nums ${state.loading || state.stale ? "opacity-40" : "opacity-70"}`}
       style={
         reservedWidth === undefined
           ? undefined

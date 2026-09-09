@@ -9,7 +9,6 @@ import {
   referenceValueCountsCriteria,
   useReferenceValueResourceCounts,
 } from "../useReferenceValueResourceCounts";
-import { createResourceCountsSource, useResourceCountsSource } from "../useResourceCountsSource";
 
 import { InternalProperty, PropertyPool, PropertyType, SearchOperation } from "@/sdk/constants";
 import { resourceChangedChannel } from "@/services/ResourceChangedChannel";
@@ -152,7 +151,7 @@ describe("reference resource counts", () => {
     expect(latest.loading).toBe(false);
   });
 
-  it("retains the last counts and mounted source throughout filter debounce and loading", async () => {
+  it("retains the last counts throughout filter debounce and loading", async () => {
     let resolveNext: (value: unknown) => void = () => {};
 
     request.mockResolvedValueOnce({ data: { isReady: true, counts: { choice: 12, unused: 0 } } });
@@ -166,9 +165,6 @@ describe("reference resource counts", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
     });
-    const source = latest.source;
-    const snapshots: unknown[] = [];
-    const unsubscribe = source.subscribe(() => snapshots.push(source.getSnapshot()));
 
     await act(async () =>
       root.render(<Probe search={{ page: 1, pageSize: 50, keyword: "next" }} />),
@@ -179,8 +175,6 @@ describe("reference resource counts", () => {
       error: false,
       stale: true,
     });
-    expect(latest.source).toBe(source);
-    expect(source.getSnapshot()).toEqual({ choice: 12, unused: 0 });
     await act(async () => {
       await vi.advanceTimersByTimeAsync(999);
     });
@@ -189,7 +183,7 @@ describe("reference resource counts", () => {
       await vi.advanceTimersByTimeAsync(1);
     });
     expect(latest.loading).toBe(true);
-    expect(snapshots).toEqual([]);
+    expect(latest.counts).toEqual({ choice: 12, unused: 0 });
     await act(async () =>
       resolveNext({ data: { isReady: true, counts: { choice: 2, unused: 0 } } }),
     );
@@ -199,8 +193,6 @@ describe("reference resource counts", () => {
       error: false,
       stale: false,
     });
-    expect(snapshots).toEqual([{ choice: 2, unused: 0 }]);
-    unsubscribe();
   });
 
   it("starts a new loading cycle when reverting to previously successful criteria", async () => {
@@ -263,7 +255,6 @@ describe("reference resource counts", () => {
       error: true,
       stale: true,
     });
-    expect(latest.source.getSnapshot()).toEqual({ choice: 8, unused: 0 });
     await act(async () => latest.refresh());
     expect(latest).toMatchObject({ loading: true, error: false, stale: true });
     await act(async () => {
@@ -291,7 +282,6 @@ describe("reference resource counts", () => {
     });
     await act(async () => root.render(<Probe reference={nextProperty} />));
     expect(latest.counts).toBeUndefined();
-    expect(latest.source.getSnapshot()).toBeUndefined();
     expect(latest.loading).toBe(true);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
@@ -299,7 +289,6 @@ describe("reference resource counts", () => {
     expect(latest.counts).toEqual({ other: 3 });
     await act(async () => root.render(<Probe />));
     expect(latest.counts).toBeUndefined();
-    expect(latest.source.getSnapshot()).toBeUndefined();
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
     });
@@ -320,7 +309,6 @@ describe("reference resource counts", () => {
     );
     expect(latest).toMatchObject({ loading: false, error: false, stale: false });
     expect(latest.counts).toBeUndefined();
-    expect(latest.source.getSnapshot()).toBeUndefined();
     await act(async () => {
       resourceChangedChannel.publish([2]);
       await vi.advanceTimersByTimeAsync(2000);
@@ -346,7 +334,6 @@ describe("reference resource counts", () => {
     });
     await act(async () => resourceChangedChannel.publish([1]));
     expect(latest).toMatchObject({ counts: { choice: 0 }, loading: true, stale: true });
-    expect(latest.source.getSnapshot()).toEqual({ choice: 0 });
     await act(async () => {
       await vi.advanceTimersByTimeAsync(500);
       resourceChangedChannel.publish([2]);
@@ -456,23 +443,5 @@ describe("reference resource counts", () => {
     });
     expect(request).toHaveBeenCalledTimes(2);
     expect(latest.counts).toEqual({ choice: 3 });
-  });
-
-  it("updates an already-mounted selector source when counts arrive or filters change", async () => {
-    const source = createResourceCountsSource();
-
-    function Selector() {
-      const counts = useResourceCountsSource(source);
-
-      return <span>{counts?.choice ?? "pending"}</span>;
-    }
-    await act(async () => root.render(<Selector />));
-    expect(container.textContent).toBe("pending");
-    await act(async () => source.publish({ choice: 8 }));
-    expect(container.textContent).toBe("8");
-    await act(async () => source.publish(undefined));
-    expect(container.textContent).toBe("pending");
-    await act(async () => source.publish({ choice: 0 }));
-    expect(container.textContent).toBe("0");
   });
 });

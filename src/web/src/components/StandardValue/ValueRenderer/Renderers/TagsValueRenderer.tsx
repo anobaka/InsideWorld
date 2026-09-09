@@ -1,6 +1,6 @@
 "use client";
 
-import type { ResourceCountsSource } from "@/hooks/useResourceCountsSource";
+import type { OptionDisplayProps } from "../../OptionDisplayProps";
 import type { ValueRendererProps } from "../models";
 import type { TagValue } from "../../models";
 
@@ -21,20 +21,18 @@ import SelectableChip from "@/components/StandardValue/ValueRenderer/Renderers/c
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
 import { Button } from "@/components/bakaui";
 import { buildLogger } from "@/components/utils";
-import ReferenceValueCount from "@/components/Property/components/ReferenceValueCount";
 import { useFilterOptionsThreshold } from "@/hooks/useFilterOptionsThreshold";
 
 type TagData = TagValue & { value: string; color?: string };
 
-type TagsValueRendererProps = ValueRendererProps<TagValue[], string[]> & {
-  getDataSource?: () => Promise<TagData[]>;
-  valueAttributes?: { color?: string }[];
-  size?: "sm" | "md" | "lg";
-  resourceCounts?: Record<string, number>;
-  resourceCountsSource?: ResourceCountsSource;
-  disabledKeys?: ReadonlySet<string>;
-  disabledKeysSource?: DisabledChoiceKeysSource;
-};
+type TagsValueRendererProps = ValueRendererProps<TagValue[], string[]> &
+  OptionDisplayProps & {
+    getDataSource?: () => Promise<TagData[]>;
+    valueAttributes?: { color?: string }[];
+    size?: "sm" | "md" | "lg";
+    disabledKeys?: ReadonlySet<string>;
+    disabledKeysSource?: DisabledChoiceKeysSource;
+  };
 
 const log = buildLogger("TagsValueRenderer");
 const TagsValueRenderer = (props: TagsValueRendererProps) => {
@@ -47,8 +45,8 @@ const TagsValueRenderer = (props: TagsValueRendererProps) => {
     variant,
     getDataSource,
     valueAttributes,
-    resourceCounts,
-    resourceCountsSource,
+    renderOptionExtra,
+    optionsDescription,
     disabledKeys: initialDisabledKeys,
     disabledKeysSource,
     size,
@@ -116,8 +114,8 @@ const TagsValueRenderer = (props: TagsValueRendererProps) => {
   const openFullEditor = editor
     ? () => {
         createPortal(TagsValueEditor, {
-          resourceCounts,
-          resourceCountsSource,
+          renderOptionExtra,
+          optionsDescription,
           disabledKeys,
           disabledKeysSource,
           value: editor?.value,
@@ -188,11 +186,7 @@ const TagsValueRenderer = (props: TagsValueRendererProps) => {
             label={
               <>
                 {getTagLabel(item)}
-                <ReferenceValueCount
-                  count={resourceCounts?.[item.value]}
-                  source={resourceCountsSource}
-                  valueId={item.value}
-                />
+                {renderOptionExtra?.({ value: item.value, label: getTagLabel(item) })}
               </>
             }
             size={size}

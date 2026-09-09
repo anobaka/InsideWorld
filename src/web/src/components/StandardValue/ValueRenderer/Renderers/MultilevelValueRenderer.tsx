@@ -1,7 +1,7 @@
 "use client";
 "use strict";
 
-import type { ResourceCountsSource } from "@/hooks/useResourceCountsSource";
+import type { OptionDisplayProps } from "../../OptionDisplayProps";
 import type { ValueRendererProps } from "../models";
 import type { MultilevelData } from "../../models";
 
@@ -23,7 +23,6 @@ import NotSet, {
 import NoChoicesAvailable from "@/components/StandardValue/ValueRenderer/Renderers/components/NoChoicesAvailable";
 import SelectableChip from "@/components/StandardValue/ValueRenderer/Renderers/components/SelectableChip";
 import { buildLogger } from "@/components/utils";
-import ReferenceValueCount from "@/components/Property/components/ReferenceValueCount";
 import { useFilterOptionsThreshold } from "@/hooks/useFilterOptionsThreshold";
 
 type FlattenedOption = {
@@ -32,16 +31,15 @@ type FlattenedOption = {
   color?: string;
 };
 
-type MultilevelValueRendererProps = ValueRendererProps<string[][], string[]> & {
-  multiple?: boolean;
-  getDataSource?: () => Promise<MultilevelData<string>[]>;
-  valueAttributes?: { color?: string }[][];
-  size?: "sm" | "md" | "lg";
-  resourceCounts?: Record<string, number>;
-  resourceCountsSource?: ResourceCountsSource;
-  disabledKeys?: ReadonlySet<string>;
-  disabledKeysSource?: DisabledChoiceKeysSource;
-};
+type MultilevelValueRendererProps = ValueRendererProps<string[][], string[]> &
+  OptionDisplayProps & {
+    multiple?: boolean;
+    getDataSource?: () => Promise<MultilevelData<string>[]>;
+    valueAttributes?: { color?: string }[][];
+    size?: "sm" | "md" | "lg";
+    disabledKeys?: ReadonlySet<string>;
+    disabledKeysSource?: DisabledChoiceKeysSource;
+  };
 
 const log = buildLogger("MultilevelValueRenderer");
 
@@ -53,8 +51,8 @@ const MultilevelValueRenderer = ({
   multiple,
   defaultEditing = false,
   valueAttributes,
-  resourceCounts,
-  resourceCountsSource,
+  renderOptionExtra,
+  optionsDescription,
   disabledKeys: initialDisabledKeys,
   disabledKeysSource,
   size,
@@ -113,8 +111,8 @@ const MultilevelValueRenderer = ({
   const openFullEditor = editor
     ? () => {
         createPortal(MultilevelValueEditor<string>, {
-          resourceCounts,
-          resourceCountsSource,
+          renderOptionExtra,
+          optionsDescription,
           disabledKeys,
           disabledKeysSource,
           getDataSource: getDataSource,
@@ -229,11 +227,7 @@ const MultilevelValueRenderer = ({
             label={
               <>
                 {opt.label}
-                <ReferenceValueCount
-                  count={resourceCounts?.[opt.path[opt.path.length - 1]]}
-                  source={resourceCountsSource}
-                  valueId={opt.path[opt.path.length - 1]}
-                />
+                {renderOptionExtra?.({ value: opt.path[opt.path.length - 1], label: opt.label })}
               </>
             }
             size={size}

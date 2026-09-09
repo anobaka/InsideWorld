@@ -1,8 +1,8 @@
 import type { ComponentType, ReactNode } from "react";
 import type { DisabledChoiceKeysSource } from "@/hooks/useDisabledChoiceKeys";
-import type { ResourceCountsSource } from "@/hooks/useResourceCountsSource";
+import type { OptionDisplayProps } from "../OptionDisplayProps";
 
-import { createElement } from "react";
+import { createElement, useSyncExternalStore } from "react";
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -13,7 +13,6 @@ import MultilevelValueRenderer from "../ValueRenderer/Renderers/MultilevelValueR
 import MultilevelValueEditor from "../ValueEditor/Editors/MultilevelValueEditor";
 
 import { createDisabledChoiceKeysSource } from "@/hooks/useDisabledChoiceKeys";
-import { createResourceCountsSource } from "@/hooks/useResourceCountsSource";
 
 const { createPortal, optionsThreshold } = vi.hoisted(() => ({
   createPortal: vi.fn(),
@@ -78,11 +77,10 @@ vi.mock("@/components/bakaui", () => {
   };
 });
 
-type ScenarioProps = {
+type ScenarioProps = OptionDisplayProps & {
   selected?: string[];
   disabledKeys?: ReadonlySet<string>;
   disabledKeysSource?: DisabledChoiceKeysSource;
-  resourceCountsSource?: ResourceCountsSource;
   onValueChange: ReturnType<typeof vi.fn>;
 };
 
@@ -96,6 +94,7 @@ const getTags = async () => choices.map(({ value, label }) => ({ value, name: la
 const scenarios = [
   ...[false, true].map((multiple) => ({
     name: multiple ? "multiple choices" : "single choice",
+    expectedBizValue: ["Unused"],
     render: ({ selected, onValueChange, ...disabledProps }: ScenarioProps) => (
       <ChoiceValueRenderer
         isEditing
@@ -108,6 +107,7 @@ const scenarios = [
   })),
   {
     name: "tags",
+    expectedBizValue: [{ name: "Unused", group: undefined }],
     render: ({ selected, onValueChange, ...disabledProps }: ScenarioProps) => (
       <TagsValueRenderer
         isEditing
@@ -119,6 +119,7 @@ const scenarios = [
   },
   ...[false, true].map((multiple) => ({
     name: multiple ? "multiple multilevel choices" : "single multilevel choice",
+    expectedBizValue: [["Unused"]],
     render: ({ selected, onValueChange, ...disabledProps }: ScenarioProps) => (
       <MultilevelValueRenderer
         isEditing
@@ -169,6 +170,50 @@ function openedDialog() {
   if (!dialog) throw new Error("Expected the full editor to open");
 
   return dialog;
+}
+
+async function search(dialog: ParentNode, keyword: string) {
+  const input = dialog.querySelector("input")!;
+  const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+
+  await act(async () => {
+    setValue.call(input, keyword);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
+function createReviewSlots() {
+  let snapshot = { status: "Pending review", description: "Reviews in progress" };
+  const listeners = new Set<() => void>();
+  const subscribe = (listener: () => void) => {
+    listeners.add(listener);
+
+    return () => listeners.delete(listener);
+  };
+  const getSnapshot = () => snapshot;
+  const ReviewBadge = ({ value, label }: { value: string; label: string }) => {
+    const review = useSyncExternalStore(subscribe, getSnapshot);
+
+    return (
+      <span data-label={label} data-option-extra={value}>
+        {review.status}
+      </span>
+    );
+  };
+  const ReviewDescription = () => {
+    const review = useSyncExternalStore(subscribe, getSnapshot);
+
+    return <div role="status">{review.description}</div>;
+  };
+
+  return {
+    renderOptionExtra: (option: { value: string; label: string }) => <ReviewBadge {...option} />,
+    optionsDescription: <ReviewDescription />,
+    publish: (next: typeof snapshot) => {
+      snapshot = next;
+      listeners.forEach((listener) => listener());
+    },
+  };
 }
 
 beforeEach(() => {
@@ -272,38 +317,87 @@ describe.each(scenarios)("disabled $name", ({ render: renderRenderer }) => {
     await click(button("Apply", dialog));
     expect(onValueChange).toHaveBeenCalledWith([], []);
   });
-
-  it("keeps the count slot and update status connected in an open full editor", async () => {
-    optionsThreshold.current = 1;
-    const source = createResourceCountsSource();
-    const reservedWidths = { "unused-id": 7, "used-id": 4 };
-
-    source.publish({ "unused-id": 9, "used-id": 1 }, { reservedWidths });
-    await render(renderRenderer({ resourceCountsSource: source, onValueChange: vi.fn() }));
-    await click(button(/common.action.more/));
-    const dialog = openedDialog();
-    const choice = button("Unused(9)", dialog);
-    const badge = choice.querySelector('span[style*="width: 7ch"]')!;
-
-    expect(badge).not.toBeNull();
-    expect(dialog.querySelectorAll('[role="status"]')).toHaveLength(1);
-    act(() => source.publish({ "unused-id": 9 }, { reservedWidths, loading: true, stale: true }));
-    expect(badge.textContent).toBe("(9)");
-    expect(badge.className).toContain("opacity-40");
-    expect(dialog.querySelector('[role="status"]')?.textContent).toBe(
-      "property.reference.updatingCounts",
-    );
-    expect(choice).toBeEnabled();
-
-    act(() => source.publish({ "unused-id": 0 }, { reservedWidths }));
-    expect(choice.querySelector('span[style*="width: 7ch"]')).toBe(badge);
-    expect(badge.textContent).toBe("");
-    expect(badge.getAttribute("aria-hidden")).toBe("true");
-    expect(choice).toBeEnabled();
-    expect(dialog.querySelector('[role="status"]')?.textContent).toBe("");
-    expect(createPortal).toHaveBeenCalledTimes(1);
-  });
 });
+
+describe.each(scenarios)(
+  "option display slots for $name",
+  ({ render: renderRenderer, expectedBizValue }) => {
+    it("appends caller content inline while retaining the existing option value mapping", async () => {
+      const onValueChange = vi.fn();
+      const slots = createReviewSlots();
+
+      await render(renderRenderer({ ...slots, onValueChange }));
+      const choice = button("UnusedPending review");
+      const badge = choice.querySelector('[data-option-extra="unused-id"]')!;
+
+      expect(badge.getAttribute("data-label")).toBe("Unused");
+      expect(choice.textContent).toBe("UnusedPending review");
+      await click(choice);
+      expect(onValueChange.mock.lastCall?.[0]).toEqual(["unused-id"]);
+      expect(JSON.stringify(onValueChange.mock.lastCall?.[1])).not.toContain("Pending review");
+    });
+
+    it("keeps caller-owned metadata connected in an open full editor without changing selection", async () => {
+      optionsThreshold.current = 1;
+      const slots = createReviewSlots();
+      const onValueChange = vi.fn();
+
+      await render(renderRenderer({ ...slots, onValueChange }));
+      await click(button(/common.action.more/));
+      const dialog = openedDialog();
+      const choice = button("UnusedPending review", dialog);
+      const badge = choice.querySelector('[data-option-extra="unused-id"]')!;
+
+      expect(badge.getAttribute("data-label")).toBe("Unused");
+      expect(dialog.querySelector('[role="status"]')?.textContent).toBe("Reviews in progress");
+      await click(choice);
+      act(() => slots.publish({ status: "Approved", description: "Reviews complete" }));
+
+      expect(choice.querySelector('[data-option-extra="unused-id"]')).toBe(badge);
+      expect(badge.textContent).toBe("Approved");
+      expect(dialog.querySelector('[role="status"]')?.textContent).toBe("Reviews complete");
+      expect(choice).toBeEnabled();
+      expect(onValueChange).not.toHaveBeenCalled();
+      await click(button("Apply", dialog));
+      expect(onValueChange).toHaveBeenCalledWith(["unused-id"], expectedBizValue);
+      expect(createPortal).toHaveBeenCalledTimes(1);
+    });
+
+    it("searches the original label without matching appended metadata", async () => {
+      optionsThreshold.current = 1;
+      const slots = createReviewSlots();
+      const onValueChange = vi.fn();
+
+      await render(renderRenderer({ ...slots, onValueChange }));
+      await click(button(/common.action.more/));
+      const dialog = openedDialog();
+
+      await search(dialog, "Pending review");
+      expect(dialog.querySelectorAll("[data-option-extra]")).toHaveLength(0);
+      await search(dialog, "unused");
+      expect(dialog.querySelectorAll("[data-option-extra]")).toHaveLength(1);
+      await click(button("UnusedPending review", dialog));
+      await click(button("Apply", dialog));
+      expect(onValueChange).toHaveBeenCalledWith(["unused-id"], expectedBizValue);
+    });
+
+    it("renders ordinary labels without extra markup or status when no slots are supplied", async () => {
+      optionsThreshold.current = 1;
+
+      await render(renderRenderer({ onValueChange: vi.fn() }));
+      expect(button("Unused").textContent).toBe("Unused");
+      expect(document.querySelector("[data-option-extra]")).toBeNull();
+      expect(document.querySelector('[role="status"]')).toBeNull();
+      await click(button(/common.action.more/));
+      const dialog = openedDialog();
+
+      expect(button("Unused", dialog).textContent).toBe("Unused");
+      expect(button("Used", dialog).textContent).toBe("Used");
+      expect(dialog.querySelector("[data-option-extra]")).toBeNull();
+      expect(dialog.querySelector('[role="status"]')).toBeNull();
+    });
+  },
+);
 
 describe("disabled multilevel navigation", () => {
   it("expands a disabled parent and selects an enabled descendant", async () => {

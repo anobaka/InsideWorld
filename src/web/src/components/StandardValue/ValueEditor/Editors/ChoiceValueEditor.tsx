@@ -1,5 +1,6 @@
 "use client";
 
+import type { OptionDisplayProps } from "../../OptionDisplayProps";
 import type { ValueEditorProps } from "../models";
 import type { DestroyableProps } from "@/components/bakaui/types";
 
@@ -8,16 +9,9 @@ import { useEffect, useState } from "react";
 import { SearchOutlined } from "@ant-design/icons";
 
 import {
-  useResourceCountsSource,
-  type ResourceCountsSource,
-} from "@/hooks/useResourceCountsSource";
-import {
   useDisabledChoiceKeys,
   type DisabledChoiceKeysSource,
 } from "@/hooks/useDisabledChoiceKeys";
-import ReferenceValueCount, {
-  ReferenceValueCountsStatus,
-} from "@/components/Property/components/ReferenceValueCount";
 import { Button, Input, Modal } from "@/components/bakaui";
 import { buildLogger } from "@/components/utils";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
@@ -25,9 +19,8 @@ import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContext
 type Data = { value: string; label: string };
 
 type ChoiceValueEditorProps = ValueEditorProps<string[] | undefined> &
-  DestroyableProps & {
-    resourceCounts?: Record<string, number>;
-    resourceCountsSource?: ResourceCountsSource;
+  DestroyableProps &
+  OptionDisplayProps & {
     disabledKeys?: ReadonlySet<string>;
     disabledKeysSource?: DisabledChoiceKeysSource;
     multiple: boolean;
@@ -39,8 +32,8 @@ const ChoiceValueEditor = (props: ChoiceValueEditorProps) => {
   const { t } = useTranslation();
   const { createPortal } = useBakabaseContext();
   const {
-    resourceCounts: initialResourceCounts,
-    resourceCountsSource,
+    renderOptionExtra,
+    optionsDescription,
     disabledKeys: initialDisabledKeys,
     disabledKeysSource,
     multiple,
@@ -49,7 +42,6 @@ const ChoiceValueEditor = (props: ChoiceValueEditorProps) => {
     onValueChange,
   } = props;
 
-  const resourceCounts = useResourceCountsSource(resourceCountsSource, initialResourceCounts);
   const disabledKeys = useDisabledChoiceKeys(disabledKeysSource, initialDisabledKeys);
 
   const [dataSource, setDataSource] = useState<Data[]>([]);
@@ -97,7 +89,7 @@ const ChoiceValueEditor = (props: ChoiceValueEditorProps) => {
           }}
         />
       </div>
-      <ReferenceValueCountsStatus source={resourceCountsSource} />
+      {optionsDescription}
       <div className={"flex flex-wrap gap-1"}>
         {dataSource.length == 0
           ? t<string>("No choices available, please check your configurations")
@@ -130,11 +122,7 @@ const ChoiceValueEditor = (props: ChoiceValueEditorProps) => {
                     }}
                   >
                     {d.label}
-                    <ReferenceValueCount
-                      count={resourceCounts?.[d.value]}
-                      source={resourceCountsSource}
-                      valueId={d.value}
-                    />
+                    {renderOptionExtra?.({ value: d.value, label: d.label })}
                   </Button>
                 );
               })}

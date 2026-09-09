@@ -1,7 +1,7 @@
 "use client";
 "use strict";
 
-import type { ResourceCountsSource } from "@/hooks/useResourceCountsSource";
+import type { OptionDisplayProps } from "../../OptionDisplayProps";
 import type { ValueRendererProps } from "../models";
 
 import { useEffect, useState, useMemo, useRef } from "react";
@@ -21,7 +21,6 @@ import SelectableChip from "@/components/StandardValue/ValueRenderer/Renderers/c
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
 import { Button } from "@/components/bakaui";
 import { buildLogger } from "@/components/utils";
-import ReferenceValueCount from "@/components/Property/components/ReferenceValueCount";
 import { useFilterOptionsThreshold } from "@/hooks/useFilterOptionsThreshold";
 
 type Data = { label: string; value: string; color?: string };
@@ -31,17 +30,16 @@ type Data = { label: string; value: string; color?: string };
  * The two are both string[] — never mix them: selection state must only ever
  * be derived from editor.value.
  */
-type ChoiceValueRendererProps = ValueRendererProps<string[], string[]> & {
-  multiple?: boolean;
-  getDataSource?: () => Promise<Data[]>;
-  /** Index-parallel to `value`; build both from the same source array. */
-  valueAttributes?: { color?: string }[];
-  size?: "sm" | "md" | "lg";
-  resourceCounts?: Record<string, number>;
-  resourceCountsSource?: ResourceCountsSource;
-  disabledKeys?: ReadonlySet<string>;
-  disabledKeysSource?: DisabledChoiceKeysSource;
-};
+type ChoiceValueRendererProps = ValueRendererProps<string[], string[]> &
+  OptionDisplayProps & {
+    multiple?: boolean;
+    getDataSource?: () => Promise<Data[]>;
+    /** Index-parallel to `value`; build both from the same source array. */
+    valueAttributes?: { color?: string }[];
+    size?: "sm" | "md" | "lg";
+    disabledKeys?: ReadonlySet<string>;
+    disabledKeysSource?: DisabledChoiceKeysSource;
+  };
 
 const log = buildLogger("ChoiceValueRenderer");
 const ChoiceValueRenderer = (props: ChoiceValueRendererProps) => {
@@ -52,8 +50,8 @@ const ChoiceValueRenderer = (props: ChoiceValueRendererProps) => {
     getDataSource,
     multiple,
     valueAttributes,
-    resourceCounts,
-    resourceCountsSource,
+    renderOptionExtra,
+    optionsDescription,
     disabledKeys: initialDisabledKeys,
     disabledKeysSource,
     size,
@@ -115,8 +113,8 @@ const ChoiceValueRenderer = (props: ChoiceValueRendererProps) => {
   const openFullEditor = editor
     ? () => {
         createPortal(ChoiceValueEditor, {
-          resourceCounts,
-          resourceCountsSource,
+          renderOptionExtra,
+          optionsDescription,
           disabledKeys,
           disabledKeysSource,
           value: editor?.value,
@@ -199,11 +197,7 @@ const ChoiceValueRenderer = (props: ChoiceValueRendererProps) => {
             label={
               <>
                 {item.label}
-                <ReferenceValueCount
-                  count={resourceCounts?.[item.value]}
-                  source={resourceCountsSource}
-                  valueId={item.value}
-                />
+                {renderOptionExtra?.({ value: item.value, label: item.label })}
               </>
             }
             size={size}

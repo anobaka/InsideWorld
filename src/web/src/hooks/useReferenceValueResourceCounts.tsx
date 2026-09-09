@@ -1,13 +1,8 @@
 import type { PropsWithChildren } from "react";
-import type {
-  ReferenceProperty,
-  ReferenceValueResourceCounts,
-} from "@/components/Property/referenceValues";
+import type { ReferenceProperty } from "@/components/Property/referenceValues";
 import type { SearchForm } from "@/pages/resource/models";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-
-import { createResourceCountsSource } from "./useResourceCountsSource";
 
 import BApi from "@/sdk/BApi";
 import { ContentType } from "@/sdk/Api";
@@ -16,7 +11,7 @@ import { isReferenceValueType } from "@/components/Property/PropertySystem";
 import { toSearchInputModel } from "@/components/ResourceFilter/utils/toInputModel";
 import { resourceChangedChannel } from "@/services/ResourceChangedChannel";
 
-type CountsResponse = { counts: ReferenceValueResourceCounts; isReady: boolean };
+type CountsResponse = { counts: Record<string, number>; isReady: boolean };
 const pending = new Map<string, Promise<CountsResponse>>();
 const SearchContext = createContext<SearchForm | undefined>(undefined);
 
@@ -84,10 +79,9 @@ export function useReferenceValueResourceCounts(property?: ReferenceProperty, se
   const [result, setResult] = useState<{
     propertyKey: string;
     requestToken: object;
-    counts?: ReferenceValueResourceCounts;
+    counts?: Record<string, number>;
     error?: boolean;
   }>();
-  const source = useMemo(createResourceCountsSource, []);
 
   useEffect(() => {
     if (!enabled) return;
@@ -145,10 +139,7 @@ export function useReferenceValueResourceCounts(property?: ReferenceProperty, se
   const loading = enabled && !settled;
   const error = enabled && settled && !!current?.error;
 
-  useEffect(() => source.publish(current?.counts), [source, current?.counts]);
-
   return {
-    source,
     counts: current?.counts,
     error,
     loading,
