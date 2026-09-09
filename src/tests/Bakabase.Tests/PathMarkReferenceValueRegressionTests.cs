@@ -22,6 +22,8 @@ using Bakabase.Modules.Property.Components.Properties.Multilevel;
 using Bakabase.Modules.Property.Components.Properties.Tags;
 using Bakabase.Modules.Property.Extensions;
 using Bakabase.Modules.StandardValue.Extensions;
+using Bakabase.Service.Extensions;
+using Bakabase.Service.Models.Input;
 using Bakabase.TestKit.Utils;
 using Bootstrap.Components.Tasks;
 using FluentAssertions;
@@ -67,6 +69,27 @@ public sealed class PathMarkReferenceValueRegressionTests
                 // Best-effort cleanup. A failed assertion should remain the test's failure.
             }
         }
+    }
+
+    [TestMethod]
+    public async Task SearchInput_SingleChoiceIn_DeserializesSerializedListStringAtTheApiBoundary()
+    {
+        var choiceId = Guid.NewGuid().ToString();
+        var property = await AddProperty(
+            "Single choice API filter",
+            PropertyType.SingleChoice,
+            new SingleChoicePropertyOptions
+            {
+                Choices = [new ChoiceOptions {Label = "Action", Value = choiceId}]
+            });
+
+        var search = await BuildSingleChoiceInApiSearch(property.Id, choiceId);
+
+        var filter = search.Group!.Filters.Should().ContainSingle().Subject;
+        filter.Property.Should().NotBeNull();
+        filter.Property!.Type.Should().Be(PropertyType.SingleChoice);
+        filter.Operation.Should().Be(SearchOperation.In);
+        filter.DbValue.Should().BeOfType<List<string>>().Subject.Should().Equal(choiceId);
     }
 
     [TestMethod]
@@ -299,7 +322,19 @@ public sealed class PathMarkReferenceValueRegressionTests
 
         var triggerProperty = await AddProperty("Partial-sync trigger", PropertyType.SingleLineText);
         await AddPropertyMark(triggerProperty.Id, "touch");
+
+        // The index must contain the beta.144 state before partial sync starts. Rebuilding
+        // afterwards would hide the incremental-update consistency window reported by users.
+        await RebuildSearchIndex();
+        await AssertSingleChoiceInSearchMatches(resource.Id, property.Id, pollutedChoiceId);
+        await AssertSingleChoiceInSearchDoesNotMatch(property.Id, originalChoiceId);
+
         await SyncPendingPropertyMarks();
+
+        // This is intentionally the first operation after SyncMarks returns: no delay,
+        // polling, or full rebuild may mask an update that is still queued or in flight.
+        await AssertSingleChoiceInSearchMatches(resource.Id, property.Id, originalChoiceId);
+        await AssertSingleChoiceInSearchDoesNotMatch(property.Id, pollutedChoiceId);
 
         var refreshedProperty = await propertyService.GetByKey(property.Id);
         var refreshedOptions = refreshedProperty.Options.Should()
@@ -327,10 +362,46 @@ public sealed class PathMarkReferenceValueRegressionTests
             .Values!.Should().ContainSingle(v => v.Scope == (int) PropertyValueScope.Synchronization).Subject;
         reloadedValue.Value.Should().Be(originalChoiceId);
         reloadedValue.BizValue.Should().Be("Action");
+    }
+
+    [TestMethod]
+    public async Task Resync_PropertyMarkWithoutMatches_RemovesValueFromReadyIndexBeforeSyncReturns()
+    {
+        var resourceService = _sp.GetRequiredService<IResourceService>();
+        var propertyService = _sp.GetRequiredService<ICustomPropertyService>();
+        var propertyValueService = _sp.GetRequiredService<ICustomPropertyValueService>();
+        var pathMarkService = _sp.GetRequiredService<IPathMarkService>();
+
+        var resourcePath = Path.Combine(_testRoot, "Movie");
+        Directory.CreateDirectory(resourcePath);
+        await resourceService.AddOrPutRange([new Resource {Path = resourcePath, IsFile = false}]);
+        var resource = (await resourceService.GetAll()).Should().ContainSingle().Subject;
+
+        var property = await AddProperty("Deleted property mark", PropertyType.SingleChoice);
+        var mark = await AddPropertyMark(property.Id, "Action");
+        await SyncPendingPropertyMarks();
+
+        var refreshedProperty = await propertyService.GetByKey(property.Id);
+        var choiceId = refreshedProperty.Options.Should()
+            .BeOfType<SingleChoicePropertyOptions>().Subject.Choices.Should()
+            .ContainSingle(c => c.Label == "Action").Which.Value;
 
         await RebuildSearchIndex();
-        await AssertReferenceSearchMatches(resource.Id, refreshedProperty,
-            SearchOperation.Equals, originalChoiceId);
+        await AssertSingleChoiceInSearchMatches(resource.Id, property.Id, choiceId);
+
+        mark.Path = Path.Combine(_testRoot, "NoLongerMatches");
+        await pathMarkService.Update(mark);
+        await SyncPendingPropertyMarks();
+
+        // The resource still exists, but its removed synchronization value must not remain
+        // searchable after the successful re-sync reports completion.
+        await AssertSingleChoiceInSearchDoesNotMatch(property.Id, choiceId);
+        (await resourceService.GetAll()).Should().ContainSingle(r => r.Id == resource.Id);
+        (await propertyValueService.GetAllDbModels(v =>
+                v.ResourceId == resource.Id &&
+                v.PropertyId == property.Id &&
+                v.Scope == (int) PropertyValueScope.Synchronization))
+            .Should().BeEmpty();
     }
 
     [TestMethod]
@@ -548,6 +619,64 @@ public sealed class PathMarkReferenceValueRegressionTests
         var index = _sp.GetRequiredService<IResourceSearchIndexService>();
         await index.RebuildAllAsync(CancellationToken.None);
         await index.WaitForReadyAsync(TimeSpan.FromSeconds(10));
+    }
+
+    private async Task<ResourceSearch> BuildSingleChoiceInApiSearch(int propertyId, params string[] choiceIds)
+    {
+        var serializedList = choiceIds.ToList().SerializeAsStandardValue(StandardValueType.ListString);
+        serializedList.Should().NotBeNull();
+
+        var input = new ResourceSearchInputModel
+        {
+            Page = 1,
+            PageSize = 100,
+            Group = new ResourceSearchFilterGroupInputModel
+            {
+                Combinator = SearchCombinator.And,
+                Filters =
+                [
+                    new ResourceSearchFilterInputModel
+                    {
+                        PropertyPool = PropertyPool.Custom,
+                        PropertyId = propertyId,
+                        Operation = SearchOperation.In,
+                        DbValue = serializedList
+                    }
+                ]
+            }
+        };
+
+        return await input.ToDomainModel(_sp.GetRequiredService<IPropertyService>());
+    }
+
+    private async Task AssertSingleChoiceInSearchMatches(
+        int expectedResourceId,
+        int propertyId,
+        string choiceId)
+    {
+        var search = await BuildSingleChoiceInApiSearch(propertyId, choiceId);
+        var indexedIds = await _sp.GetRequiredService<IResourceSearchIndexService>()
+            .SearchResourceIdsAsync(search.Group);
+        indexedIds.Should().NotBeNull(
+            "the ready inverted index must answer the filter instead of allowing a full-scan fallback");
+        indexedIds!.Should().ContainSingle(id => id == expectedResourceId);
+
+        var result = await _sp.GetRequiredService<IResourceService>().Search(search);
+        result.Data.Should().ContainSingle(r => r.Id == expectedResourceId);
+    }
+
+    private async Task AssertSingleChoiceInSearchDoesNotMatch(int propertyId, string choiceId)
+    {
+        var search = await BuildSingleChoiceInApiSearch(propertyId, choiceId);
+        var indexedIds = await _sp.GetRequiredService<IResourceSearchIndexService>()
+            .SearchResourceIdsAsync(search.Group);
+        indexedIds.Should().NotBeNull(
+            "the ready inverted index must answer the filter instead of allowing a full-scan fallback");
+        indexedIds!.Should().BeEmpty();
+
+        var result = await _sp.GetRequiredService<IResourceService>().Search(search);
+        result.Data.Should().NotBeNull();
+        result.Data!.Count.Should().Be(0);
     }
 
     private async Task AssertReferenceSearchMatches(

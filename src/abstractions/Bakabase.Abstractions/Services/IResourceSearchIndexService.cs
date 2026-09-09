@@ -62,6 +62,15 @@ public interface IResourceSearchIndexService
     void RemoveResources(IEnumerable<int> resourceIds);
 
     /// <summary>
+    /// 等待调用此方法前已排队的增量索引更新全部处理完成。
+    /// </summary>
+    /// <remarks>
+    /// 这是一个 FIFO 屏障；在屏障之后排队的更新不会延迟本次等待。
+    /// 如果屏障之前的更新永久失败，该任务会抛出异常。
+    /// </remarks>
+    Task WaitForPendingUpdatesAsync(CancellationToken ct = default);
+
+    /// <summary>
     /// 全量重建索引
     /// </summary>
     Task RebuildAllAsync(CancellationToken ct = default);
