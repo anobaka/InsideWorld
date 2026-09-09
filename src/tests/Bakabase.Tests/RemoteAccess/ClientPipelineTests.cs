@@ -3,10 +3,13 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Client.Abstractions;
+using Bakabase.Client.Abstractions.Models;
 using Bakabase.Client.Components.Forwarding;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -90,7 +93,7 @@ public class ClientPipelineTests
     /// point of most of these.
     /// </summary>
     private async Task<HttpResponseMessage> Send(string path, string? host = null, string? origin = null,
-        HttpMethod? method = null)
+        HttpMethod? method = null, string? body = null)
     {
         using var client = new HttpClient();
         var request = new HttpRequestMessage(method ?? HttpMethod.Get, $"http://127.0.0.1:{_port}{path}");
@@ -100,6 +103,11 @@ public class ClientPipelineTests
         if (origin != null)
         {
             request.Headers.Add("Origin", origin);
+        }
+
+        if (body != null)
+        {
+            request.Content = new StringContent(body, Encoding.UTF8, "application/json");
         }
 
         return await client.SendAsync(request);
@@ -217,6 +225,50 @@ public class ClientPipelineTests
         var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
         Assert.AreEqual("/data/media/a.mkv", body.GetProperty("serverPath").GetString());
         StringAssert.Contains(body.GetProperty("message").GetString()!, "/data/media/a.mkv");
+    }
+
+    [TestMethod]
+    public async Task The_clients_own_api_is_answered_here_not_forwarded()
+    {
+        // /client/ is a prefix the server does not use, so nothing under it can shadow
+        // one of its routes or be shadowed later. With no server configured, a forwarded
+        // request would have come back "not connected" instead.
+        var response = await Send($"{ClientApiEndpoints.Prefix}/status");
+        var data = JsonDocument.Parse(await response.Content.ReadAsStringAsync())
+            .RootElement.GetProperty("data");
+
+        Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        Assert.IsFalse(response.Headers.Contains("X-Bakabase-Client"));
+        Assert.AreEqual(0, data.GetProperty("servers").GetArrayLength());
+        Assert.IsFalse(data.GetProperty("serverReachable").GetBoolean());
+
+        // Says what this build can run here, so the settings page can tell the user
+        // rather than letting them find out by clicking.
+        Assert.IsTrue(data.GetProperty("implementedUserMachineRoutes").GetArrayLength() > 0);
+    }
+
+    [TestMethod]
+    public async Task The_status_answer_never_carries_a_device_key()
+    {
+        // The key exists in this process to sign with. A page has no use for it, and
+        // once it reaches one it is in browser memory, in devtools, and in any extension
+        // the user has installed.
+        var body = await (await Send($"{ClientApiEndpoints.Prefix}/status")).Content.ReadAsStringAsync();
+
+        StringAssert.DoesNotMatch(body, new Regex("deviceKey", RegexOptions.IgnoreCase));
+    }
+
+    [TestMethod]
+    public async Task Connecting_to_nothing_reports_it_rather_than_failing()
+    {
+        var response = await Send($"{ClientApiEndpoints.Prefix}/connect", method: HttpMethod.Post,
+            body: "{\"address\":\"127.0.0.1:1\"}");
+
+        var data = JsonDocument.Parse(await response.Content.ReadAsStringAsync())
+            .RootElement.GetProperty("data");
+
+        Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        Assert.AreEqual((int) ServerHandshakeOutcome.Unreachable, data.GetProperty("outcome").GetInt32());
     }
 
     [TestMethod]

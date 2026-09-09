@@ -128,6 +128,10 @@ public class ClientStartup
             endpoints.MapGet(ClientContextEndpoint.Path,
                 (HttpContext context, ClientContextEndpoint endpoint) => endpoint.WriteAsync(context));
 
+            // Questions about this machine — which server it points at, where that
+            // server's libraries are here — which the server has no way to answer.
+            ClientApiEndpoints.Map(endpoints, AppService.CoreVersion.ToString());
+
             // Everything else is the server's. Actions that have to run on this machine
             // are still refused upstream, with a reason saying so, until the client
             // learns to run them itself — so nothing silently happens on the wrong
