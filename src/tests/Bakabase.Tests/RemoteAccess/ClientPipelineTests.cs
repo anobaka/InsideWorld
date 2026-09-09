@@ -202,6 +202,23 @@ public class ClientPipelineTests
     }
 
     [TestMethod]
+    public async Task Opening_a_server_path_with_no_mapping_says_which_path_and_why()
+    {
+        // Nothing can infer where /data/media is on this machine, so the answer names
+        // the path and carries a header the frontend keys its "set this up" prompt off.
+        // Guessing, or reporting a generic failure, would both leave the user stuck.
+        var response = await Send("/tool/open?path=%2Fdata%2Fmedia%2Fa.mkv");
+
+        Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.AreEqual(nameof(ClientForwardingFailure.PathNotMapped),
+            response.Headers.GetValues("X-Bakabase-Client").First());
+
+        var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
+        Assert.AreEqual("/data/media/a.mkv", body.GetProperty("serverPath").GetString());
+        StringAssert.Contains(body.GetProperty("message").GetString()!, "/data/media/a.mkv");
+    }
+
+    [TestMethod]
     public async Task Opening_a_link_refuses_anything_that_is_not_a_web_address()
     {
         // Reached the local handler rather than the forwarder, and stopped there.

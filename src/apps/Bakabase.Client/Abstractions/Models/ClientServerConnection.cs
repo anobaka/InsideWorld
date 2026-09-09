@@ -34,6 +34,12 @@ public class ClientServerConnection
     public DateTime PairedAt { get; set; }
 
     public DateTime? LastConnectedAt { get; set; }
+
+    /// <summary>
+    /// Where this server's libraries are on this machine. Per server, because the same
+    /// client may reach two installs whose paths mean entirely different things.
+    /// </summary>
+    public List<ClientPathMapping> PathMappings { get; set; } = [];
 }
 
 /// <summary>

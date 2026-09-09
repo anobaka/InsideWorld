@@ -66,6 +66,8 @@ public class ClientStartup
         // UserMachineRoutes without a handler here is answered as "this client is
         // behind" rather than forwarded to a server that would only refuse it.
         services.AddSingleton<IUserMachineHandler, OpenUrlHandler>();
+        services.AddSingleton<IUserMachineHandler, OpenPathHandler>();
+        services.AddSingleton<IUserMachineHandler, OpenFileHandler>();
         services.TryAddSingleton<UserMachineDispatcher>();
 
         services.AddRouting();
