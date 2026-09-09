@@ -5164,6 +5164,90 @@ export const CompressedFileDetectionResultStatusLabel: Record<CompressedFileDete
   [CompressedFileDetectionResultStatus.Error]: 'Error'
 };
 
+export enum ClientPairingOutcome {
+  Paired = 0,
+  Unreachable = 1,
+  CodeRejected = 2,
+  AwaitingApproval = 3,
+  RequestRejected = 4,
+  TooManyAttempts = 5,
+  PairingUnsupported = 6
+}
+
+export const clientPairingOutcomes = [
+  { label: 'Paired', value: ClientPairingOutcome.Paired },
+  { label: 'Unreachable', value: ClientPairingOutcome.Unreachable },
+  { label: 'CodeRejected', value: ClientPairingOutcome.CodeRejected },
+  { label: 'AwaitingApproval', value: ClientPairingOutcome.AwaitingApproval },
+  { label: 'RequestRejected', value: ClientPairingOutcome.RequestRejected },
+  { label: 'TooManyAttempts', value: ClientPairingOutcome.TooManyAttempts },
+  { label: 'PairingUnsupported', value: ClientPairingOutcome.PairingUnsupported }
+] as const;
+
+export const ClientPairingOutcomeLabel: Record<ClientPairingOutcome, string> = {
+  [ClientPairingOutcome.Paired]: 'Paired',
+  [ClientPairingOutcome.Unreachable]: 'Unreachable',
+  [ClientPairingOutcome.CodeRejected]: 'CodeRejected',
+  [ClientPairingOutcome.AwaitingApproval]: 'AwaitingApproval',
+  [ClientPairingOutcome.RequestRejected]: 'RequestRejected',
+  [ClientPairingOutcome.TooManyAttempts]: 'TooManyAttempts',
+  [ClientPairingOutcome.PairingUnsupported]: 'PairingUnsupported'
+};
+
+export enum ServerHandshakeOutcome {
+  Ok = 0,
+  Unreachable = 1,
+  NotBakabase = 2,
+  ClientTooOld = 3,
+  ServerTooOld = 4,
+  RemoteAccessDisabled = 5
+}
+
+export const serverHandshakeOutcomes = [
+  { label: 'Ok', value: ServerHandshakeOutcome.Ok },
+  { label: 'Unreachable', value: ServerHandshakeOutcome.Unreachable },
+  { label: 'NotBakabase', value: ServerHandshakeOutcome.NotBakabase },
+  { label: 'ClientTooOld', value: ServerHandshakeOutcome.ClientTooOld },
+  { label: 'ServerTooOld', value: ServerHandshakeOutcome.ServerTooOld },
+  { label: 'RemoteAccessDisabled', value: ServerHandshakeOutcome.RemoteAccessDisabled }
+] as const;
+
+export const ServerHandshakeOutcomeLabel: Record<ServerHandshakeOutcome, string> = {
+  [ServerHandshakeOutcome.Ok]: 'Ok',
+  [ServerHandshakeOutcome.Unreachable]: 'Unreachable',
+  [ServerHandshakeOutcome.NotBakabase]: 'NotBakabase',
+  [ServerHandshakeOutcome.ClientTooOld]: 'ClientTooOld',
+  [ServerHandshakeOutcome.ServerTooOld]: 'ServerTooOld',
+  [ServerHandshakeOutcome.RemoteAccessDisabled]: 'RemoteAccessDisabled'
+};
+
+export enum ClientForwardingFailure {
+  None = 0,
+  NotConnected = 1,
+  ServerUnreachable = 2,
+  ForeignCaller = 3,
+  NeedsNewerClient = 4,
+  PathNotMapped = 5
+}
+
+export const clientForwardingFailures = [
+  { label: 'None', value: ClientForwardingFailure.None },
+  { label: 'NotConnected', value: ClientForwardingFailure.NotConnected },
+  { label: 'ServerUnreachable', value: ClientForwardingFailure.ServerUnreachable },
+  { label: 'ForeignCaller', value: ClientForwardingFailure.ForeignCaller },
+  { label: 'NeedsNewerClient', value: ClientForwardingFailure.NeedsNewerClient },
+  { label: 'PathNotMapped', value: ClientForwardingFailure.PathNotMapped }
+] as const;
+
+export const ClientForwardingFailureLabel: Record<ClientForwardingFailure, string> = {
+  [ClientForwardingFailure.None]: 'None',
+  [ClientForwardingFailure.NotConnected]: 'NotConnected',
+  [ClientForwardingFailure.ServerUnreachable]: 'ServerUnreachable',
+  [ClientForwardingFailure.ForeignCaller]: 'ForeignCaller',
+  [ClientForwardingFailure.NeedsNewerClient]: 'NeedsNewerClient',
+  [ClientForwardingFailure.PathNotMapped]: 'PathNotMapped'
+};
+
 export const ExtensionMediaTypes: Record<string, MediaType> = {
   ".3gp": MediaType.Video,
   ".avi": MediaType.Video,

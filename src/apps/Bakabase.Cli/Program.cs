@@ -57,6 +57,9 @@ static void WriteSwagger(string outPath)
 
 static void WriteConstants(string outPath)
 {
-    File.WriteAllText(outPath, BakabaseConstantsGenerator.Generate());
+    File.WriteAllText(outPath, BakabaseConstantsGenerator.Generate(
+        typeof(Bakabase.Client.Components.Connection.ClientPairingOutcome),
+        typeof(Bakabase.Client.Abstractions.Models.ServerHandshakeOutcome),
+        typeof(Bakabase.Client.Components.Forwarding.ClientForwardingFailure)));
     Console.WriteLine($"constants -> {outPath}");
 }

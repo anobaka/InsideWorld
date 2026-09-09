@@ -11,10 +11,17 @@ namespace Bakabase.Service.Components
 {
     public static class BakabaseConstantsGenerator
     {
-        public static string Generate()
+        /// <param name="extraEnums">
+        /// Enums from assemblies this one does not reference. The thin client's are the
+        /// case: its outcomes are rendered by the same frontend, but nothing on the
+        /// server side can see them, so the codegen driver -- which sees both -- hands
+        /// them in rather than the frontend keeping a hand-copied duplicate that would
+        /// silently drift.
+        /// </param>
+        public static string Generate(params Type[] extraEnums)
         {
             var sb = new StringBuilder();
-            sb.Append(ConstantsGenerator.Generate(BakabaseConstantTypes.GetAll()));
+            sb.Append(ConstantsGenerator.Generate([..BakabaseConstantTypes.GetAll(), ..extraEnums]));
             sb.Append(Environment.NewLine);
             sb.Append(Environment.NewLine);
             sb.Append(GenerateExtensionMediaTypeMap());

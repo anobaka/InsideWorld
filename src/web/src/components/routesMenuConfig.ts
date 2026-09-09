@@ -31,6 +31,8 @@ import {
   AiOutlineCloudServer,
   AiOutlinePartition,
   AiOutlineMobile,
+  AiOutlineLaptop,
+  AiOutlineNodeIndex,
 } from "react-icons/ai";
 import { lazy } from "react";
 import { MdOutlineArticle, MdVideoLibrary } from "react-icons/md";
@@ -61,6 +63,8 @@ import PathRuleConfigPage from "@/pages/path-mark-config";
 import PathMarksPage from "@/pages/path-marks";
 import ProfilerPage from "@/pages/profiler";
 import MobileAppPage from "@/pages/mobile-app";
+import ClientConnectionPage from "@/pages/client-connection";
+import ClientPathMappingPage from "@/pages/client-path-mapping";
 import ComparisonPage from "@/pages/comparison";
 import AiConfigurationPage from "@/pages/ai-configuration";
 import ChatPage from "@/pages/chat";
@@ -92,6 +96,12 @@ export interface RouteMenuItem {
   isBeta?: boolean;
   isDeprecated?: boolean;
   menu?: boolean;
+  /**
+   * Hidden unless this is the thin client. Evaluated when the menu renders rather than
+   * when this module loads: the answer arrives from the context call, which has not
+   * happened yet at import time.
+   */
+  pureClientOnly?: boolean;
 }
 
 export const routesMenuConfig: RouteMenuItem[] = [
@@ -474,6 +484,34 @@ export const routesMenuConfig: RouteMenuItem[] = [
     icon: AiOutlineMobile,
     layout: "basic",
     menu: true,
+  },
+  {
+    // The endpoints behind these pages exist only in the thin client, so the group is
+    // filtered out of the menu everywhere else — see `pureClientOnly`. The routes stay
+    // registered regardless, because a bookmark can still land on one, and each page
+    // renders a notice rather than a broken screen.
+    name: "menu.client",
+    icon: AiOutlineLaptop,
+    menu: true,
+    pureClientOnly: true,
+    children: [
+      {
+        name: "menu.client.connection",
+        path: "/client-connection",
+        component: ClientConnectionPage,
+        icon: AiOutlineLaptop,
+        layout: "basic",
+        menu: true,
+      },
+      {
+        name: "menu.client.pathMapping",
+        path: "/client-path-mapping",
+        component: ClientPathMappingPage,
+        icon: AiOutlineNodeIndex,
+        layout: "basic",
+        menu: true,
+      },
+    ],
   },
   {
     name: "menu.test",
