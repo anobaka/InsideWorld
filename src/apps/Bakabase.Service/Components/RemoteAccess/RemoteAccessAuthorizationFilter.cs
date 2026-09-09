@@ -50,8 +50,11 @@ namespace Bakabase.Service.Components.RemoteAccess
                 return;
             }
 
-            // (3) Anything goes, for callers the host has opted into trusting.
-            if (remoteContext is {IsUnrestricted: true})
+            // (3) Anything goes, for callers the host has opted into trusting — either
+            // by the mode, or by pairing this specific device. Pairing is what makes a
+            // remote client feature-complete without anyone marking up the four hundred
+            // odd endpoints nobody has reviewed.
+            if (remoteContext is {IsUnrestricted: true} or {IsPaired: true})
             {
                 return;
             }

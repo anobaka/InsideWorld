@@ -1,10 +1,12 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Modules.RemoteAccess.Abstractions.Models;
 using Bakabase.Modules.RemoteAccess.Abstractions.Services;
+using Bakabase.Modules.RemoteAccess.Components.Pairing;
 using Bootstrap.Components.Miscellaneous.ResponseBuilders;
 using Bootstrap.Models.Constants;
 using Microsoft.AspNetCore.Http;
@@ -19,8 +21,14 @@ namespace Bakabase.Service.Components.RemoteAccess
     /// <para>
     /// Loopback requests pass straight through, so the desktop app behaves exactly
     /// as it always has. Everything else is judged against
-    /// <see cref="RemoteAccessMode"/>. There is no identity involved — anything that
-    /// can reach the port is trusted — so this is a switch, not an access check.
+    /// <see cref="RemoteAccessMode"/>, and — if it offered one — against its device
+    /// signature.
+    /// </para>
+    /// <para>
+    /// Signing is optional by default: a LAN caller that presents nothing is anonymous,
+    /// which is what every existing phone does. Pairing raises what a caller may reach;
+    /// it becomes a requirement only when the operator turns
+    /// <c>RequirePairing</c> on.
     /// </para>
     /// <para>
     /// Per-endpoint decisions are left to <see cref="RemoteAccessAuthorizationFilter"/>,
@@ -42,19 +50,43 @@ namespace Bakabase.Service.Components.RemoteAccess
             "/internal-doc"
         ];
 
-        public async Task InvokeAsync(HttpContext context, IRemoteAccessService remoteAccessService)
+        /// <summary>
+        /// Reachable without pairing even when pairing is required, because a device
+        /// with no credentials has to be able to get some. Everything else under
+        /// <c>/remote-access</c> stays behind the gate.
+        /// </summary>
+        private static readonly string[] AnonymousPathPrefixes =
+        [
+            "/remote-access/server-info",
+            "/remote-access/pair",
+            "/remote-access/pairing"
+        ];
+
+        public async Task InvokeAsync(HttpContext context, IRemoteAccessService remoteAccessService,
+            RemoteDeviceAuthenticator authenticator, IRemoteDeviceService deviceService)
         {
             var isLoopback = IsLoopback(context);
             var mode = remoteAccessService.GetEffectiveMode();
 
-            context.SetRemoteAccessContext(new RemoteAccessContext {IsLoopback = isLoopback, Mode = mode});
-
-            if (isLoopback || mode == RemoteAccessMode.Unrestricted)
+            // The host itself leaves here, before any of the identity work below. This
+            // ordering is what makes the all-in-one provably unaffected.
+            if (isLoopback)
             {
+                context.SetRemoteAccessContext(new RemoteAccessContext {IsLoopback = true, Mode = mode});
                 await next(context);
                 return;
             }
 
+            var auth = await AuthenticateAsync(context, authenticator);
+            context.SetRemoteAccessContext(new RemoteAccessContext
+            {
+                IsLoopback = false,
+                Mode = mode,
+                Device = auth.Outcome == DeviceAuthOutcome.Authenticated ? auth.Device : null
+            });
+
+            // Checked before anything about pairing, so a switched-off server does not
+            // reveal whether a device is known to it.
             if (mode == RemoteAccessMode.Disabled)
             {
                 await WriteDenial(context, HttpStatusCode.Forbidden, RemoteAccessDenialReason.Disabled,
@@ -62,7 +94,38 @@ namespace Bakabase.Service.Components.RemoteAccess
                 return;
             }
 
+            if (!auth.MayProceed)
+            {
+                // A caller that tried to sign and failed is told why. Falling through as
+                // anonymous instead would hide a revoked device or a wrong clock behind
+                // whatever generic refusal came later.
+                var (reason, message) = Describe(auth.Outcome);
+                await WriteDenial(context, HttpStatusCode.Unauthorized, reason, message);
+                return;
+            }
+
             var path = context.Request.Path.Value ?? string.Empty;
+
+            if (mode != RemoteAccessMode.Unrestricted &&
+                remoteAccessService.GetRequirePairing() &&
+                auth.Outcome != DeviceAuthOutcome.Authenticated &&
+                !AnonymousPathPrefixes.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
+            {
+                await WriteDenial(context, HttpStatusCode.Unauthorized, RemoteAccessDenialReason.Unauthenticated,
+                    "This server only serves paired devices. Pair this one first.");
+                return;
+            }
+
+            if (auth.Outcome == DeviceAuthOutcome.Authenticated)
+            {
+                await deviceService.TouchAsync(auth.Device!.Id, context.RequestAborted);
+            }
+
+            if (mode == RemoteAccessMode.Unrestricted)
+            {
+                await next(context);
+                return;
+            }
 
             if (HostOnlyPathPrefixes.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
             {
@@ -73,6 +136,61 @@ namespace Bakabase.Service.Components.RemoteAccess
 
             await next(context);
         }
+
+        /// <summary>
+        /// Verifies the signature, hashing the body only when the caller was expected to
+        /// hash it too.
+        /// </summary>
+        /// <remarks>
+        /// Both sides decide that from the same observable — a non-GET request whose
+        /// declared length fits the threshold — so they cannot disagree about what was
+        /// signed. Anything else (a streamed upload, a chunked request with no declared
+        /// length) is signed with an empty digest, which leaves its body outside the
+        /// signature; the method, path, query, timestamp and nonce still are not.
+        /// <para>
+        /// Buffering happens only for requests that actually carry our scheme, so an
+        /// anonymous caller never pays for it and a large upload is never copied.
+        /// </para>
+        /// </remarks>
+        private static async Task<DeviceAuthResult> AuthenticateAsync(HttpContext context,
+            RemoteDeviceAuthenticator authenticator)
+        {
+            var header = context.Request.Headers.Authorization.ToString();
+            if (RemoteRequestSignature.TryParseHeader(header) == null)
+            {
+                return DeviceAuthResult.Anonymous;
+            }
+
+            var request = context.Request;
+            var bodyDigest = string.Empty;
+
+            var hashable = !HttpMethods.IsGet(request.Method) &&
+                           !HttpMethods.IsHead(request.Method) &&
+                           request.ContentLength is > 0 and <= RemoteRequestSignature.MaxHashedBodyBytes;
+
+            if (hashable)
+            {
+                request.EnableBuffering();
+                using var buffer = new MemoryStream((int) request.ContentLength!.Value);
+                await request.Body.CopyToAsync(buffer, context.RequestAborted);
+                request.Body.Position = 0;
+                bodyDigest = RemoteRequestSignature.HashBody(buffer.GetBuffer().AsSpan(0, (int) buffer.Length));
+            }
+
+            return authenticator.Authenticate(header, request.Method, request.Path.Value ?? string.Empty,
+                request.QueryString.HasValue ? request.QueryString.Value![1..] : string.Empty, bodyDigest);
+        }
+
+        private static (RemoteAccessDenialReason Reason, string Message) Describe(DeviceAuthOutcome outcome) =>
+            outcome switch
+            {
+                DeviceAuthOutcome.UnknownDevice => (RemoteAccessDenialReason.DeviceRevoked,
+                    "This device is no longer paired with this server. Pair it again."),
+                DeviceAuthOutcome.Expired => (RemoteAccessDenialReason.SignatureExpired,
+                    "This device's clock is too far from the server's. Check the time on both."),
+                _ => (RemoteAccessDenialReason.Unauthenticated,
+                    "This request could not be verified. Pair this device again.")
+            };
 
         private static bool IsLoopback(HttpContext context)
         {

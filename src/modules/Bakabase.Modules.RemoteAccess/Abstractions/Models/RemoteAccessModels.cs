@@ -37,7 +37,26 @@ public enum RemoteAccessDenialReason
     /// device: it is not a permission, it is a statement about where the action means
     /// anything.
     /// </summary>
-    RunsOnUserMachine = 5
+    RunsOnUserMachine = 5,
+
+    /// <summary>
+    /// Pairing is required here and this caller has none. Distinct from
+    /// <see cref="Disabled"/>: the door exists, the caller just has no key.
+    /// </summary>
+    Unauthenticated = 6,
+
+    /// <summary>
+    /// The signature's timestamp is outside the accepted window. Nearly always a wrong
+    /// clock rather than an attack, and the UI should say so — telling someone their
+    /// pairing is broken when their clock is off sends them to the wrong fix.
+    /// </summary>
+    SignatureExpired = 7,
+
+    /// <summary>
+    /// Signed as a device the server no longer knows. The device was revoked, or the
+    /// server's data was reset.
+    /// </summary>
+    DeviceRevoked = 8
 }
 
 /// <summary>
@@ -49,11 +68,25 @@ public record RemoteAccessContext
     public required bool IsLoopback { get; init; }
     public required RemoteAccessMode Mode { get; init; }
 
+    /// <summary>The device that signed this request, if any.</summary>
+    public RemoteDevice? Device { get; init; }
+
     /// <summary>
     /// True when this request bypasses every remote check — a loopback caller, or
     /// <see cref="RemoteAccessMode.Unrestricted"/>.
     /// </summary>
     public bool IsUnrestricted => IsLoopback || Mode == RemoteAccessMode.Unrestricted;
+
+    /// <summary>
+    /// Whether a known device signed this request.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately separate from <see cref="IsUnrestricted"/> rather than folded into
+    /// it. That property has other consumers — live transcoding is gated on it, among
+    /// them — and collapsing the two would quietly hand paired devices permissions
+    /// nobody decided to give them.
+    /// </remarks>
+    public bool IsPaired => Device != null;
 }
 
 /// <summary>

@@ -38,6 +38,9 @@ public static class ServiceCollectionExtensions
         // directory.
         services.TryAddSingleton<IRemoteDeviceStore, RemoteDeviceStore>();
         services.TryAddSingleton<NonceCache>();
+        services.TryAddSingleton<IRemoteDeviceService>(sp =>
+            new RemoteDeviceService(sp.GetRequiredService<IRemoteDeviceStore>()));
+        services.TryAddSingleton<RemoteDeviceAuthenticator>();
 
         services.AddSingleton<IServableRootProvider, MediaLibraryServableRootProvider>();
         services.AddSingleton<IServableRootProvider, PathMarkServableRootProvider>();

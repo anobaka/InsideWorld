@@ -29,7 +29,12 @@ namespace Bakabase.Service.Components.RemoteAccess
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             var remoteContext = context.HttpContext.GetRemoteAccessContext();
-            if (remoteContext is {IsUnrestricted: true})
+
+            // A paired device is one the operator deliberately let in, and the point of
+            // pairing is parity with sitting at the machine — a playlist entry, a
+            // subtitle or a cover may legitimately live outside every library root. The
+            // guard exists for callers nobody vouched for.
+            if (remoteContext is {IsUnrestricted: true} or {IsPaired: true})
             {
                 await next();
                 return;

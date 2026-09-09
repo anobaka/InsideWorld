@@ -41,6 +41,18 @@ public class RemoteAccessOptions
     public bool AllowLiveTranscode { get; set; }
 
     /// <summary>
+    /// Whether an unpaired caller is refused outright. Off by default, so a LAN that
+    /// works today keeps working.
+    /// </summary>
+    /// <remarks>
+    /// This is the switch for deployments that are not a home network — turning it on
+    /// leaves an unpaired caller nothing but the pairing handshake itself. It is a
+    /// public flag with no secret in it, which is why it may live here; device keys and
+    /// pairing codes may not.
+    /// </remarks>
+    public bool RequirePairing { get; set; }
+
+    /// <summary>
     /// Stable identity of this Bakabase install, generated once on first use.
     /// Lets a client recognize "the server I paired my library browsing with"
     /// across IP changes and restarts — the address is transient, this is not.
