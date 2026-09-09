@@ -45,8 +45,10 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
             SingleWriter = false
         });
 
-    // Batch update configuration
-    private const int BatchSize = 100;
+    // Batch update configuration. Bulk callers enqueue bounded chunks and the single
+    // reader adaptively coalesces adjacent chunks up to this many distinct resources.
+    // This keeps memory predictable while avoiding a full cache scan for every 100 IDs.
+    private const int MaxBatchResourceCount = 4096;
     private const int MaxDelayMs = 500;
     private const int MinBatchIntervalMs = 50;
     private const int MaxBatchAttempts = 3;
@@ -59,10 +61,11 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
     private Exception? _unrecoveredIndexFailure;
     private readonly CancellationTokenSource _backgroundCts = new();
     private Task? _backgroundTask;
+    private long _pendingOperationCount;
 
     private abstract record IndexQueueItem;
 
-    private sealed record OperationQueueItem(IndexOperation Operation) : IndexQueueItem;
+    private sealed record OperationBatchQueueItem(IReadOnlyList<IndexOperation> Operations) : IndexQueueItem;
 
     private sealed record BarrierQueueItem(TaskCompletionSource Completion) : IndexQueueItem;
 
@@ -172,28 +175,22 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
 
     public void InvalidateResource(int resourceId)
     {
-        EnqueueOperation(new IndexOperation(IndexOperationType.Update, resourceId));
+        EnqueueOperations(IndexOperationType.Update, [resourceId]);
     }
 
     public void InvalidateResources(IEnumerable<int> resourceIds)
     {
-        foreach (var resourceId in resourceIds)
-        {
-            EnqueueOperation(new IndexOperation(IndexOperationType.Update, resourceId));
-        }
+        EnqueueOperations(IndexOperationType.Update, resourceIds);
     }
 
     public void RemoveResource(int resourceId)
     {
-        EnqueueOperation(new IndexOperation(IndexOperationType.Remove, resourceId));
+        EnqueueOperations(IndexOperationType.Remove, [resourceId]);
     }
 
     public void RemoveResources(IEnumerable<int> resourceIds)
     {
-        foreach (var resourceId in resourceIds)
-        {
-            EnqueueOperation(new IndexOperation(IndexOperationType.Remove, resourceId));
-        }
+        EnqueueOperations(IndexOperationType.Remove, resourceIds);
     }
 
     public async Task WaitForPendingUpdatesAsync(CancellationToken ct = default)
@@ -210,16 +207,29 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
         await completion.Task;
     }
 
-    private void EnqueueOperation(IndexOperation operation)
+    private void EnqueueOperations(IndexOperationType type, IEnumerable<int> resourceIds)
     {
-        if (!_operationChannel.Writer.TryWrite(new OperationQueueItem(operation)))
+        // Deduplicate one bulk notification before it reaches the channel. Very large
+        // notifications are split so no individual queue item or processing batch is
+        // unbounded; the reader can still merge adjacent chunks when IDs overlap.
+        foreach (var chunk in resourceIds.Distinct().Chunk(MaxBatchResourceCount))
         {
+            var operations = chunk.Select(resourceId => new IndexOperation(type, resourceId)).ToArray();
+            Interlocked.Add(ref _pendingOperationCount, operations.Length);
+
+            if (_operationChannel.Writer.TryWrite(new OperationBatchQueueItem(operations)))
+            {
+                continue;
+            }
+
+            Interlocked.Add(ref _pendingOperationCount, -operations.Length);
             _logger.LogError(
-                "Failed to enqueue {OperationType} operation for resource {ResourceId}",
-                operation.Type,
-                operation.ResourceId);
+                "Failed to enqueue {OperationType} operations for {ResourceCount} resources",
+                type,
+                operations.Length);
             MarkIndexUnavailable(new InvalidOperationException(
-                $"Failed to enqueue {operation.Type} operation for resource {operation.ResourceId}"));
+                $"Failed to enqueue {type} operations for {operations.Length} resources"));
+            return;
         }
     }
 
@@ -229,57 +239,118 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
 
     private async Task ProcessOperationsAsync(CancellationToken ct)
     {
-        var batch = new List<IndexOperation>(BatchSize);
+        var batch = new Dictionary<int, IndexOperationType>(MaxBatchResourceCount);
+        IndexQueueItem? deferredItem = null;
 
         while (!ct.IsCancellationRequested)
         {
             try
             {
-                // Wait for the first operation
-                if (!await _operationChannel.Reader.WaitToReadAsync(ct))
+                IndexQueueItem? item;
+                if (deferredItem != null)
                 {
-                    break;
+                    item = deferredItem;
+                    deferredItem = null;
+                }
+                else
+                {
+                    // Wait for the first operation or barrier.
+                    if (!await _operationChannel.Reader.WaitToReadAsync(ct))
+                    {
+                        break;
+                    }
+
+                    if (!_operationChannel.Reader.TryRead(out item))
+                    {
+                        continue;
+                    }
                 }
 
                 batch.Clear();
                 var deadline = DateTime.UtcNow.AddMilliseconds(MaxDelayMs);
-                var processedOperations = false;
+                BarrierQueueItem? barrier = null;
+                var channelCompleted = false;
 
-                while (batch.Count < BatchSize &&
-                       DateTime.UtcNow < deadline &&
-                       _operationChannel.Reader.TryRead(out var item))
+                while (item != null)
                 {
-                    if (item is OperationQueueItem operationItem)
+                    if (item is BarrierQueueItem barrierItem)
                     {
-                        batch.Add(operationItem.Operation);
+                        // Never read or merge work beyond a barrier. Its completion therefore
+                        // remains an exact FIFO acknowledgement of the preceding prefix.
+                        barrier = barrierItem;
+                        break;
+                    }
+
+                    var operationItem = (OperationBatchQueueItem)item;
+                    var consumed = MergeOperations(batch, operationItem.Operations);
+                    Interlocked.Add(ref _pendingOperationCount, -consumed);
+
+                    if (consumed < operationItem.Operations.Count)
+                    {
+                        // This queue item exceeded the bounded number of distinct resources.
+                        // Keep its unconsumed suffix ahead of every item still in the channel.
+                        deferredItem = new OperationBatchQueueItem(operationItem.Operations
+                            .Skip(consumed)
+                            .ToArray());
+                        break;
+                    }
+
+                    if (batch.Count >= MaxBatchResourceCount)
+                    {
+                        break;
+                    }
+
+                    if (_operationChannel.Reader.TryRead(out item))
+                    {
                         continue;
                     }
 
-                    var barrier = (BarrierQueueItem)item;
-
-                    // A batch must never cross a barrier. Apply everything collected before
-                    // it, then complete the barrier before reading any subsequent work.
-                    if (batch.Count > 0)
+                    // Give adjacent small notifications a short bounded window to arrive.
+                    // A barrier arriving in this window is consumed on the next iteration and
+                    // ends the batch immediately.
+                    var remaining = deadline - DateTime.UtcNow;
+                    if (remaining <= TimeSpan.Zero)
                     {
-                        await ProcessBatchWithRetryAsync(batch, ct);
-                        batch.Clear();
-                        processedOperations = true;
+                        break;
                     }
 
-                    await CompleteBarrierAsync(barrier, ct);
-                    break;
+                    using var collectionCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                    collectionCts.CancelAfter(remaining);
+                    try
+                    {
+                        if (!await _operationChannel.Reader.WaitToReadAsync(collectionCts.Token))
+                        {
+                            channelCompleted = true;
+                            break;
+                        }
+                    }
+                    catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
+                    _operationChannel.Reader.TryRead(out item);
                 }
 
                 if (batch.Count > 0)
                 {
                     await ProcessBatchWithRetryAsync(batch, ct);
-                    processedOperations = true;
                 }
 
-                if (processedOperations)
+                if (barrier != null)
                 {
-                    // Brief pause between batches to avoid resource overuse
+                    await CompleteBarrierAsync(barrier, ct);
+                }
+
+                if (batch.Count > 0)
+                {
+                    // Brief pause between batches to avoid resource overuse.
                     await Task.Delay(MinBatchIntervalMs, ct);
+                }
+
+                if (channelCompleted && deferredItem == null)
+                {
+                    break;
                 }
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -294,7 +365,38 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
         }
     }
 
-    private async Task ProcessBatchWithRetryAsync(List<IndexOperation> operations, CancellationToken ct)
+    private static int MergeOperations(
+        Dictionary<int, IndexOperationType> batch,
+        IReadOnlyList<IndexOperation> operations)
+    {
+        var consumed = 0;
+        foreach (var operation in operations)
+        {
+            if (!batch.TryGetValue(operation.ResourceId, out var existingType))
+            {
+                if (batch.Count >= MaxBatchResourceCount)
+                {
+                    break;
+                }
+
+                batch[operation.ResourceId] = operation.Type;
+            }
+            else if (existingType == IndexOperationType.Remove || operation.Type == IndexOperationType.Remove)
+            {
+                // A removal wins within one barrier-delimited batch. Re-reading a resource
+                // that was removed in the same logical change can resurrect stale entries.
+                batch[operation.ResourceId] = IndexOperationType.Remove;
+            }
+
+            consumed++;
+        }
+
+        return consumed;
+    }
+
+    private async Task ProcessBatchWithRetryAsync(
+        IReadOnlyDictionary<int, IndexOperationType> operations,
+        CancellationToken ct)
     {
         Exception? lastError = null;
 
@@ -373,20 +475,19 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
         }
     }
 
-    private async Task ProcessBatchAsync(List<IndexOperation> operations, CancellationToken ct)
+    private async Task ProcessBatchAsync(
+        IReadOnlyDictionary<int, IndexOperationType> operations,
+        CancellationToken ct)
     {
-        // Group by operation type and deduplicate
+        // Operations have already been deduplicated across adjacent queue items.
         var toRemove = operations
-            .Where(o => o.Type == IndexOperationType.Remove)
-            .Select(o => o.ResourceId)
-            .Distinct()
+            .Where(o => o.Value == IndexOperationType.Remove)
+            .Select(o => o.Key)
             .ToArray();
 
         var toUpdate = operations
-            .Where(o => o.Type == IndexOperationType.Update)
-            .Select(o => o.ResourceId)
-            .Distinct()
-            .Except(toRemove) // Don't update what we're removing
+            .Where(o => o.Value == IndexOperationType.Update)
+            .Select(o => o.Key)
             .ToArray();
 
         // Process removals first
@@ -415,6 +516,7 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
     private async Task UpdateResourcesIndexAsync(int[] resourceIds, CancellationToken ct)
     {
         using var scope = _scopeFactory.CreateScope();
+        var resourceIdSet = resourceIds.ToHashSet();
 
         try
         {
@@ -432,7 +534,7 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
                 .GetRequiredService<IMediaLibraryResourceMappingService>();
 
             var customPropertyValues = await customPropertyValueService
-                .GetAll(x => resourceIds.Contains(x.ResourceId),
+                .GetAll(x => resourceIdSet.Contains(x.ResourceId),
                     InsideWorld.Models.Constants.AdditionalItems.CustomPropertyValueAdditionalItem.None, false);
             var customPropertyService = scope.ServiceProvider
                 .GetRequiredService<ICustomPropertyService>();
@@ -440,8 +542,8 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
             var propertyMap = customProperties.ToDictionary(p => p.Id, p => p.ToProperty());
 
             var reservedPropertyValues = await reservedPropertyValueService
-                .GetAll(x => resourceIds.Contains(x.ResourceId));
-            var resourceDbModels = await resourceOrm.GetAllDbModels(x => resourceIds.Contains(x.Id));
+                .GetAll(x => resourceIdSet.Contains(x.ResourceId));
+            var resourceDbModels = await resourceOrm.GetAllDbModels(x => resourceIdSet.Contains(x.Id));
             var dbResourceMap = resourceDbModels.ToDictionary(r => r.Id, r => r);
             var mediaLibraryMappings = await mediaLibraryResourceMappingService
                 .GetMediaLibraryIdsByResourceIds(resourceIds);
@@ -1241,8 +1343,8 @@ public class ResourceSearchIndexService : IResourceSearchIndexService
             Version = _index.Version,
             LastUpdatedAt = _index.LastUpdatedAt,
             TotalResourceCount = _index.AllResourceIds.Count,
-            // CanCount guard: the single-reader operation channel does not support Count.
-            PendingUpdateCount = _operationChannel.Reader.CanCount ? _operationChannel.Reader.Count : 0,
+            PendingUpdateCount = (int)Math.Min(int.MaxValue,
+                Math.Max(0, Interlocked.Read(ref _pendingOperationCount))),
             IndexSizes = new Dictionary<string, int>
             {
                 ["ValueIndex"] = _index.GetValueIndexEntryCount(),
