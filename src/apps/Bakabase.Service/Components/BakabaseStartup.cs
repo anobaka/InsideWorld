@@ -130,6 +130,10 @@ namespace Bakabase.Service.Components
             services.AddSingleton<RemoteAccessHubFilter>();
             services.Configure<HubOptions>(o => o.AddFilter<RemoteAccessHubFilter>());
 
+            // Idle unless the server is locked out of itself, which on a desktop
+            // install it never is.
+            services.AddHostedService<FirstDevicePairingCodeAnnouncer>();
+
             services.AddSingleton<ThirdPartyHttpRequestLogger>();
 
             services.TryAddSingleton<Bakabase.Service.Components.Mobile.MobileAppDownloadService>();
