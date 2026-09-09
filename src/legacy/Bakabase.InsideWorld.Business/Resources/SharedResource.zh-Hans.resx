@@ -621,6 +621,12 @@
   <data name="ResourceProfileIndex_UpdatingResourceMappings" xml:space="preserve">
     <value>正在更新 {0} 个资源的配置映射...</value>
   </data>
+  <data name="BTask_Name_AcquisitionQueue" xml:space="preserve">
+    <value>获取队列</value>
+  </data>
+  <data name="BTask_Description_AcquisitionQueue" xml:space="preserve">
+    <value>让获取任务与执行它们的工作流保持一致，并在有空位时启动排队中的获取。</value>
+  </data>
   <data name="BTask_Name_SearchIndex" xml:space="preserve">
     <value>构建搜索索引</value>
   </data>
