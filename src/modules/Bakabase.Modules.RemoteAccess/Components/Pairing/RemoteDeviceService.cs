@@ -76,13 +76,9 @@ public interface IRemoteDeviceService
 /// and two devices racing cannot both win.
 /// </para>
 /// </remarks>
-public sealed class RemoteDeviceService(
-    IRemoteDeviceStore store,
-    Func<DateTime>? now = null,
-    Func<string>? serverId = null) : IRemoteDeviceService
+public sealed class RemoteDeviceService(IRemoteDeviceStore store, Func<DateTime>? now = null) : IRemoteDeviceService
 {
     private readonly Func<DateTime> _now = now ?? (() => DateTime.UtcNow);
-    private readonly Func<string> _serverId = serverId ?? (() => string.Empty);
 
     public bool HasAnyDevice => store.Read().Devices.Count > 0;
 
@@ -163,7 +159,7 @@ public sealed class RemoteDeviceService(
 
             var device = NewDevice(deviceName, platform, now, approvedBy: null);
             data.Devices.Add(device);
-            return PairingResult.Ok(new PairingCredentials(device.Id, device.Key, _serverId()));
+            return PairingResult.Ok(new PairingCredentials(device.Id, device.Key));
         }, ct);
     }
 
@@ -186,6 +182,7 @@ public sealed class RemoteDeviceService(
         await store.MutateAsync(data =>
         {
             DropExpired(data, now);
+            TrimPending(data);
             data.PendingRequests.Add(request);
         }, ct);
 
@@ -253,7 +250,7 @@ public sealed class RemoteDeviceService(
             data.Devices.Add(device);
             data.PendingRequests.Remove(request);
 
-            return PairingResult.Ok(new PairingCredentials(device.Id, device.Key, _serverId()));
+            return PairingResult.Ok(new PairingCredentials(device.Id, device.Key));
         }, ct);
     }
 
@@ -311,6 +308,21 @@ public sealed class RemoteDeviceService(
 
     private static void DropExpired(RemoteDeviceStoreData data, DateTime now) =>
         data.PendingRequests.RemoveAll(r => r.ExpiresAt <= now);
+
+    /// <summary>
+    /// Keeps room for the request about to be added. Unapproved requests go first: an
+    /// approved one belongs to a device already waiting to collect its key, and dropping
+    /// it would strand that device.
+    /// </summary>
+    private static void TrimPending(RemoteDeviceStoreData data)
+    {
+        while (data.PendingRequests.Count >= PendingPairingRequest.MaxPending)
+        {
+            var oldest = data.PendingRequests.Where(r => !r.IsApproved).MinBy(r => r.RequestedAt) ??
+                         data.PendingRequests.MinBy(r => r.RequestedAt)!;
+            data.PendingRequests.Remove(oldest);
+        }
+    }
 
     /// <summary>
     /// Digits only, so it can be read aloud and typed on a phone. Drawn from a uniform

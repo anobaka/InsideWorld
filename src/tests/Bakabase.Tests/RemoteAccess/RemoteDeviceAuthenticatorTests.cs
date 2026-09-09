@@ -31,7 +31,7 @@ public class RemoteDeviceAuthenticatorTests
         _now = new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc);
 
         var store = new RemoteDeviceStore(new TempDirectory(Path.Combine(_root, "remote-access")));
-        _devices = new RemoteDeviceService(store, () => _now, () => "server-1");
+        _devices = new RemoteDeviceService(store, () => _now);
         _nonces = new NonceCache(TimeSpan.FromMinutes(10), 4096, () => _now);
         _auth = new RemoteDeviceAuthenticator(_devices, _nonces, () => _now);
 

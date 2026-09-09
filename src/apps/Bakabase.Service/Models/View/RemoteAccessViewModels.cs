@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System;
 using Bakabase.Abstractions.Models.Domain.Constants;
+using Bakabase.Modules.RemoteAccess.Abstractions.Models;
 
 namespace Bakabase.Service.Models.View
 {
@@ -17,6 +19,13 @@ namespace Bakabase.Service.Models.View
         public bool IsLocal { get; set; }
 
         public RemoteAccessMode Mode { get; set; }
+
+        /// <summary>Whether this caller's request carried a valid device signature.</summary>
+        public bool Paired { get; set; }
+
+        public string? DeviceId { get; set; }
+
+        public string? DeviceName { get; set; }
     }
 
     public record RemoteAccessAddressViewModel
@@ -41,6 +50,107 @@ namespace Bakabase.Service.Models.View
         /// remote playback of incompatible video is meant for native players.
         /// </summary>
         public bool AllowLiveTranscode { get; set; }
+
+        /// <summary>Whether unpaired callers are refused outright.</summary>
+        public bool RequirePairing { get; set; }
+
+        public List<RemoteAccessDeviceViewModel> Devices { get; set; } = [];
+
+        public List<RemoteAccessPendingRequestViewModel> PendingRequests { get; set; } = [];
+
+        /// <summary>Null when no code is outstanding.</summary>
+        public RemoteAccessPairingCodeViewModel? PairingCode { get; set; }
+    }
+
+    /// <summary>
+    /// A paired device as the settings page shows it. Carries no key — the key exists
+    /// on the server only to verify signatures and is never rendered anywhere.
+    /// </summary>
+    public record RemoteAccessDeviceViewModel
+    {
+        public string Id { get; set; } = null!;
+
+        public string Name { get; set; } = null!;
+
+        public RemoteDevicePlatform Platform { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+
+        /// <summary>Null until the device makes its first signed request.</summary>
+        public DateTime? LastSeenAt { get; set; }
+
+        /// <summary>Which device let this one in; null for the first, which used a code.</summary>
+        public string? ApprovedByDeviceId { get; set; }
+    }
+
+    public record RemoteAccessPendingRequestViewModel
+    {
+        public string Id { get; set; } = null!;
+
+        public string DeviceName { get; set; } = null!;
+
+        public RemoteDevicePlatform Platform { get; set; }
+
+        /// <summary>Where it came from, so the approver can sanity-check it.</summary>
+        public string? RemoteAddress { get; set; }
+
+        public DateTime RequestedAt { get; set; }
+
+        public DateTime ExpiresAt { get; set; }
+    }
+
+    /// <summary>
+    /// Status of the outstanding code. The code itself appears only in the response that
+    /// issued it.
+    /// </summary>
+    public record RemoteAccessPairingCodeViewModel
+    {
+        public DateTime ExpiresAt { get; set; }
+
+        public int RemainingAttempts { get; set; }
+    }
+
+    /// <summary>The one response that carries a pairing code in plain text.</summary>
+    public record RemoteAccessIssuedPairingCodeViewModel
+    {
+        public string Code { get; set; } = null!;
+
+        public DateTime ExpiresAt { get; set; }
+    }
+
+    /// <summary>
+    /// Credentials for a device that just paired. The key is returned here and never
+    /// again — the device is expected to store it.
+    /// </summary>
+    public record RemoteAccessPairingCredentialsViewModel
+    {
+        public string DeviceId { get; set; } = null!;
+
+        public string Key { get; set; } = null!;
+
+        public string ServerId { get; set; } = null!;
+    }
+
+    /// <summary>
+    /// The result of asking to pair, or of collecting the answer. Exactly one of
+    /// <see cref="Credentials"/> and <see cref="Failure"/> is meaningful.
+    /// </summary>
+    public record RemoteAccessPairingResultViewModel
+    {
+        public RemoteAccessPairingCredentialsViewModel? Credentials { get; set; }
+
+        public PairingFailure Failure { get; set; }
+    }
+
+    public record RemoteAccessPairingRequestAcceptedViewModel
+    {
+        /// <summary>
+        /// Present this to collect credentials once somebody approves. It is the only
+        /// thing identifying this request, so it is treated as a secret.
+        /// </summary>
+        public string RequestId { get; set; } = null!;
+
+        public DateTime ExpiresAt { get; set; }
     }
 
     /// <summary>
@@ -65,5 +175,18 @@ namespace Bakabase.Service.Models.View
         public int ProtocolVersion { get; set; }
 
         public RemoteAccessMode Mode { get; set; }
+
+        /// <summary>
+        /// Whether this server understands device pairing. A capability flag rather than
+        /// a protocol bump: raising the protocol version would make every already
+        /// installed client refuse to connect as "too new".
+        /// </summary>
+        public bool PairingSupported { get; set; }
+
+        /// <summary>
+        /// The server's clock, so a client can measure its offset and sign with a
+        /// timestamp the server will accept.
+        /// </summary>
+        public DateTime ServerTime { get; set; }
     }
 }

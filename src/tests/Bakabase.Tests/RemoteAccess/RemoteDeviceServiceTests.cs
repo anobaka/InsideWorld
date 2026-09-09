@@ -29,7 +29,7 @@ public class RemoteDeviceServiceTests
         _root = Path.Combine(Path.GetTempPath(), "bakabase-pairing-tests", Guid.NewGuid().ToString("N"));
         _now = new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc);
         _store = new RemoteDeviceStore(new TempDirectory(Path.Combine(_root, "remote-access")));
-        _service = new RemoteDeviceService(_store, () => _now, () => "server-1");
+        _service = new RemoteDeviceService(_store, () => _now);
     }
 
     [TestCleanup]
@@ -56,7 +56,6 @@ public class RemoteDeviceServiceTests
 
         var first = await _service.PairWithCodeAsync(issue.Code, "Phone", RemoteDevicePlatform.Android);
         Assert.IsTrue(first.Succeeded);
-        Assert.AreEqual("server-1", first.Credentials!.ServerId);
 
         // Consumed: the same code must not let a second device in.
         var second = await _service.PairWithCodeAsync(issue.Code, "Laptop", RemoteDevicePlatform.Windows);
@@ -242,6 +241,41 @@ public class RemoteDeviceServiceTests
         Assert.AreEqual(1, _service.GetPendingRequests().Count);
         await _service.ApproveRequestAsync(request.Id, approver);
         Assert.AreEqual(0, _service.GetPendingRequests().Count);
+    }
+
+    [TestMethod]
+    public async Task The_pending_queue_is_bounded()
+    {
+        // Anyone who can reach the server can file a request without credentials, so an
+        // unbounded queue is a file that grows on its own.
+        for (var i = 0; i < PendingPairingRequest.MaxPending + 10; i++)
+        {
+            await _service.RequestPairingAsync($"Device {i}", RemoteDevicePlatform.Android, null);
+        }
+
+        Assert.AreEqual(PendingPairingRequest.MaxPending, _service.GetPendingRequests().Count);
+
+        // Trimming takes the oldest, so the request a real user just filed survives a
+        // flood rather than being the one dropped.
+        Assert.IsTrue(_service.GetPendingRequests()
+            .Any(r => r.DeviceName == $"Device {PendingPairingRequest.MaxPending + 9}"));
+    }
+
+    [TestMethod]
+    public async Task A_flood_cannot_strand_a_device_waiting_for_its_key()
+    {
+        // An approved request holds the only copy of a key its device has not collected
+        // yet. Dropping it under pressure would leave that device unable to finish.
+        var approver = (await PairFirstDevice()).DeviceId;
+        var mine = await _service.RequestPairingAsync("Tablet", RemoteDevicePlatform.Android, null);
+        Assert.IsTrue(await _service.ApproveRequestAsync(mine.Id, approver));
+
+        for (var i = 0; i < PendingPairingRequest.MaxPending * 2; i++)
+        {
+            await _service.RequestPairingAsync($"Noise {i}", RemoteDevicePlatform.Android, null);
+        }
+
+        Assert.IsTrue((await _service.ClaimApprovedAsync(mine.Id)).Succeeded);
     }
 
     // ---- device list ----

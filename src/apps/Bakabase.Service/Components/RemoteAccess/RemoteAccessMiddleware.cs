@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -52,14 +53,19 @@ namespace Bakabase.Service.Components.RemoteAccess
 
         /// <summary>
         /// Reachable without pairing even when pairing is required, because a device
-        /// with no credentials has to be able to get some. Everything else under
-        /// <c>/remote-access</c> stays behind the gate.
+        /// with no credentials has to be able to get some.
         /// </summary>
-        private static readonly string[] AnonymousPathPrefixes =
+        /// <remarks>
+        /// The trailing slash on the pairing prefix is load-bearing: without it this
+        /// would also match <c>/remote-access/pairing/...</c>, which is the management
+        /// side — issuing codes, approving requests — and would hand an unpaired caller
+        /// the ability to approve itself. Public so a test can hold this list and the
+        /// controller's routes against each other rather than trusting them to agree.
+        /// </remarks>
+        public static readonly IReadOnlyList<string> AnonymousPathPrefixes =
         [
             "/remote-access/server-info",
-            "/remote-access/pair",
-            "/remote-access/pairing"
+            "/remote-access/pair/"
         ];
 
         public async Task InvokeAsync(HttpContext context, IRemoteAccessService remoteAccessService,

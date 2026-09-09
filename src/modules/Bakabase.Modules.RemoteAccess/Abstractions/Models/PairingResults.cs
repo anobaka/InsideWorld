@@ -37,7 +37,12 @@ public enum PairingFailure
 /// Credentials handed to a device that has just paired. The key appears here once and
 /// is never returned again.
 /// </summary>
-public sealed record PairingCredentials(string DeviceId, string Key, string ServerId);
+/// <remarks>
+/// Carries no server identity: which install this is belongs to the remote-access
+/// service, and duplicating it here would give the same fact two sources. The web layer
+/// pairs the two when it answers the device.
+/// </remarks>
+public sealed record PairingCredentials(string DeviceId, string Key);
 
 public sealed record PairingResult(PairingCredentials? Credentials, PairingFailure Failure)
 {

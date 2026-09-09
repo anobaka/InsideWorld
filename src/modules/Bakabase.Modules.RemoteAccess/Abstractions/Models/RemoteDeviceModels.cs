@@ -85,6 +85,13 @@ public class PendingPairingRequest
     public bool IsApproved => ApprovedKey != null;
 
     public static readonly TimeSpan DefaultLifetime = TimeSpan.FromMinutes(10);
+
+    /// <summary>
+    /// How many requests may queue at once. Anyone who can reach the server can file
+    /// one without credentials, so an unbounded queue is both a file that grows on its
+    /// own and an approval list a real request can be buried in.
+    /// </summary>
+    public const int MaxPending = 20;
 }
 
 /// <summary>
