@@ -1,6 +1,7 @@
 using System.Net;
 using Bakabase.Client.Abstractions;
 using Bakabase.Client.Components.Connection;
+using Bakabase.Client.Components.Diagnostics;
 using Bakabase.Client.Components.Discovery;
 using Bakabase.Client.Components.Updating;
 using Bakabase.Client.Components.UserMachine;
@@ -208,6 +209,7 @@ public class ClientStartup
             // server's libraries are here — which the server has no way to answer.
             ClientApiEndpoints.Map(endpoints, AppService.CoreVersion.ToString());
             ClientUpdaterEndpoints.Map(endpoints);
+            ClientLogEndpoints.Map(endpoints);
 
             // Everything else is the server's. Actions that have to run on this machine
             // are still refused upstream, with a reason saying so, until the client

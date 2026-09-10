@@ -1,0 +1,258 @@
+"use client";
+
+import type { SettingItem } from "@/pages/configuration/components/SettingsSection";
+import type { ClientStatus, ClientUpdaterState, ClientVersionInfo } from "@/core/clientApi";
+
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import Markdown from "react-markdown";
+import { CheckCircleOutlined, InfoCircleOutlined } from "@ant-design/icons";
+
+import { clientApi } from "@/core/clientApi";
+import { UpdaterStatus, RemoteDevicePlatform } from "@/sdk/constants";
+import { Button, Chip, Divider, Modal, Progress, Tooltip } from "@/components/bakaui";
+import ExternalLink from "@/components/ExternalLink";
+import SettingsSection from "@/pages/configuration/components/SettingsSection";
+import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
+import { useIsPureClient } from "@/stores/remoteAccess";
+
+/** How often the client's update progress is re-read while it is downloading. */
+const PROGRESS_INTERVAL = 1500;
+
+/**
+ * What this client is and whether it needs updating.
+ *
+ * The section below this one describes the server: in a thin client every value on it —
+ * paths, core version, update state — is forwarded from the machine holding the library,
+ * and pressing its update button updates that machine. The two are released separately
+ * and are routinely different versions, so this is the only place the version people are
+ * actually looking at appears.
+ */
+const ClientAppInfo: React.FC<{ query?: string }> = ({ query }) => {
+  const { t } = useTranslation();
+  const { createPortal } = useBakabaseContext();
+  const isPureClient = useIsPureClient();
+
+  const [status, setStatus] = useState<ClientStatus>();
+  const [updater, setUpdater] = useState<ClientUpdaterState>();
+  const [newVersion, setNewVersion] = useState<ClientVersionInfo>();
+  const timer = useRef<ReturnType<typeof setInterval>>();
+
+  const readUpdaterState = useCallback(async () => {
+    try {
+      setUpdater(await clientApi.updater.state());
+    } catch {
+      // The client answering nothing about itself is not worth a toast; the section
+      // simply shows what it last knew.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isPureClient) {
+      return;
+    }
+
+    clientApi
+      .status()
+      .then(setStatus)
+      .catch(() => {});
+    clientApi.updater
+      .newVersion()
+      .then(setNewVersion)
+      .catch(() => {});
+    readUpdaterState();
+  }, [isPureClient, readUpdaterState]);
+
+  // The server pushes its updater state over SignalR; the client has no such channel to
+  // this window, so its progress is polled — but only while something is actually
+  // downloading.
+  useEffect(() => {
+    if (updater?.status === UpdaterStatus.Running && !timer.current) {
+      timer.current = setInterval(readUpdaterState, PROGRESS_INTERVAL);
+    } else if (updater?.status !== UpdaterStatus.Running && timer.current) {
+      clearInterval(timer.current);
+      timer.current = undefined;
+    }
+
+    return () => {
+      if (timer.current) {
+        clearInterval(timer.current);
+        timer.current = undefined;
+      }
+    };
+  }, [updater?.status, readUpdaterState]);
+
+  if (!isPureClient) {
+    return null;
+  }
+
+  const startUpdating = async () => {
+    setUpdater(await clientApi.updater.start());
+    readUpdaterState();
+  };
+
+  const upToDate = (
+    <span className="flex items-center gap-1 text-success">
+      <CheckCircleOutlined className="text-base" />
+      {t<string>("configuration.appInfo.upToDate")}
+    </span>
+  );
+
+  const renderUpdate = () => {
+    switch (updater?.status) {
+      case UpdaterStatus.Running:
+        return (
+          <Progress
+            showValueLabel
+            className="w-[200px] pl-3"
+            label={`${t("configuration.appInfo.downloading")} ${newVersion?.version ?? ""}`}
+            size="sm"
+            value={updater.percentage}
+          />
+        );
+      case UpdaterStatus.PendingRestart:
+        return (
+          <Button color="primary" size="sm" onPress={() => clientApi.updater.restart()}>
+            {t<string>("configuration.appInfo.restartToUpdate")}
+          </Button>
+        );
+      case UpdaterStatus.Failed:
+        return (
+          <div className="flex items-center gap-2">
+            <span className="text-danger">
+              {t<string>("configuration.appInfo.failedToUpdateApp")}
+            </span>
+            <Button color="primary" size="sm" variant="light" onPress={startUpdating}>
+              {t<string>("configuration.appInfo.clickToRetry")}
+            </Button>
+          </div>
+        );
+      case UpdaterStatus.Unavailable:
+        return (
+          <Tooltip
+            className="max-w-[360px]"
+            color="secondary"
+            content={t("configuration.appInfo.updateCheckUnavailable.tip")}
+            placement="top"
+          >
+            <span className="flex items-center gap-1 text-foreground-500">
+              <InfoCircleOutlined className="text-base" />
+              {t<string>("configuration.appInfo.updateCheckUnavailable")}
+            </span>
+          </Tooltip>
+        );
+      default:
+        break;
+    }
+
+    // A build that no installer put here cannot be updated, and saying "up to date" for
+    // it claims a check that never happened.
+    if (newVersion?.updateCheckUnavailable) {
+      return (
+        <Tooltip
+          className="max-w-[360px]"
+          color="secondary"
+          content={t("configuration.appInfo.updateCheckUnavailable.tip")}
+          placement="top"
+        >
+          <span className="flex items-center gap-1 text-foreground-500">
+            <InfoCircleOutlined className="text-base" />
+            {t<string>("configuration.appInfo.updateCheckUnavailable")}
+          </span>
+        </Tooltip>
+      );
+    }
+
+    if (!newVersion?.version) {
+      return upToDate;
+    }
+
+    return (
+      <div className="flex items-center gap-2 flex-wrap">
+        <Chip radius="sm" variant="light">
+          {newVersion.version}
+        </Chip>
+        {newVersion.changelog && (
+          <>
+            <Divider orientation="vertical" />
+            <Button
+              color="secondary"
+              size="sm"
+              variant="light"
+              onPress={() =>
+                createPortal(Modal, {
+                  size: "xl",
+                  title: newVersion.version,
+                  defaultVisible: true,
+                  children: (
+                    <Markdown
+                      components={{ a: (props) => <ExternalLink {...props} target="_blank" /> }}
+                    >
+                      {newVersion.changelog}
+                    </Markdown>
+                  ),
+                  footer: { actions: ["cancel"] },
+                })
+              }
+            >
+              {t<string>("configuration.appInfo.changelog")}
+            </Button>
+          </>
+        )}
+        <Divider orientation="vertical" />
+        <Button color="success" size="sm" variant="light" onPress={startUpdating}>
+          {t<string>("configuration.appInfo.clickToAutoUpdate")}
+        </Button>
+      </div>
+    );
+  };
+
+  const items: SettingItem[] = [
+    {
+      id: "clientVersion",
+      label: t("configuration.clientInfo.version"),
+      keywords: ["version", "client", "版本", "客户端"],
+      render: () => (
+        <Chip radius="sm" variant="light">
+          {status?.clientVersion ?? "-"}
+        </Chip>
+      ),
+    },
+    {
+      id: "clientDevice",
+      label: t("configuration.clientInfo.device"),
+      tip: t("configuration.clientInfo.device.tip"),
+      keywords: ["device", "name", "设备", "名称"],
+      render: () => (
+        <div className="flex items-center gap-2">
+          <span>{status?.deviceName ?? "-"}</span>
+          {status?.platform !== undefined && (
+            <Chip radius="sm" size="sm" variant="flat">
+              {RemoteDevicePlatform[status.platform]}
+            </Chip>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: "clientLatestVersion",
+      label: t("configuration.clientInfo.latestVersion"),
+      tip: t("configuration.clientInfo.latestVersion.tip"),
+      keywords: ["update", "upgrade", "更新", "客户端"],
+      render: renderUpdate,
+    },
+  ];
+
+  return (
+    <SettingsSection
+      items={items}
+      keywords={["client", "客户端", "version", "update"]}
+      query={query}
+      title={t("configuration.clientInfo.title")}
+    />
+  );
+};
+
+ClientAppInfo.displayName = "ClientAppInfo";
+
+export default ClientAppInfo;

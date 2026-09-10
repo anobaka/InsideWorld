@@ -1,7 +1,9 @@
+import type { BakabaseInfrastructuresComponentsAppUpgradeAbstractionsAppVersionInfo } from "@/sdk/Api";
 import type {
   ClientPairingOutcome,
   RemoteDevicePlatform,
   ServerHandshakeOutcome,
+  UpdaterStatus,
 } from "@/sdk/constants";
 
 /**
@@ -70,6 +72,38 @@ export interface ClientPairingTicket {
   expiresAt?: string;
 }
 
+/**
+ * One line the client wrote, or one line plus everything that followed it — a stack
+ * trace belongs to the message it came from and arrives folded into it.
+ */
+export interface ClientLogEntry {
+  /** As written, offset included. Absent for a fragment with no head, i.e. a rolled file's first lines. */
+  timestamp?: string;
+  level?: string;
+  source?: string;
+  message: string;
+}
+
+export interface ClientLogPage {
+  /** False in a client that has never written a log — a first launch. */
+  available: boolean;
+  directory?: string;
+  entries: ClientLogEntry[];
+}
+
+/**
+ * The client's updater state. Shaped by the same C# types the server's updater uses, so
+ * the frontend reads both with one set of enums.
+ */
+export interface ClientUpdaterState {
+  status?: UpdaterStatus;
+  percentage?: number;
+  error?: string;
+}
+
+export type ClientVersionInfo =
+  BakabaseInfrastructuresComponentsAppUpgradeAbstractionsAppVersionInfo;
+
 const call = async <T>(path: string, init?: RequestInit): Promise<T> => {
   const rsp = await fetch(`/client${path}`, {
     ...init,
@@ -115,4 +149,41 @@ export const clientApi = {
       method: "PUT",
       body: JSON.stringify({ mappings }),
     }),
+
+  /**
+   * The client's own log, newest first.
+   *
+   * A tail rather than a query: the client keeps no log database, so there is nothing
+   * to page through, and `take` is capped server-side.
+   */
+  log: (query: { take?: number; level?: string; contains?: string } = {}) => {
+    const search = new URLSearchParams();
+
+    if (query.take) search.set("take", String(query.take));
+    if (query.level) search.set("level", query.level);
+    if (query.contains) search.set("contains", query.contains);
+
+    const suffix = search.toString();
+
+    return call<ClientLogPage>(`/log${suffix ? `?${suffix}` : ""}`);
+  },
+
+  /**
+   * Shows the client's log directory in this machine's file manager.
+   *
+   * Takes no path, and is not `/tool/open`: that route translates the server path it is
+   * given, which for a directory this process owns on this disk means refusing it.
+   */
+  openLogDirectory: () => post<{ opened: boolean }>("/log/open"),
+
+  /**
+   * The client updating itself. Separate from `BApi.updater`, which is forwarded and
+   * therefore updates the server — two products in one window.
+   */
+  updater: {
+    state: () => call<ClientUpdaterState>("/updater/state"),
+    newVersion: () => call<ClientVersionInfo>("/updater/new-version"),
+    start: () => post<ClientUpdaterState>("/updater/update"),
+    restart: () => post<ClientUpdaterState>("/updater/restart"),
+  },
 };

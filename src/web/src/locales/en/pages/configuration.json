@@ -291,5 +291,12 @@
   "configuration.remoteAccess.platform.android": "Android",
   "configuration.remoteAccess.platform.iOS": "iOS",
   "configuration.remoteAccess.title": "Remote access",
-  "configuration.thirdParty.configure": "Configure"
+  "configuration.thirdParty.configure": "Configure",
+  "configuration.appInfo.title.server": "Server information",
+  "configuration.clientInfo.title": "This client",
+  "configuration.clientInfo.version": "Client version",
+  "configuration.clientInfo.device": "Device",
+  "configuration.clientInfo.device.tip": "The name this client is known by on the server, shown next to it in the server's device list.",
+  "configuration.clientInfo.latestVersion": "Latest client version",
+  "configuration.clientInfo.latestVersion.tip": "The client and the server are released separately and are often different versions. Updating here replaces this program only; the section below updates the server."
 }

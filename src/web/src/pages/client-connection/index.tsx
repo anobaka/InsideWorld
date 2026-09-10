@@ -6,6 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 
+import ServerUpdateNotice from "./ServerUpdateNotice";
+
 import { clientApi } from "@/core/clientApi";
 import { ClientPairingOutcome, ServerHandshakeOutcome } from "@/sdk/constants";
 import { Button, Chip, Input, Modal, Snippet } from "@/components/bakaui";
@@ -218,6 +220,15 @@ const ClientConnectionPage = () => {
             {t("clientConnection.pair.stopWaiting")}
           </Button>
         </div>
+      )}
+
+      {/* Only once there is a server to talk to: before that the call is answered by
+          nobody, and an update notice about a machine this client has not reached yet
+          would be about nothing. */}
+      {status?.serverReachable && status.activeServerId && (
+        <ServerUpdateNotice
+          serverName={status.servers.find((s) => s.isActive)?.serverName ?? undefined}
+        />
       )}
 
       <div className="flex flex-col gap-2">

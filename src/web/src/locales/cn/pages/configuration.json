@@ -291,5 +291,12 @@
   "configuration.remoteAccess.platform.linux": "Linux",
   "configuration.remoteAccess.platform.android": "Android",
   "configuration.remoteAccess.platform.iOS": "iOS",
-  "configuration.thirdParty.configure": "配置"
+  "configuration.thirdParty.configure": "配置",
+  "configuration.appInfo.title.server": "服务端信息",
+  "configuration.clientInfo.title": "本客户端",
+  "configuration.clientInfo.version": "客户端版本",
+  "configuration.clientInfo.device": "设备",
+  "configuration.clientInfo.device.tip": "本客户端在服务端的设备名，服务端的设备列表中显示的就是它。",
+  "configuration.clientInfo.latestVersion": "客户端最新版本",
+  "configuration.clientInfo.latestVersion.tip": "客户端与服务端分别发布，版本经常不同。这里的更新只更新本程序；下方的更新针对服务端。"
 }
