@@ -10,29 +10,6 @@ import {
   useReferenceValueResourceCounts,
 } from "@/hooks/useReferenceValueResourceCounts";
 
-const emptyWidths: Readonly<Record<string, number>> = {};
-
-/** Global totals bound filtered counts; keep slots from shrinking during consecutive edits. */
-function reserveWidths(
-  previous: Readonly<Record<string, number>>,
-  ...counts: (Record<string, number> | undefined)[]
-): Readonly<Record<string, number>> {
-  let updated: Record<string, number> | undefined;
-
-  for (const values of counts) {
-    for (const [id, count] of Object.entries(values ?? {})) {
-      if (count <= 0) continue;
-      const width = count.toLocaleString().length + 2;
-
-      if (width <= ((updated ?? previous)[id] ?? 0)) continue;
-      updated ??= { ...previous };
-      updated[id] = width;
-    }
-  }
-
-  return updated ?? previous;
-}
-
 /** Resource-count display and availability policies belong to the filter using the options. */
 export function useFilterChoiceCounts(property: ReferenceProperty, search?: SearchForm) {
   const globalUsage = useReferenceValueResourceCounts(property);
@@ -43,36 +20,26 @@ export function useFilterChoiceCounts(property: ReferenceProperty, search?: Sear
   const [retained, setRetained] = useState<{
     key: string;
     counts?: Record<string, number>;
-    widths: Readonly<Record<string, number>>;
   }>();
   const previous = retained?.key === propertyKey ? retained : undefined;
   // When clearing/reapplying criteria, use the last displayed result rather than an older
-  // filtered hook result. A different property never inherits these counts or widths.
+  // filtered hook result. A different property never inherits these counts.
   const counts = usage.counts && !usage.stale ? usage.counts : (previous?.counts ?? usage.counts);
-  const reservedWidths = useMemo(
-    () => reserveWidths(previous?.widths ?? emptyWidths, globalUsage.counts, counts),
-    [previous?.widths, globalUsage.counts, counts],
-  );
 
   useEffect(() => {
-    if (
-      retained?.key !== propertyKey ||
-      retained.counts !== counts ||
-      retained.widths !== reservedWidths
-    ) {
-      setRetained({ key: propertyKey, counts, widths: reservedWidths });
+    if (retained?.key !== propertyKey || retained.counts !== counts) {
+      setRetained({ key: propertyKey, counts });
     }
-  }, [propertyKey, counts, reservedWidths, retained]);
+  }, [propertyKey, counts, retained]);
 
   const state = useMemo(
     () => ({
       counts,
-      reservedWidths,
       loading: usage.loading,
       error: usage.error,
       stale: counts !== undefined && (usage.stale || counts !== usage.counts),
     }),
-    [counts, reservedWidths, usage.loading, usage.error, usage.stale, usage.counts],
+    [counts, usage.loading, usage.error, usage.stale, usage.counts],
   );
   const store = useMemo(createChoiceResourceCountsStore, [propertyKey]);
 
