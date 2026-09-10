@@ -600,6 +600,27 @@
   <data name="BTask_Description_ResourceProfileIndex" xml:space="preserve">
     <value>构建资源与配置的匹配索引以加速匹配。资源或配置发生变更时会自动重新构建。</value>
   </data>
+  <data name="ResourceProfileIndex_LoadingIncrementalUpdates" xml:space="preserve">
+    <value>正在收集资源配置索引更新...</value>
+  </data>
+  <data name="ResourceProfileIndex_WaitingForSearchIndex" xml:space="preserve">
+    <value>正在等待资源搜索索引更新...</value>
+  </data>
+  <data name="ResourceProfileIndex_ProcessingProfileInvalidations" xml:space="preserve">
+    <value>正在更新资源配置 {0}/{1}...</value>
+  </data>
+  <data name="ResourceProfileIndex_InvalidatingPlayableFileCaches" xml:space="preserve">
+    <value>正在清除 {0} 个资源的可播放文件缓存...</value>
+  </data>
+  <data name="ResourceProfileIndex_LoadingProfilesForResources" xml:space="preserve">
+    <value>正在为 {0} 个变更资源加载配置...</value>
+  </data>
+  <data name="ResourceProfileIndex_MatchingProfilesForResources" xml:space="preserve">
+    <value>正在为 {2} 个变更资源匹配配置 {0}/{1}...</value>
+  </data>
+  <data name="ResourceProfileIndex_UpdatingResourceMappings" xml:space="preserve">
+    <value>正在更新 {0} 个资源的配置映射...</value>
+  </data>
   <data name="BTask_Name_SearchIndex" xml:space="preserve">
     <value>构建搜索索引</value>
   </data>
@@ -639,14 +660,38 @@
   <data name="SyncPathMark_Collected" xml:space="preserve">
     <value>已收集 {0} 个路径标记</value>
   </data>
+  <data name="SyncPathMark_CollectingPropertyEffects" xml:space="preserve">
+    <value>正在计算属性标记结果...</value>
+  </data>
   <data name="SyncPathMark_ProcessingResource" xml:space="preserve">
     <value>处理资源: {0}</value>
   </data>
   <data name="SyncPathMark_ProcessingProperty" xml:space="preserve">
     <value>处理属性: {0}</value>
   </data>
+  <data name="SyncPathMark_CollectingMediaLibraryEffects" xml:space="preserve">
+    <value>正在计算媒体库标记结果...</value>
+  </data>
   <data name="SyncPathMark_ProcessingMediaLibrary" xml:space="preserve">
     <value>处理媒体库: {0}</value>
+  </data>
+  <data name="SyncPathMark_ComputingFinalState" xml:space="preserve">
+    <value>正在计算最终状态...</value>
+  </data>
+  <data name="SyncPathMark_ApplyingPropertyChanges" xml:space="preserve">
+    <value>正在应用属性变更...</value>
+  </data>
+  <data name="SyncPathMark_ApplyingMediaLibraryChanges" xml:space="preserve">
+    <value>正在应用媒体库变更...</value>
+  </data>
+  <data name="SyncPathMark_PersistingEffects" xml:space="preserve">
+    <value>正在保存标记计算结果...</value>
+  </data>
+  <data name="SyncPathMark_UpdatingSearchIndex" xml:space="preserve">
+    <value>正在等待资源搜索索引更新...</value>
+  </data>
+  <data name="SyncPathMark_UpdatingMarkStatuses" xml:space="preserve">
+    <value>正在更新标记状态...</value>
   </data>
   <data name="SyncPathMark_FindingRelated" xml:space="preserve">
     <value>查找关联标记中</value>

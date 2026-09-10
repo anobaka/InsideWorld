@@ -1,14 +1,14 @@
-import type { BTask } from "@/core/models/BTask";
+import type { BTaskStatus } from "@/sdk/constants";
 
 import { useState, useEffect, useCallback, useImperativeHandle, forwardRef, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { AiOutlineSync } from "react-icons/ai";
 
 import PendingSyncListModal from "./PendingSyncListModal";
+import { didPathMarkSyncTaskComplete, getPathMarkSyncTask } from "./pathMarkSyncTask";
 
 import { Button, Badge } from "@/components/bakaui";
 import BApi from "@/sdk/BApi";
-import { BTaskStatus } from "@/sdk/constants";
 import { useBTasksStore } from "@/stores/bTasks";
 
 export interface PendingSyncButtonRef {
@@ -21,10 +21,6 @@ interface PendingSyncButtonProps {
   onSyncComplete?: () => void;
 }
 
-// Match PathMark sync task IDs
-const isPathMarkSyncTask = (taskId: string) =>
-  taskId === "SyncPathMarks" || taskId.startsWith("SyncPathMark_");
-
 const PendingSyncButton = forwardRef<PendingSyncButtonRef, PendingSyncButtonProps>(
   ({ buttonSize = "sm", className, onSyncComplete }, ref) => {
     const { t } = useTranslation();
@@ -33,10 +29,11 @@ const PendingSyncButton = forwardRef<PendingSyncButtonRef, PendingSyncButtonProp
     const [showPendingSyncModal, setShowPendingSyncModal] = useState(false);
 
     // Track previous task statuses to detect completion
-    const prevTaskStatusesRef = useRef<Map<string, BTaskStatus>>(new Map());
+    const prevTaskStatusRef = useRef<BTaskStatus>();
 
     // Watch BTask store for PathMark sync tasks
     const bTasks = useBTasksStore((state) => state.tasks);
+    const pathMarkSyncTask = getPathMarkSyncTask(bTasks);
 
     // Load pending sync count
     const loadPendingSyncCount = useCallback(async () => {
@@ -55,33 +52,16 @@ const PendingSyncButton = forwardRef<PendingSyncButtonRef, PendingSyncButtonProp
 
     // Auto-refresh when PathMark sync tasks complete
     useEffect(() => {
-      if (!bTasks) return;
+      const previousStatus = prevTaskStatusRef.current;
+      const currentStatus = pathMarkSyncTask?.status;
 
-      const prevStatuses = prevTaskStatusesRef.current;
-      let hasCompletedTask = false;
-
-      for (const task of bTasks as BTask[]) {
-        if (!isPathMarkSyncTask(task.id)) continue;
-
-        const prevStatus = prevStatuses.get(task.id);
-
-        // Check if task just completed (was running/not started, now completed)
-        if (
-          prevStatus !== undefined &&
-          (prevStatus === BTaskStatus.Running || prevStatus === BTaskStatus.NotStarted) &&
-          task.status === BTaskStatus.Completed
-        ) {
-          hasCompletedTask = true;
-        }
-
-        prevStatuses.set(task.id, task.status);
-      }
-
-      if (hasCompletedTask) {
+      if (didPathMarkSyncTaskComplete(previousStatus, currentStatus)) {
         loadPendingSyncCount();
         onSyncComplete?.();
       }
-    }, [bTasks, loadPendingSyncCount, onSyncComplete]);
+
+      prevTaskStatusRef.current = currentStatus;
+    }, [pathMarkSyncTask?.status, loadPendingSyncCount, onSyncComplete]);
 
     // Expose refresh method via ref
     useImperativeHandle(

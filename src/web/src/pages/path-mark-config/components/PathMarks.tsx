@@ -2,7 +2,6 @@
 
 import type { Entry } from "@/core/models/FileExplorer/Entry";
 import type { BakabaseAbstractionsModelsDomainPathMark } from "@/sdk/Api";
-import type { BTask } from "@/core/models/BTask";
 
 import React, { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,9 +10,10 @@ import { AiOutlineCopy } from "react-icons/ai";
 import MarkConfigModal from "./MarkConfigModal";
 import PathMarkChip from "./PathMarkChip";
 import AddMarkDropdown from "./AddMarkDropdown";
+import { didPathMarkSyncTaskComplete, getPathMarkSyncTask } from "./pathMarkSyncTask";
 
 import { Button } from "@/components/bakaui";
-import { PathMarkType, BTaskStatus } from "@/sdk/constants";
+import { PathMarkType, type BTaskStatus } from "@/sdk/constants";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
 import { useBTasksStore } from "@/stores/bTasks";
 import { useCopyMarksStore } from "@/stores/copyMarks";
@@ -30,15 +30,13 @@ type Props = {
   onTaskComplete?: () => void;
 };
 
-// Build task ID for a single mark sync
-const buildMarkTaskId = (markId: number) => `SyncPathMark_${markId}`;
-
 const PathMarks = ({ entry, marks = [], onSaveMark, onDeleteMark, onTaskComplete }: Props) => {
   const { t } = useTranslation();
   const { createPortal } = useBakabaseContext();
 
-  // Watch BTask store for individual mark sync tasks
+  // Path-mark synchronization is represented by one global BTask.
   const bTasks = useBTasksStore((state) => state.tasks);
+  const pathMarkSyncTask = getPathMarkSyncTask(bTasks);
 
   // Copy marks store
   const {
@@ -54,46 +52,19 @@ const PathMarks = ({ entry, marks = [], onSaveMark, onDeleteMark, onTaskComplete
   const isInCopyMode = copyModeEntryPath === entry.path;
 
   // Track previous task statuses to detect completion
-  const prevTaskStatusesRef = useRef<Map<string, BTaskStatus>>(new Map());
+  const prevTaskStatusRef = useRef<BTaskStatus>();
 
   // Detect task completion and trigger refresh
   useEffect(() => {
-    if (!marks.length || !bTasks) return;
+    const previousStatus = prevTaskStatusRef.current;
+    const currentStatus = pathMarkSyncTask?.status;
 
-    const prevStatuses = prevTaskStatusesRef.current;
-    let hasCompletedTask = false;
-
-    for (const mark of marks) {
-      if (!mark.id) continue;
-      const taskId = buildMarkTaskId(mark.id);
-      const task = bTasks.find((t) => t.id === taskId) as BTask | undefined;
-      const prevStatus = prevStatuses.get(taskId);
-
-      if (task) {
-        // Check if task just completed (was running/not started, now completed)
-        if (
-          prevStatus !== undefined &&
-          (prevStatus === BTaskStatus.Running || prevStatus === BTaskStatus.NotStarted) &&
-          task.status === BTaskStatus.Completed
-        ) {
-          hasCompletedTask = true;
-        }
-
-        prevStatuses.set(taskId, task.status);
-      } else if (
-        prevStatus !== undefined &&
-        (prevStatus === BTaskStatus.Running || prevStatus === BTaskStatus.NotStarted)
-      ) {
-        // Task was running but is now removed from the list - treat as completed
-        hasCompletedTask = true;
-        prevStatuses.delete(taskId);
-      }
+    if (didPathMarkSyncTaskComplete(previousStatus, currentStatus)) {
+      onTaskComplete?.();
     }
 
-    if (hasCompletedTask && onTaskComplete) {
-      onTaskComplete();
-    }
-  }, [bTasks, marks, onTaskComplete]);
+    prevTaskStatusRef.current = currentStatus;
+  }, [pathMarkSyncTask?.status, onTaskComplete]);
 
   const resourceMarks = marks.filter((m) => m.type === PathMarkType.Resource);
   const propertyMarks = marks.filter((m) => m.type === PathMarkType.Property);

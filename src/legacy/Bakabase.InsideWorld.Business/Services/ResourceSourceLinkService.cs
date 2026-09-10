@@ -34,7 +34,10 @@ public class ResourceSourceLinkService<TDbContext>(
 
     public async Task<List<ResourceSourceLink>> GetByResourceIds(int[] resourceIds)
     {
-        var dbModels = await orm.GetAll(m => resourceIds.Contains(m.ResourceId));
+        // The backing ORM evaluates this predicate against its full in-memory cache.
+        // Keep membership O(1) when a large incremental index batch is being rebuilt.
+        var resourceIdSet = resourceIds.ToHashSet();
+        var dbModels = await orm.GetAll(m => resourceIdSet.Contains(m.ResourceId));
         return dbModels.Select(d => d.ToDomainModel()).ToList();
     }
 

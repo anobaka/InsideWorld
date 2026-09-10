@@ -121,6 +121,27 @@ public sealed class ResourceSearchIndexIncrementalTests
         return resp.Data!.Count;
     }
 
+    private async Task<HashSet<int>?> SearchIdsByFilename(
+        IResourceSearchIndexService index,
+        string value)
+    {
+        return await index.SearchResourceIdsAsync(new ResourceSearchFilterGroup
+        {
+            Combinator = SearchCombinator.And,
+            Filters =
+            [
+                new ResourceSearchFilter
+                {
+                    PropertyPool = PropertyPool.Internal,
+                    PropertyId = (int)InternalProperty.Filename,
+                    Operation = SearchOperation.Equals,
+                    DbValue = value,
+                    Property = _filenameProperty
+                }
+            ]
+        });
+    }
+
     [TestMethod]
     public async Task RemoveResource_RemovesFromIndex()
     {
@@ -174,11 +195,11 @@ public sealed class ResourceSearchIndexIncrementalTests
         await BuildIndex();
         var id = await ResourceId("a");
 
-        Index().RemoveResource(id);
+        Index().RemoveResources([id, id]);
         await WaitForPendingUpdatesAndAssertCount(1);
 
         // The resource still exists in the database; invalidation must re-read and re-index it.
-        Index().InvalidateResource(id);
+        Index().InvalidateResources([id, id]);
         await WaitForPendingUpdatesAndAssertCount(2);
     }
 
@@ -196,22 +217,120 @@ public sealed class ResourceSearchIndexIncrementalTests
     }
 
     [TestMethod]
-    public async Task WaitForPendingUpdates_WaitsAcrossBatchBoundary()
+    public async Task WaitForPendingUpdates_CoalescedUpdateAndRemove_RemoveWins()
     {
         await Seed("a", "b");
         await BuildIndex();
         var id = await ResourceId("a");
 
+        // Repeated and adjacent notifications for one resource collapse into one logical
+        // operation. Remove wins within the barrier-delimited segment so an update cannot
+        // resurrect an entry deleted by the same logical change.
         for (var i = 0; i < 100; i++)
         {
             Index().InvalidateResource(id);
         }
-        Index().RemoveResource(id);
+        Index().RemoveResources([id, id]);
 
-        // The remove is the 101st operation, so it must be processed in the batch after
-        // the first 100 invalidations before the FIFO barrier can complete.
         await WaitForPendingUpdatesAndAssertCount(1);
         Assert.AreEqual(0, await SearchCountByFilename("a"));
+
+        // A new segment after the barrier is allowed to re-read an extant database row.
+        Index().InvalidateResources([id, id]);
+        await WaitForPendingUpdatesAndAssertCount(2);
+        Assert.AreEqual(1, await SearchCountByFilename("a"));
+    }
+
+    [TestMethod]
+    public async Task BulkInvalidations_DeduplicateAcrossAdjacentQueueItems()
+    {
+        await Seed("a", "b");
+        var scopeFactory = new CountingScopeFactory(_sp.GetRequiredService<IServiceScopeFactory>());
+        var index = new ResourceSearchIndexService(
+            scopeFactory,
+            _sp.GetRequiredService<IResourceDataChangeEvent>(),
+            _sp.GetRequiredService<ILogger<ResourceSearchIndexService>>(),
+            _sp.GetRequiredService<IBakabaseLocalizer>());
+
+        await index.RebuildAllAsync(CancellationToken.None);
+        scopeFactory.Reset();
+        var versionBefore = index.Version;
+        var a = await ResourceId("a");
+        var b = await ResourceId("b");
+
+        // More than the former 100-operation batch size, spread across adjacent bulk
+        // notifications and containing duplicates both within and across calls.
+        for (var i = 0; i < 150; i++)
+        {
+            index.InvalidateResources([a, a, b]);
+            index.InvalidateResources([b, a]);
+        }
+        index.InvalidateResource(a);
+        await index.WaitForPendingUpdatesAsync(CancellationToken.None);
+
+        Assert.AreEqual(1, scopeFactory.ScopeCount,
+            "adjacent bulk and single notifications should share one data-loading pass");
+        Assert.AreEqual(versionBefore + 1, index.Version,
+            "one coalesced batch should advance the index version once");
+        CollectionAssert.AreEquivalent(new[] {a}, (await SearchIdsByFilename(index, "a"))!.ToArray());
+        CollectionAssert.AreEquivalent(new[] {b}, (await SearchIdsByFilename(index, "b"))!.ToArray());
+    }
+
+    [TestMethod]
+    public async Task WaitForPendingUpdates_WaitsAcrossCoalescedBatchBoundary()
+    {
+        var scopeFactory = new CountingScopeFactory(_sp.GetRequiredService<IServiceScopeFactory>());
+        var index = new ResourceSearchIndexService(
+            scopeFactory,
+            _sp.GetRequiredService<IResourceDataChangeEvent>(),
+            _sp.GetRequiredService<ILogger<ResourceSearchIndexService>>(),
+            _sp.GetRequiredService<IBakabaseLocalizer>());
+
+        await index.RebuildAllAsync(CancellationToken.None);
+        scopeFactory.Reset();
+        var versionBefore = index.Version;
+
+        // Two adjacent notifications exceed the 4096-distinct-resource processing bound.
+        // The second item is therefore split by the reader, and the FIFO barrier must wait
+        // for both resulting batches rather than acknowledging only the first prefix.
+        index.InvalidateResources(Enumerable.Range(10_000, 3_000));
+        index.InvalidateResources(Enumerable.Range(13_000, 3_000));
+
+        await index.WaitForPendingUpdatesAsync(CancellationToken.None);
+
+        Assert.AreEqual(2, scopeFactory.ScopeCount,
+            "the bounded update should require exactly two data-loading passes");
+        Assert.AreEqual(versionBefore + 2, index.Version,
+            "both bounded batches must be committed before the barrier completes");
+        Assert.AreEqual(0, index.GetStatus().PendingUpdateCount);
+    }
+
+    [TestMethod]
+    public async Task Barrier_DoesNotIncludeFailureFromFollowingBatch()
+    {
+        await Seed("a");
+        var scopeFactory = new FailNextScopeFactory(_sp.GetRequiredService<IServiceScopeFactory>());
+        var index = new ResourceSearchIndexService(
+            scopeFactory,
+            _sp.GetRequiredService<IResourceDataChangeEvent>(),
+            _sp.GetRequiredService<ILogger<ResourceSearchIndexService>>(),
+            _sp.GetRequiredService<IBakabaseLocalizer>());
+
+        await index.RebuildAllAsync(CancellationToken.None);
+        var id = await ResourceId("a");
+
+        index.RemoveResource(id);
+        var firstBarrier = index.WaitForPendingUpdatesAsync(CancellationToken.None);
+
+        // This permanently failing update is queued after the first barrier. It must not
+        // be merged into the preceding removal or retroactively fault that barrier.
+        scopeFactory.FailNext(3);
+        index.InvalidateResource(id);
+
+        await firstBarrier;
+        await Assert.ThrowsExceptionAsync<InvalidOperationException>(
+            () => index.WaitForPendingUpdatesAsync(CancellationToken.None));
+        Assert.IsFalse(index.IsReady);
     }
 
     [TestMethod]
@@ -272,6 +391,21 @@ public sealed class ResourceSearchIndexIncrementalTests
         CollectionAssert.AreEqual(
             new[] {await ResourceId("a")},
             (await index.SearchResourceIdsAsync(filter))!.OrderBy(x => x).ToArray());
+    }
+
+    private sealed class CountingScopeFactory(IServiceScopeFactory inner) : IServiceScopeFactory
+    {
+        private int _scopeCount;
+
+        public int ScopeCount => Volatile.Read(ref _scopeCount);
+
+        public void Reset() => Volatile.Write(ref _scopeCount, 0);
+
+        public IServiceScope CreateScope()
+        {
+            Interlocked.Increment(ref _scopeCount);
+            return inner.CreateScope();
+        }
     }
 
     private sealed class FailNextScopeFactory(IServiceScopeFactory inner) : IServiceScopeFactory

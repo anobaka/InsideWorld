@@ -120,7 +120,7 @@ The caller (ResourceService) falls back to full-scan search at `ResourceService.
 
 ## Incremental Updates
 
-Resource changes are batched via Channel:
+Resource changes are batched via a single-reader Channel:
 
 ```csharp
 // Invalidate (update index)
@@ -132,7 +132,12 @@ RemoveResource(int resourceId)
 RemoveResources(IEnumerable<int> resourceIds)
 ```
 
-Batch processing: 100 items max, 500ms max delay.
+Each bulk notification is deduplicated and enqueued in bounded chunks of at most 4096
+resource IDs. The reader then coalesces adjacent chunks for up to 500ms or 4096 distinct
+resources, whichever comes first. This avoids repeating the full set of cache reads for
+every small batch while keeping memory and per-batch work bounded. If both update and remove
+notifications for one resource occur in the same barrier-delimited batch, remove wins, which
+preserves the previous batching semantics and prevents a stale row from being resurrected.
 
 `WaitForPendingUpdatesAsync` adds a FIFO barrier to the same channel. It completes only
 after every update queued before it has been applied; work queued after the barrier does

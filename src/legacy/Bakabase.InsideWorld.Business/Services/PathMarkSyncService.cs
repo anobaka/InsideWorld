@@ -96,6 +96,7 @@ public class PathMarkSyncService : ScopedService
     /// 2. Phase 2: Compute Final State - Use Combine to merge effects into final values
     /// 3. Phase 3: Apply Changes - Create/update/delete property values and media library mappings
     /// 4. Phase 4: Persist Effects - Save effects to DB
+    /// 5. Phase 5: Wait for the resource search index to catch up before marking the sync complete
     ///
     /// All resources are loaded as context for effect computation.
     ///
@@ -207,7 +208,8 @@ public class PathMarkSyncService : ScopedService
             // ===== Phase 1: Collect Effects (5-30%) =====
 
             // 1a. Collect property effects
-            await ReportProgress(onProgressChange, onProcessChange, 5, "Collecting property effects...");
+            await ReportProgress(onProgressChange, onProcessChange, 5,
+                _localizer.SyncPathMark_CollectingPropertyEffects());
             for (var i = 0; i < activePropertyMarks.Count; i++)
             {
                 ct.ThrowIfCancellationRequested();
@@ -234,7 +236,8 @@ public class PathMarkSyncService : ScopedService
             }
 
             // 1b. Collect media library effects
-            await ReportProgress(onProgressChange, onProcessChange, 20, "Collecting media library effects...");
+            await ReportProgress(onProgressChange, onProcessChange, 20,
+                _localizer.SyncPathMark_CollectingMediaLibraryEffects());
             for (var i = 0; i < activeMediaLibraryMarks.Count; i++)
             {
                 ct.ThrowIfCancellationRequested();
@@ -261,17 +264,20 @@ public class PathMarkSyncService : ScopedService
             }
 
             // ===== Phase 2: Compute Final State (30-50%) =====
-            await ReportProgress(onProgressChange, onProcessChange, 30, "Computing final state...");
+            await ReportProgress(onProgressChange, onProcessChange, 30,
+                _localizer.SyncPathMark_ComputingFinalState());
             await ComputeFinalPropertyState(ctx);
             await ComputeFinalMediaLibraryState(ctx);
 
             // ===== Phase 3: Apply Changes (50-80%) =====
-            await ReportProgress(onProgressChange, onProcessChange, 50, "Applying property changes...");
+            await ReportProgress(onProgressChange, onProcessChange, 50,
+                _localizer.SyncPathMark_ApplyingPropertyChanges());
             var propertyResult = await ApplyPropertyChanges(ctx, ct);
             result.PropertiesApplied = propertyResult.Applied;
             result.PropertiesDeleted = propertyResult.Deleted;
 
-            await ReportProgress(onProgressChange, onProcessChange, 65, "Applying media library changes...");
+            await ReportProgress(onProgressChange, onProcessChange, 65,
+                _localizer.SyncPathMark_ApplyingMediaLibraryChanges());
             var mappingResult = await ApplyMediaLibraryChanges(ctx, ct);
             result.MediaLibraryMappingsCreated = mappingResult.Created;
             result.MediaLibraryMappingsDeleted = mappingResult.Deleted;
@@ -294,18 +300,33 @@ public class PathMarkSyncService : ScopedService
                     affectedMediaLibraryIds.Count);
             }
 
-            // ===== Phase 4: Persist Effects (80-95%) =====
-            await ReportProgress(onProgressChange, onProcessChange, 80, "Persisting effects...");
+            // ===== Phase 4: Persist Effects (80-90%) =====
+            await ReportProgress(onProgressChange, onProcessChange, 80,
+                _localizer.SyncPathMark_PersistingEffects());
             await ComputeEffectDiff(ctx);
-            await PersistEffects(ctx);
+            await PersistEffects(ctx, onProgressChange, ct);
 
-            // ===== Cleanup (95-100%) =====
+            // ===== Phase 5: Wait for Search Index (90-95%) =====
             // Property and mapping writes enqueue background index reads through a separate
             // DbContext. Drain those reads before writing mark statuses so SQLite does not see
             // a reader/writer race, and only report the marks as synced once search is current.
-            await _resourceSearchIndexService.WaitForPendingUpdatesAsync(ct);
+            await ReportProgress(onProgressChange, onProcessChange, 90,
+                _localizer.SyncPathMark_UpdatingSearchIndex());
+            var indexBarrierSw = Stopwatch.StartNew();
+            try
+            {
+                await _resourceSearchIndexService.WaitForPendingUpdatesAsync(ct);
+            }
+            finally
+            {
+                indexBarrierSw.Stop();
+                _logger.LogInformation("[Sync] Resource search index barrier took {ElapsedMs}ms",
+                    indexBarrierSw.ElapsedMilliseconds);
+            }
 
-            await ReportProgress(onProgressChange, onProcessChange, 95, "Updating mark statuses...");
+            // ===== Cleanup (95-100%) =====
+            await ReportProgress(onProgressChange, onProcessChange, 95,
+                _localizer.SyncPathMark_UpdatingMarkStatuses());
             await BatchUpdateMarkStatuses(ctx, marksToDelete);
 
             await ReportProgress(onProgressChange, onProcessChange, 100, _localizer.SyncPathMark_Complete());
@@ -1127,36 +1148,57 @@ public class PathMarkSyncService : ScopedService
     /// <summary>
     /// Persists effect changes to database.
     /// </summary>
-    private async Task PersistEffects(SyncContext ctx)
+    private async Task PersistEffects(
+        SyncContext ctx,
+        Func<int, Task>? onProgressChange,
+        CancellationToken ct)
     {
         var sw = Stopwatch.StartNew();
+        var addBatches = ctx.PropertyEffectsToAdd.Chunk(BatchSize).ToList();
+        var updateBatches = ctx.PropertyEffectsToUpdate.Values.Chunk(BatchSize).ToList();
+        var operationCount = addBatches.Count + updateBatches.Count +
+                             (ctx.PropertyEffectIdsToDelete.Count > 0 ? 1 : 0);
+        var completedOperations = 0;
+
+        async Task ReportOperationCompleted()
+        {
+            completedOperations++;
+            if (onProgressChange != null)
+            {
+                await onProgressChange(80 + (int)(10.0 * completedOperations / operationCount));
+            }
+        }
 
         // Add new property effects
-        if (ctx.PropertyEffectsToAdd.Count > 0)
+        if (addBatches.Count > 0)
         {
-            var batches = ctx.PropertyEffectsToAdd.Chunk(BatchSize).ToList();
-            for (var i = 0; i < batches.Count; i++)
+            for (var i = 0; i < addBatches.Count; i++)
             {
-                await _effectService.AddPropertyEffects(batches[i]);
-                if (i < batches.Count - 1) await Task.Delay(5);
+                ct.ThrowIfCancellationRequested();
+                await _effectService.AddPropertyEffects(addBatches[i]);
+                await ReportOperationCompleted();
+                if (i < addBatches.Count - 1) await Task.Delay(5, ct);
             }
         }
 
         // Update same-key effects and lazily normalized V220 effects.
-        if (ctx.PropertyEffectsToUpdate.Count > 0)
+        if (updateBatches.Count > 0)
         {
-            var batches = ctx.PropertyEffectsToUpdate.Values.Chunk(BatchSize).ToList();
-            for (var i = 0; i < batches.Count; i++)
+            for (var i = 0; i < updateBatches.Count; i++)
             {
-                await _effectService.UpdatePropertyEffects(batches[i]);
-                if (i < batches.Count - 1) await Task.Delay(5);
+                ct.ThrowIfCancellationRequested();
+                await _effectService.UpdatePropertyEffects(updateBatches[i]);
+                await ReportOperationCompleted();
+                if (i < updateBatches.Count - 1) await Task.Delay(5, ct);
             }
         }
 
         // Delete stale property effects
         if (ctx.PropertyEffectIdsToDelete.Count > 0)
         {
+            ct.ThrowIfCancellationRequested();
             await _effectService.DeletePropertyEffects(ctx.PropertyEffectIdsToDelete);
+            await ReportOperationCompleted();
         }
 
         sw.Stop();
