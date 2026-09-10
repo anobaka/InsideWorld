@@ -118,6 +118,14 @@
   <p class="lede">This is the Bakabase client. Your library lives on a server; point this at it once
     and it is remembered.</p>
 
+  <section class="panel" id="update" hidden>
+    <h2>Client update</h2>
+    <p class="note" id="update-note" style="margin-top: 0"></p>
+    <p class="row" style="margin: 10px 0 0">
+      <button class="primary" id="update-now" type="button">Update and restart</button>
+    </p>
+  </section>
+
   <section class="panel">
     <h2>On this network</h2>
     <ul id="found"></ul>
@@ -162,6 +170,10 @@
   var Handshake = {
     Ok: 0, Unreachable: 1, NotBakabase: 2, ClientTooOld: 3, ServerTooOld: 4,
     RemoteAccessDisabled: 5
+  };
+  // Bakabase.Infrastructures' UpdaterStatus, which travels as a number like the rest.
+  var Updater = {
+    Idle: 1, Running: 2, PendingRestart: 3, UpToDate: 4, Failed: 5, Unavailable: 6
   };
   var Pairing = {
     Paired: 0, Unreachable: 1, CodeRejected: 2, AwaitingApproval: 3, RequestRejected: 4,
@@ -369,6 +381,59 @@
     }).catch(function (err) { note($('pairing-note'), String(err), 'bad'); });
   });
 
+  // ---- updating this client ----
+
+  // Offered here because this is the screen a client that cannot get any further
+  // lands on: an old build meeting a newer server is refused with ClientTooOld, and
+  // being told to update without anywhere to do it is a dead end.
+  function checkForUpdate() {
+    fetch('/client/updater/new-version')
+      .then(unwrap)
+      .then(function (info) {
+        if (!info || !info.version) { return; }
+
+        $('update').hidden = false;
+        note($('update-note'),
+          'Version ' + info.version + ' is available. You are on ' +
+          (info.runningVersion || 'an older build') + '.');
+      })
+      .catch(function () { /* an update check is never worth an error on this page */ });
+  }
+
+  function pollUntilDownloaded() {
+    var waitingForDownload = setInterval(function () {
+      fetch('/client/updater/state').then(unwrap).then(function (state) {
+        if (!state) { return; }
+
+        if (state.status === Updater.PendingRestart) {
+          clearInterval(waitingForDownload);
+          note($('update-note'), 'Restarting…');
+          // Never returns on success: the process is replaced.
+          fetch('/client/updater/restart', { method: 'POST' }).catch(function () {});
+        } else if (state.status === Updater.Failed) {
+          clearInterval(waitingForDownload);
+          $('update-now').disabled = false;
+          note($('update-note'), state.error || 'The update could not be downloaded.', 'bad');
+        } else {
+          note($('update-note'), 'Downloading… ' + (state.percentage || 0) + '%');
+        }
+      }).catch(function () {});
+    }, 1000);
+  }
+
+  $('update-now').addEventListener('click', function () {
+    $('update-now').disabled = true;
+    note($('update-note'), 'Downloading…');
+
+    fetch('/client/updater/update', { method: 'POST' })
+      .then(unwrap)
+      .then(pollUntilDownloaded)
+      .catch(function (err) {
+        $('update-now').disabled = false;
+        note($('update-note'), String(err), 'bad');
+      });
+  });
+
   // ---- address form ----
 
   $('address-form').addEventListener('submit', function (e) {
@@ -384,8 +449,9 @@
     .then(function (status) {
       if (status && status.activeServerId) { enterApp(); return; }
       scan();
+      checkForUpdate();
     })
-    .catch(scan);
+    .catch(function () { scan(); checkForUpdate(); });
 
   $('rescan').addEventListener('click', scan);
 })();

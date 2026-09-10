@@ -2,8 +2,11 @@ using System.Net;
 using Bakabase.Client.Abstractions;
 using Bakabase.Client.Components.Connection;
 using Bakabase.Client.Components.Discovery;
+using Bakabase.Client.Components.Updating;
 using Bakabase.Client.Components.UserMachine;
+using Bakabase.Abstractions.Components.Gui;
 using Bakabase.Infrastructures.Components.App;
+using Bakabase.Infrastructures.Components.App.Upgrade.Abstractions;
 using Bakabase.Client.Components.BatchPlay;
 using Bakabase.Modules.Player.Abstractions.Components;
 using Bakabase.Modules.ThirdParty.Abstractions.Http.Cookie;
@@ -77,6 +80,17 @@ public class ClientStartup
         // Finding servers to connect to. Only the connect page uses it, and only before
         // there is a server — after that this client knows exactly where to go.
         services.TryAddSingleton<IServerDiscovery, UdpProbeClient>();
+
+        // The client updates itself from its own feed. The server's /updater/* routes are
+        // forwarded and still mean "update the server"; these two are different questions
+        // about two different programs that happen to share a window.
+        services.TryAddSingleton<IAppUpdateSource, ClientUpdateSource>();
+        services.AddUpdater();
+
+        // The shell's adapter is the tray icon, and the updater has to hide it before
+        // handing over to Velopack. Optional: a host without a GUI simply has none.
+        services.TryAddTransient(sp =>
+            sp.GetService<Bakabase.Infrastructures.Components.Gui.IGuiAdapter>() as ITrayIconController);
 
         // Actions whose effect lands on whatever machine runs them. Anything declared in
         // UserMachineRoutes without a handler here is answered as "this client is
@@ -193,6 +207,7 @@ public class ClientStartup
             // Questions about this machine — which server it points at, where that
             // server's libraries are here — which the server has no way to answer.
             ClientApiEndpoints.Map(endpoints, AppService.CoreVersion.ToString());
+            ClientUpdaterEndpoints.Map(endpoints);
 
             // Everything else is the server's. Actions that have to run on this machine
             // are still refused upstream, with a reason saying so, until the client

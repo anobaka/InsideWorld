@@ -11,6 +11,7 @@ using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Client.Abstractions;
 using Bakabase.Client.Abstractions.Models;
 using Bakabase.Client.Components.Forwarding;
+using Bakabase.Client.Components.Updating;
 using Bakabase.Client.Components.UserMachine;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -256,6 +257,28 @@ public class ClientPipelineTests
             Assert.AreEqual(nameof(ClientForwardingFailure.NotConnected),
                 response.Headers.GetValues("X-Bakabase-Client").First(), path);
         }
+    }
+
+    [TestMethod]
+    public async Task The_client_updater_answers_here_rather_than_being_forwarded()
+    {
+        // /updater/* stays the server's and keeps meaning "update the server". The
+        // client's own version is a different question about a different program, so it
+        // lives under the prefix that is never forwarded.
+        var state = await Send(ClientUpdaterEndpoints.Prefix + "/state");
+
+        Assert.AreEqual(HttpStatusCode.OK, state.StatusCode);
+        Assert.IsFalse(state.Headers.Contains("X-Bakabase-Client"));
+
+        // A test host is not a Velopack install, so the check reports exactly that
+        // rather than claiming to be up to date — the distinction UpdaterStatus draws
+        // between Unavailable and UpToDate.
+        var check = await Send(ClientUpdaterEndpoints.Prefix + "/new-version");
+        var data = JsonDocument.Parse(await check.Content.ReadAsStringAsync())
+            .RootElement.GetProperty("data");
+
+        Assert.AreEqual(HttpStatusCode.OK, check.StatusCode);
+        Assert.IsTrue(data.GetProperty("updateCheckUnavailable").GetBoolean());
     }
 
     [TestMethod]
