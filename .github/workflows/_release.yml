@@ -318,6 +318,15 @@ jobs:
           path: ./vpk-artifacts
         continue-on-error: true
 
+      # A pattern of its own: the loop above globs vpk-*/ and would otherwise sweep
+      # the client's packages into the all-in-one's asset names.
+      - name: Download client Velopack artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: velopack-client-*
+          path: ./client-vpk-artifacts
+        continue-on-error: true
+
       # Present only when deploy.yml's mobile job ran (i.e. the app changed
       # since the previous release); otherwise this quietly finds nothing.
       - name: Download mobile artifacts
@@ -369,6 +378,33 @@ jobs:
           done
           ls -lh Bakabase-Setup-${VERSION}-* 2>/dev/null || echo "No Velopack installers found"
           ls -lh bakabase-${VERSION}-*.zip 2>/dev/null || echo "No Velopack portable zips found"
+
+      - name: Collect client installers for release
+        shell: bash
+        run: |
+          VERSION="${{ inputs.version }}"
+
+          # Same shapes as the all-in-one's, under names that say which product they
+          # install. Both go on one release: same repository, same version stream.
+          for dir in ./client-vpk-artifacts/velopack-client-*/; do
+            [ -d "$dir" ] || continue
+            artifact_name=$(basename "$dir" | sed 's/^velopack-client-//')
+            echo "Processing client Velopack artifact: $artifact_name"
+
+            for f in "$dir"*Setup*.exe; do
+              [ -f "$f" ] || continue
+              cp "$f" "./Bakabase.Client-Setup-${VERSION}-${artifact_name}.exe"
+            done
+            for f in "$dir"*.pkg; do
+              [ -f "$f" ] || continue
+              cp "$f" "./Bakabase.Client-Setup-${VERSION}-${artifact_name}.pkg"
+            done
+            for f in "$dir"*-Portable.zip; do
+              [ -f "$f" ] || continue
+              cp "$f" "./bakabase-client-${VERSION}-${artifact_name}.zip"
+            done
+          done
+          ls -lh Bakabase.Client-Setup-${VERSION}-* 2>/dev/null || echo "No client installers found"
 
       - name: Append download links to changelog
         shell: bash
@@ -477,6 +513,10 @@ jobs:
             Bakabase-Setup-${{ inputs.version }}-win-x64.exe
             Bakabase-Setup-${{ inputs.version }}-osx-x64.pkg
             Bakabase-Setup-${{ inputs.version }}-osx-arm64.pkg
+            bakabase-client-${{ inputs.version }}-win-x64.zip
+            Bakabase.Client-Setup-${{ inputs.version }}-win-x64.exe
+            Bakabase.Client-Setup-${{ inputs.version }}-osx-x64.pkg
+            Bakabase.Client-Setup-${{ inputs.version }}-osx-arm64.pkg
             mobile-artifacts/*
           fail_on_unmatched_files: false
         env:
