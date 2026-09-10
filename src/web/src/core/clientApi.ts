@@ -177,6 +177,16 @@ export const clientApi = {
   openLogDirectory: () => post<{ opened: boolean }>("/log/open"),
 
   /**
+   * Tells this machine's tray icon whether the server is working.
+   *
+   * In the all-in-one the task manager sets the icon directly — same process. Here the
+   * tasks are on the server and the tray is on this desk, and the window is already
+   * holding the server's live task feed, so it reports what it sees rather than having
+   * the client open a second connection to learn the same thing.
+   */
+  setTrayRunning: (running: boolean) => post<{ applied: boolean }>("/tray", { running }),
+
+  /**
    * The client updating itself. Separate from `BApi.updater`, which is forwarded and
    * therefore updates the server — two products in one window.
    */

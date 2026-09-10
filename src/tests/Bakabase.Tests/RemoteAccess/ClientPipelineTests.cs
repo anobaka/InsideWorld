@@ -10,7 +10,9 @@ using System.Threading.Tasks;
 using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Client.Abstractions;
 using Bakabase.Client.Abstractions.Models;
+using Bakabase.Client.Components.Diagnostics;
 using Bakabase.Client.Components.Forwarding;
+using Bakabase.Client.Components.Shell;
 using Bakabase.Client.Components.Updating;
 using Bakabase.Client.Components.UserMachine;
 using Microsoft.AspNetCore.Hosting;
@@ -279,6 +281,70 @@ public class ClientPipelineTests
 
         Assert.AreEqual(HttpStatusCode.OK, check.StatusCode);
         Assert.IsTrue(data.GetProperty("updateCheckUnavailable").GetBoolean());
+    }
+
+    [TestMethod]
+    public async Task The_clients_own_log_answers_here_rather_than_being_forwarded()
+    {
+        // /log/* is the server's and stays forwarded — it is the log of the machine
+        // holding the library. The client's own log is a different file on a different
+        // computer, and the one place a refused signature or a player that would not
+        // start is written down.
+        var response = await Send(ClientLogEndpoints.Prefix + "?take=5");
+
+        Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        Assert.IsFalse(response.Headers.Contains("X-Bakabase-Client"),
+            "answered locally, so nothing forwarded and nothing refused");
+
+        // A test host has no application data directory and therefore no log. Reported
+        // as "no log here" rather than as an error: a client on its first launch is in
+        // exactly the same position and must not be shown a failure.
+        var data = JsonDocument.Parse(await response.Content.ReadAsStringAsync())
+            .RootElement.GetProperty("data");
+
+        Assert.IsFalse(data.GetProperty("available").GetBoolean());
+        Assert.AreEqual(0, data.GetProperty("entries").GetArrayLength());
+    }
+
+    [TestMethod]
+    public async Task Opening_the_log_directory_is_refused_rather_than_throwing_when_there_is_none()
+    {
+        var response = await Send(ClientLogEndpoints.Prefix + "/open", method: HttpMethod.Post, body: "{}");
+
+        Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.IsFalse(JsonDocument.Parse(await response.Content.ReadAsStringAsync())
+            .RootElement.GetProperty("data").GetProperty("opened").GetBoolean());
+    }
+
+    [TestMethod]
+    public async Task The_tray_takes_a_running_state_even_where_there_is_no_tray()
+    {
+        // The window reports what the server's task feed says, because in this flavour
+        // the tasks and the tray are on different machines. A host with no GUI — this
+        // one, and a headless client — takes the report and has nothing to set, which is
+        // not a failure the page should be told about.
+        var response = await Send(ClientTrayEndpoints.Prefix, method: HttpMethod.Post,
+            body: "{\"running\":true}");
+
+        Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        Assert.IsFalse(response.Headers.Contains("X-Bakabase-Client"));
+        Assert.IsFalse(JsonDocument.Parse(await response.Content.ReadAsStringAsync())
+            .RootElement.GetProperty("data").GetProperty("applied").GetBoolean());
+    }
+
+    [TestMethod]
+    public async Task A_tray_report_that_says_nothing_is_refused_rather_than_read_as_idle()
+    {
+        // Saying nothing is not saying "idle". Taking an empty body as false would let a
+        // bug in the page park the icon on idle while the server works, and the answer
+        // would look like a success.
+        var empty = await Send(ClientTrayEndpoints.Prefix, method: HttpMethod.Post, body: "");
+
+        Assert.AreEqual(HttpStatusCode.BadRequest, empty.StatusCode);
+
+        var garbage = await Send(ClientTrayEndpoints.Prefix, method: HttpMethod.Post, body: "not json");
+
+        Assert.AreEqual(HttpStatusCode.BadRequest, garbage.StatusCode);
     }
 
     [TestMethod]
