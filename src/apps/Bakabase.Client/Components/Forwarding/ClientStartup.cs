@@ -84,8 +84,12 @@ public class ClientStartup(IConfiguration configuration, IWebHostEnvironment env
             AppService.CoreVersion.ToString()));
 
         // Finding servers to connect to. Only the connect page uses it, and only before
-        // there is a server — after that this client knows exactly where to go.
-        services.TryAddSingleton<IServerDiscovery, UdpProbeClient>();
+        // there is a server — after that this client knows exactly where to go. Both
+        // channels are registered because they fail on different networks: broadcast is
+        // dropped by most enterprise wireless, multicast by plenty of home routers.
+        services.TryAddSingleton<UdpProbeClient>();
+        services.TryAddSingleton<MdnsBrowser>();
+        services.TryAddSingleton<IServerDiscovery, ServerDiscovery>();
 
         // The client updates itself from its own feed. The server's /updater/* routes are
         // forwarded and still mean "update the server"; these two are different questions
