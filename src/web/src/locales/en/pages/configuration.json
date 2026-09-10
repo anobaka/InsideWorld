@@ -298,5 +298,8 @@
   "configuration.clientInfo.device": "Device",
   "configuration.clientInfo.device.tip": "The name this client is known by on the server, shown next to it in the server's device list.",
   "configuration.clientInfo.latestVersion": "Latest client version",
-  "configuration.clientInfo.latestVersion.tip": "The client and the server are released separately and are often different versions. Updating here replaces this program only; the section below updates the server."
+  "configuration.clientInfo.latestVersion.tip": "The client and the server are released separately and are often different versions. Updating here replaces this program only; the section below updates the server.",
+  "configuration.remoteAccess.title.server": "Remote access (server)",
+  "configuration.dataPath.restart.body.server": "The move is set up. Restarting the server switches it to the new data path; this client will reconnect once it is back.",
+  "configuration.dataPath.restart.button.server": "Restart the server now"
 }

@@ -8,6 +8,8 @@ import { CopyOutlined, CheckOutlined, GithubOutlined } from "@ant-design/icons";
 import { Accordion, AccordionItem, Button, Chip, Link, Modal, Snippet } from "@/components/bakaui";
 import BApi from "@/sdk/BApi";
 import Urls from "@/cons/Urls";
+import { useIsPureClient } from "@/stores/remoteAccess";
+import { clientApi } from "@/core/clientApi";
 
 interface IProps {
   error?: Error;
@@ -35,6 +37,10 @@ const Step = ({ number, title, children }: StepProps) => (
 const ErrorModal = ({ error, errorInfo }: IProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  // Which program to restart, and whose log to read. Both answers change in a thin
+  // client: the window that just failed is this one, and the log that recorded it is
+  // this machine's — the path below belongs to the server.
+  const isPureClient = useIsPureClient();
 
   const [appInfo, setAppInfo] = useState<{ logPath: string }>();
   const [showFullStack, setShowFullStack] = useState(false);
@@ -42,6 +48,19 @@ const ErrorModal = ({ error, errorInfo }: IProps) => {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    // A thin client's /app/info is the server's, and so is the log path in it. The
+    // failure being reported happened in this window, so the log worth pointing at
+    // is this machine's — and the server's path could not be opened from here
+    // anyway, since nothing maps it.
+    if (isPureClient) {
+      clientApi
+        .log({ take: 1 })
+        .then((page) => setAppInfo(page.directory ? { logPath: page.directory } : undefined))
+        .catch(() => {});
+
+      return;
+    }
+
     BApi.app.getAppInfo().then((rsp) => {
       if (!rsp.code) {
         setAppInfo({
@@ -49,7 +68,7 @@ const ErrorModal = ({ error, errorInfo }: IProps) => {
         });
       }
     });
-  }, []);
+  }, [isPureClient]);
 
   const truncateStack = (stack: string, maxLines: number = 5) => {
     const lines = stack.split("\n");
@@ -189,8 +208,15 @@ const ErrorModal = ({ error, errorInfo }: IProps) => {
             <Step number={1} title={t<string>("error.modal.reloadPage")}>
               <kbd className="px-1 py-0.5 text-xs bg-default-200 rounded font-mono">F5</kbd>
             </Step>
-            <Step number={2} title={t<string>("error.modal.restartApp")}>
-              {t<string>("error.modal.restartAppDesc")}
+            <Step
+              number={2}
+              title={t<string>(
+                isPureClient ? "error.modal.restartClient" : "error.modal.restartApp",
+              )}
+            >
+              {t<string>(
+                isPureClient ? "error.modal.restartClientDesc" : "error.modal.restartAppDesc",
+              )}
             </Step>
             <Step number={3} title={t<string>("error.modal.contactSupport")}>
               <div className="flex flex gap-1.5 mt-1">
@@ -201,7 +227,11 @@ const ErrorModal = ({ error, errorInfo }: IProps) => {
                       hideSymbol
                       className="cursor-pointer ml-1"
                       size="sm"
-                      onClick={() => BApi.tool.openFileOrDirectory({ path: appInfo.logPath })}
+                      onClick={() =>
+                        isPureClient
+                          ? clientApi.openLogDirectory()
+                          : BApi.tool.openFileOrDirectory({ path: appInfo.logPath })
+                      }
                     >
                       <span className="break-all whitespace-break-spaces text-primary">
                         {appInfo.logPath}

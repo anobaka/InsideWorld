@@ -17,7 +17,7 @@ import { RemoteAccessMode, RemoteDevicePlatform } from "@/sdk/constants";
 import { Button, Chip, Input, Modal, Select, Snippet, Switch } from "@/components/bakaui";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
 import SettingsSection from "@/pages/configuration/components/SettingsSection";
-import { useRemoteAccessStore } from "@/stores/remoteAccess";
+import { useIsPureClient, useRemoteAccessStore } from "@/stores/remoteAccess";
 
 interface RemoteAccessProps {
   query?: string;
@@ -60,6 +60,7 @@ const RemoteAccess: React.FC<RemoteAccessProps> = ({ query }) => {
   const [issuedCode, setIssuedCode] = useState<{ code: string; expiresAt: string }>();
   const [now, setNow] = useState(() => Date.now());
   const reloadClientContext = useRemoteAccessStore((state) => state.load);
+  const isPureClient = useIsPureClient();
   const loading = useRef(false);
 
   const load = useCallback(async () => {
@@ -444,7 +445,14 @@ const RemoteAccess: React.FC<RemoteAccessProps> = ({ query }) => {
       items={items}
       keywords={["remote", "lan", "远程", "局域网"]}
       query={query}
-      title={t("configuration.remoteAccess.title")}
+      // Whose remote access this is. In a thin client every switch here is
+      // forwarded — "only this machine" means the machine holding the library, not
+      // the one the window is open on.
+      title={t(
+        isPureClient
+          ? "configuration.remoteAccess.title.server"
+          : "configuration.remoteAccess.title",
+      )}
     />
   );
 };
