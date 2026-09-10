@@ -1,5 +1,6 @@
 "use client";
 
+import type { OptionDisplayProps } from "../../OptionDisplayProps";
 import type { CSSProperties } from "react";
 import type { ValueEditorProps } from "../models";
 import type { TagValue } from "@/components/StandardValue/models";
@@ -10,23 +11,17 @@ import { useEffect, useMemo, useState } from "react";
 import { SearchOutlined } from "@ant-design/icons";
 
 import {
-  useResourceCountsSource,
-  type ResourceCountsSource,
-} from "@/hooks/useResourceCountsSource";
-import {
   useDisabledChoiceKeys,
   type DisabledChoiceKeysSource,
 } from "@/hooks/useDisabledChoiceKeys";
-import ReferenceValueCount from "@/components/Property/components/ReferenceValueCount";
 import { Button, Input, Modal } from "@/components/bakaui";
 import { autoBackgroundColor, buildLogger } from "@/components/utils";
 
 type TagData = TagValue & { value: string; color?: string };
 
 type TagsValueEditorProps = ValueEditorProps<string[], TagValue[]> &
-  DestroyableProps & {
-    resourceCounts?: Record<string, number>;
-    resourceCountsSource?: ResourceCountsSource;
+  DestroyableProps &
+  OptionDisplayProps & {
     disabledKeys?: ReadonlySet<string>;
     disabledKeysSource?: DisabledChoiceKeysSource;
     getDataSource: () => Promise<TagData[] | undefined>;
@@ -37,8 +32,8 @@ const log = buildLogger("TagsValueEditor");
 const TagsValueEditor = (props: TagsValueEditorProps) => {
   const { t } = useTranslation();
   const {
-    resourceCounts: initialResourceCounts,
-    resourceCountsSource,
+    renderOptionExtra,
+    optionsDescription,
     disabledKeys: initialDisabledKeys,
     disabledKeysSource,
     getDataSource,
@@ -47,7 +42,6 @@ const TagsValueEditor = (props: TagsValueEditorProps) => {
     onCancel,
   } = props;
 
-  const resourceCounts = useResourceCountsSource(resourceCountsSource, initialResourceCounts);
   const disabledKeys = useDisabledChoiceKeys(disabledKeysSource, initialDisabledKeys);
 
   const [dataSource, setDataSource] = useState<TagData[]>([]);
@@ -127,7 +121,7 @@ const TagsValueEditor = (props: TagsValueEditorProps) => {
         onPress={() => toggleTag(tag.value)}
       >
         {tag.name}
-        <ReferenceValueCount count={resourceCounts?.[tag.value]} />
+        {renderOptionExtra?.({ value: tag.value, label: tag.name })}
       </Button>
     );
   };
@@ -167,6 +161,7 @@ const TagsValueEditor = (props: TagsValueEditorProps) => {
           />
         </div>
 
+        {optionsDescription}
         <div className={"flex flex-col gap-3 min-h-0 overflow-y-auto"}>
           {dataSource.length === 0 ? (
             <div className={"text-default-400 text-center py-4"}>

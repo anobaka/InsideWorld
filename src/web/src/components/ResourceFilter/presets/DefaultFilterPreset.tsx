@@ -3,9 +3,10 @@
 import type { FilterConfig, SearchFilter } from "../models";
 import type { IProperty } from "@/components/Property/models";
 
+import FilterValueRenderer from "../components/Filter/FilterValueRenderer";
+
 import BApi from "@/sdk/BApi";
 import PropertySelector from "@/components/PropertySelector";
-import ReferencePropertyValueInput from "../components/Filter/ReferencePropertyValueInput";
 import { PropertyPool, ResourceProperty } from "@/sdk/constants";
 
 /**
@@ -99,7 +100,7 @@ export function createDefaultFilterConfig(
 
       renderValueInput: (property, dbValue, bizValue, onValueChange, options) => {
         return (
-          <ReferencePropertyValueInput
+          <FilterValueRenderer
             bizValue={bizValue}
             dbValue={dbValue}
             defaultEditing={options?.defaultEditing}

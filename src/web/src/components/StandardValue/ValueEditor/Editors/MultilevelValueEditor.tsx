@@ -1,5 +1,6 @@
 "use client";
 
+import type { OptionDisplayProps } from "../../OptionDisplayProps";
 import type { CSSProperties } from "react";
 import type { ValueEditorProps } from "../models";
 import type { MultilevelData } from "@/components/StandardValue/models";
@@ -11,14 +12,9 @@ import { RightOutlined, SearchOutlined } from "@ant-design/icons";
 import { useUpdateEffect } from "react-use";
 
 import {
-  useResourceCountsSource,
-  type ResourceCountsSource,
-} from "@/hooks/useResourceCountsSource";
-import {
   useDisabledChoiceKeys,
   type DisabledChoiceKeysSource,
 } from "@/hooks/useDisabledChoiceKeys";
-import ReferenceValueCount from "@/components/Property/components/ReferenceValueCount";
 import { Button, Input, Modal } from "@/components/bakaui";
 import {
   filterMultilevelData,
@@ -30,12 +26,11 @@ type Selectable<V> = (data: MultilevelData<V>, depth: number, index: number) => 
 
 interface MultilevelValueEditorProps<V>
   extends ValueEditorProps<V[], string[][]>,
-    DestroyableProps {
+    DestroyableProps,
+    OptionDisplayProps<V> {
   getDataSource?: () => Promise<MultilevelData<V>[] | undefined>;
   selectable?: Selectable<V>;
   multiple?: boolean;
-  resourceCounts?: Record<string, number>;
-  resourceCountsSource?: ResourceCountsSource;
   disabledKeys?: ReadonlySet<string>;
   disabledKeysSource?: DisabledChoiceKeysSource;
 }
@@ -55,13 +50,12 @@ const MultilevelValueEditor = <V = string,>(props: MultilevelValueEditorProps<V>
     onValueChange,
     onCancel,
     multiple,
-    resourceCounts: initialResourceCounts,
-    resourceCountsSource,
+    renderOptionExtra,
+    optionsDescription,
     disabledKeys: initialDisabledKeys,
     disabledKeysSource,
   } = props;
 
-  const resourceCounts = useResourceCountsSource(resourceCountsSource, initialResourceCounts);
   const disabledKeys = useDisabledChoiceKeys(disabledKeysSource, initialDisabledKeys);
 
   log(props);
@@ -172,7 +166,7 @@ const MultilevelValueEditor = <V = string,>(props: MultilevelValueEditorProps<V>
             >
               <span className="truncate">
                 {item.label}
-                <ReferenceValueCount count={resourceCounts?.[String(item.value)]} />
+                {renderOptionExtra?.({ value: item.value, label: item.label ?? "" })}
               </span>
               {hasChildren && <RightOutlined className="text-xs flex-shrink-0" />}
             </Button>
@@ -217,6 +211,8 @@ const MultilevelValueEditor = <V = string,>(props: MultilevelValueEditorProps<V>
             onValueChange={(v) => setKeyword(v)}
           />
         </div>
+
+        {optionsDescription}
 
         {/* Selected items display */}
         {selectedLabels.length > 0 && (

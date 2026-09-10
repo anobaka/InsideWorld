@@ -2,7 +2,7 @@
 "use strict";
 
 import type { DisabledChoiceKeysSource } from "@/hooks/useDisabledChoiceKeys";
-import type { ResourceCountsSource } from "@/hooks/useResourceCountsSource";
+import type { OptionDisplayProps } from "@/components/StandardValue/OptionDisplayProps";
 import type { Dayjs } from "dayjs";
 import type { Duration } from "dayjs/plugin/duration";
 import type {
@@ -45,10 +45,8 @@ import ParentResourceValueRenderer from "@/components/ResourceFilter/components/
 
 export type DataPool = {};
 
-export type Props = {
+export type Props = OptionDisplayProps & {
   property: IProperty;
-  resourceCounts?: Record<string, number>;
-  resourceCountsSource?: ResourceCountsSource;
   /** Reference option IDs that cannot be newly selected; selected values remain removable. */
   disabledKeys?: ReadonlySet<string>;
   disabledKeysSource?: DisabledChoiceKeysSource;
@@ -85,8 +83,8 @@ const log = buildLogger("PropertyValueRenderer");
 const PropertyValueRenderer = (props: Props) => {
   const {
     property,
-    resourceCounts,
-    resourceCountsSource,
+    renderOptionExtra,
+    optionsDescription,
     disabledKeys,
     disabledKeysSource,
     variant = "default",
@@ -233,8 +231,8 @@ const PropertyValueRenderer = (props: Props) => {
           }
           isEditing={isEditing}
           isReadonly={isReadonly}
-          resourceCounts={resourceCounts}
-          resourceCountsSource={resourceCountsSource}
+          optionsDescription={optionsDescription}
+          renderOptionExtra={renderOptionExtra}
           size={size}
           value={typedBv == undefined ? undefined : [typedBv]}
           valueAttributes={vas}
@@ -276,8 +274,8 @@ const PropertyValueRenderer = (props: Props) => {
           }
           isEditing={isEditing}
           isReadonly={isReadonly}
-          resourceCounts={resourceCounts}
-          resourceCountsSource={resourceCountsSource}
+          optionsDescription={optionsDescription}
+          renderOptionExtra={renderOptionExtra}
           size={size}
           value={typedBv}
           valueAttributes={vas}
@@ -478,8 +476,8 @@ const PropertyValueRenderer = (props: Props) => {
           isEditing={isEditing}
           isReadonly={isReadonly}
           multiple={!(options?.valueIsSingleton ?? false)}
-          resourceCounts={resourceCounts}
-          resourceCountsSource={resourceCountsSource}
+          optionsDescription={optionsDescription}
+          renderOptionExtra={renderOptionExtra}
           size={size}
           value={typedBv}
           valueAttributes={vas}
@@ -525,8 +523,8 @@ const PropertyValueRenderer = (props: Props) => {
           }
           isEditing={isEditing}
           isReadonly={isReadonly}
-          resourceCounts={resourceCounts}
-          resourceCountsSource={resourceCountsSource}
+          optionsDescription={optionsDescription}
+          renderOptionExtra={renderOptionExtra}
           size={size}
           value={typedBv}
           valueAttributes={vas}

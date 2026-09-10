@@ -29,6 +29,7 @@ export type { StandardValue } from "./StandardValueFactory";
 
 // Re-export types from models
 export type { LinkValue, TagValue, MultilevelData } from "./models";
+export type { OptionDisplayProps } from "./OptionDisplayProps";
 
 // Re-export helpers
 export {

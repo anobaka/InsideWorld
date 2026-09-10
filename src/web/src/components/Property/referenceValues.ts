@@ -6,16 +6,6 @@ import { GroupCombinator } from "@/components/ResourceFilter/models";
 import { serializeStandardValue } from "@/components/StandardValue/helpers";
 
 export type ReferenceProperty = Pick<IProperty, "id" | "pool" | "type" | "name">;
-export type ReferenceValueResourceCounts = Record<string, number>;
-
-/** Only explicit global zeros mean an option has no referencing resources. */
-export function getUnreferencedValueIds(
-  counts?: ReferenceValueResourceCounts,
-): ReadonlySet<string> | undefined {
-  return counts === undefined
-    ? undefined
-    : new Set(Object.keys(counts).filter((value) => counts[value] === 0));
-}
 
 /** Use reference IDs, never labels, so case handling stays inside the property module. */
 export function buildReferenceValueSearch(property: ReferenceProperty, value: string): SearchForm {
