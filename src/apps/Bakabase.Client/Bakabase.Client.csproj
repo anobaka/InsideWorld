@@ -32,6 +32,23 @@
 
     <ItemGroup>
       <PackageReference Include="Yarp.ReverseProxy" Version="2.3.0" />
+      <!--
+        Errors from this process. Not Sentry.AspNetCore: its diagnostic listener files an
+        event per failed HTTP request, and every request this process handles is a relay
+        to a server on somebody's LAN.
+      -->
+      <PackageReference Include="Sentry.Extensions.Logging" Version="4.13.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!--
+          Flows into the entry project's output, where ClientHost adds it to the
+          configuration by name. Deliberately not called appsettings.json: the test project
+          references both this and Bakabase.Service, and two files with that name silently
+          overwrite one another in the output — whichever copies last wins, and nothing
+          warns.
+        -->
+        <Content Include="client-analytics.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>

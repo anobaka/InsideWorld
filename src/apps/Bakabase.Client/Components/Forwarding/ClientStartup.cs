@@ -20,8 +20,10 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using AppContext = Bakabase.Infrastructures.Components.App.AppContext;
 
@@ -44,11 +46,13 @@ namespace Bakabase.Client.Components.Forwarding;
 /// thing this layer must not do is get in the way of bytes it is only passing along.
 /// </para>
 /// </remarks>
-public class ClientStartup
+public class ClientStartup(IConfiguration configuration, IWebHostEnvironment environment)
 {
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddHttpForwarder();
+
+        ConfigureTelemetry(services);
 
         services.TryAddSingleton<IClientDataDirectory>(sp =>
             new AppServiceClientDataDirectory(sp.GetRequiredService<AppService>()));
@@ -159,6 +163,15 @@ public class ClientStartup
 
     public void Configure(IApplicationBuilder app, AppContext appContext, ILogger<ClientStartup> logger)
     {
+        // Started here rather than in ConfigureServices because the anonymous id lives in
+        // the client's data directory, and that is only resolvable once the container is
+        // built. A test host reaches this with no DSN configured and does nothing.
+        if (ClientTelemetry.IsEnabled(configuration, environment.IsDevelopment()))
+        {
+            ClientTelemetry.Initialize(configuration, environment.IsDevelopment(), environment.EnvironmentName,
+                ClientAnonymousId.GetOrCreate(app.ApplicationServices.GetRequiredService<IClientDataDirectory>()));
+        }
+
         // The port comes from the address the host actually bound, not from a second
         // copy of the same decision — the guard has to be right about it or it either
         // refuses everything or protects nothing.
@@ -226,6 +239,33 @@ public class ClientStartup
             endpoints.MapFallback("/{**path}", (HttpContext context, UpstreamForwarder forwarder) =>
                 forwarder.ForwardAsync(context));
         });
+    }
+
+    /// <summary>
+    /// Routes this process's own error logs to Sentry, if this build has somewhere to
+    /// report to.
+    /// </summary>
+    /// <remarks>
+    /// The SDK itself is started in <see cref="Configure"/>, where the client's data
+    /// directory can be resolved for the anonymous id. Registered here behind the same
+    /// condition so the provider is never attached to a hub that will not exist.
+    /// </remarks>
+    private void ConfigureTelemetry(IServiceCollection services)
+    {
+        if (!ClientTelemetry.IsEnabled(configuration, environment.IsDevelopment()))
+        {
+            return;
+        }
+
+        // Same reasoning as the server's: the static Serilog logger is built inside
+        // Bakabase.Infrastructures, so the provider that reaches Sentry is the
+        // Microsoft.Extensions.Logging one.
+        services.AddLogging(builder => builder.AddSentry(o =>
+        {
+            o.InitializeSdk = false;
+            o.MinimumEventLevel = LogLevel.Error;
+            o.MinimumBreadcrumbLevel = LogLevel.Information;
+        }));
     }
 
     private static int ResolveListeningPort(AppContext appContext)

@@ -1,5 +1,7 @@
+using Bakabase.Client.Components.Diagnostics;
 using Bakabase.Client.Components.Forwarding;
 using Bakabase.Infrastructures.Components.App;
+using Microsoft.Extensions.Configuration;
 using Bakabase.Infrastructures.Components.Gui;
 using Bakabase.Infrastructures.Components.SystemService;
 using Microsoft.Extensions.Hosting;
@@ -49,7 +51,17 @@ public class ClientHost(IGuiAdapter guiAdapter, ISystemService systemService)
     protected override string DisplayName => "Bakabase Client";
 
     protected override IHostBuilder CreateHostBuilder(params string[] args) =>
-        AppUtils.CreateAppHostBuilder<ClientStartup>(args);
+        AppUtils.CreateAppHostBuilder<ClientStartup>(args)
+            .ConfigureAppConfiguration(builder => builder
+                // Read from beside the executable rather than from the working directory,
+                // which for a shortcut or a Dock launch is nothing in particular.
+                .AddJsonFile(
+                    Path.Combine(System.AppContext.BaseDirectory, ClientTelemetry.SettingsFileName),
+                    optional: true)
+                // Re-added because the file above was appended after the environment
+                // variables the default builder registered, and last source wins. Without
+                // this, the committed default would override the per-install override.
+                .AddEnvironmentVariables());
 
     /// <summary>
     /// Nothing of the user's runs here — the tasks that must not be interrupted are on
