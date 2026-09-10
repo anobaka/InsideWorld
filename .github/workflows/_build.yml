@@ -145,6 +145,18 @@ jobs:
             nuget-${{ runner.os }}-
       - name: Build Bakabase project
         run: dotnet publish -p:RuntimeMode=${{ matrix.runtimeMode }} ${{matrix.csproj}} --self-contained -r ${{ matrix.rid }} -o ./publish
+      # The thin client's half must not travel with the server's. Nothing references it
+      # today, and this is what says so out loud: a stray project reference would
+      # otherwise ship the forwarding layer, the device keys' storage and the connect
+      # page inside the container image, where none of them mean anything.
+      - name: Assert the server carries none of the client
+        shell: bash
+        run: |
+          if ls ./publish/Bakabase.Client*.dll >/dev/null 2>&1; then
+            echo "The client's assemblies were published with the server:"
+            ls -1 ./publish/Bakabase.Client*.dll
+            exit 1
+          fi
       - name: Download frontend artifact
         uses: actions/download-artifact@v4
         with:
