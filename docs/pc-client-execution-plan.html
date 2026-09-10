@@ -224,6 +224,8 @@ footer{margin-top:36px;color:var(--dim);font-size:12px;border-top:1px solid var(
 </table>
 
 <h3>阶段四：收尾——日志、更新区分、托盘、文案、移动端</h3>
+<div class="rule ok"><b>进度（2026-09-10）</b>：<b>阶段四全部完成并推送</b>。<code class="i">/client/log</code>（含 <code class="i">/client/log/open</code>，不走 <code class="i">/tool/open</code> 的路径映射）、日志页来源切换（默认选“能回答的那一端”）、设置页“本客户端”分区与服务端分区改名、侧边栏更新横幅在纯客户端只更新客户端（原先它调的是转发的 <code class="i">/updater/*</code>，开窗即会开始更新服务端）、服务端更新提示挪到连接页；<code class="i">POST /client/tray</code> 由页面上报服务端任务态（空 body 按 400 拒绝，不当成“空闲”）；客户端 Sentry 打 <code class="i">launch_mode=client</code> 与独立匿名标识——DSN 键刻意不复用服务端的 <code class="i">BackendDsn</code>，否则每个由 <code class="i">ClientStartup</code> 组装的测试宿主都会读到隔壁的 <code class="i">appsettings.json</code> 并向线上项目上报（已由测试锁死）；User-Agent 收敛为 <code class="i">WebViewUserAgent</code> 一处，<code class="i">IWebViewSession.UserAgent</code> 默认接口成员，采集结果携带窗口自报值；mDNS 浏览器补齐（广播被丢弃的网络上是唯一能用的一半）；移动端设备页（轮询、可批准/拒绝/改名/撤销，撤销本机后丢弃密钥）；文案五处。C# 全量测试 954 通过，前端 228 通过，<code class="i">keysResolve</code> 顺带查出 <code class="i">common.save</code> 无人应答。</div>
+<div class="rule warn"><b>本阶段未做的两项</b>：<b>同机双运行时更新器互相提示</b>——两个产物各有安装目录与更新通道，握手已经会拦下协议不兼容的组合，剩下的只是版本号不同，而两端版本在设置页里各自写着；<b><code class="i">POST /client/path-mappings/resolve</code></b>（按映射状态灰掉“打开目录”按钮）——它要把 <code class="i">ClientPathMapper</code> 的最长前缀匹配复制到 TypeScript 里，而客户端拒绝时前端已经给出指向映射页的提示。两项都可随时补，都不挡发布。</div>
 <table>
 <tr><th style="width:44%">事项</th><th>验收</th></tr>
 <tr><td><code class="i">/client/log</code>（读 Serilog 文件，客户端没有 SQLite 日志库）；日志页来源切换；应用信息页两端区分；<code class="i">AppUpdateBanner</code> 在纯客户端只关心客户端更新，服务端更新提示放在连接页</td><td>纯客户端界面能分别查看两端日志与版本</td></tr>
