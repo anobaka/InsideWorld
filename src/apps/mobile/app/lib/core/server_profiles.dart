@@ -10,6 +10,7 @@ class ServerProfile {
     required this.name,
     required this.baseUrl,
     required this.lastConnectedAt,
+    this.paired = false,
   });
 
   final String id;
@@ -19,11 +20,28 @@ class ServerProfile {
   final String baseUrl;
   final DateTime lastConnectedAt;
 
+  /// Whether this device holds a key for this server.
+  ///
+  /// The key itself lives in the keystore, not here — this is only the flag that says
+  /// to go looking for one. Absent from profiles written before pairing existed, and
+  /// it defaults to false there, which is correct: those devices have no key.
+  final bool paired;
+
+  ServerProfile copyWith({String? name, String? baseUrl, DateTime? lastConnectedAt, bool? paired}) =>
+      ServerProfile(
+        id: id,
+        name: name ?? this.name,
+        baseUrl: baseUrl ?? this.baseUrl,
+        lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
+        paired: paired ?? this.paired,
+      );
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
         'baseUrl': baseUrl,
         'lastConnectedAt': lastConnectedAt.toIso8601String(),
+        'paired': paired,
       };
 
   static ServerProfile? fromJson(Map<String, dynamic> json) {
@@ -39,6 +57,7 @@ class ServerProfile {
       lastConnectedAt:
           DateTime.tryParse(json['lastConnectedAt'] as String? ?? '') ??
               DateTime.fromMillisecondsSinceEpoch(0),
+      paired: json['paired'] as bool? ?? false,
     );
   }
 }
@@ -84,6 +103,20 @@ class ServerProfileStore {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, jsonEncode(merged.map((p) => p.toJson()).toList()));
     return merged;
+  }
+
+  /// Records that this device paired with (or was unpaired from) a server, leaving
+  /// everything else about the profile alone.
+  Future<List<ServerProfile>> setPaired(String id, bool paired) async {
+    final existing = await load();
+    final matches = existing.where((p) => p.id == id);
+    final profile = matches.isEmpty ? null : matches.first;
+
+    if (profile == null || profile.paired == paired) {
+      return existing;
+    }
+
+    return save(profile.copyWith(paired: paired));
   }
 
   Future<List<ServerProfile>> remove(String id) async {

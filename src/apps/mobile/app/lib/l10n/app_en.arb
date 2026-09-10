@@ -10,12 +10,30 @@
   "byAddress": "By address",
   "connect": "Connect",
   "couldNotConnect": "Could not connect to {url}",
-  "@couldNotConnect": {"placeholders": {"url": {"type": "String"}}},
+  "@couldNotConnect": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
   "remoteAccessDisabledHint": "Remote access is turned off. Enable it in Bakabase on the host machine (Settings → Remote access).",
   "protocolTooNew": "Server speaks protocol v{version}; this app is too old for it. Update the app.",
-  "@protocolTooNew": {"placeholders": {"version": {"type": "String"}}},
+  "@protocolTooNew": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "protocolTooOld": "Server speaks protocol v{version}; this app needs a newer server. Update Bakabase on the host.",
-  "@protocolTooOld": {"placeholders": {"version": {"type": "String"}}},
+  "@protocolTooOld": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "searchHint": "Search resources",
   "allLibraries": "All",
   "sortTooltip": "Sort",
@@ -33,14 +51,48 @@
   "copyStreamLink": "Copy stream link",
   "streamLinkCopied": "Stream link copied — paste it into a player",
   "couldNotOpenPlayer": "Could not open {name} — is it installed?",
-  "@couldNotOpenPlayer": {"placeholders": {"name": {"type": "String"}}},
+  "@couldNotOpenPlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "otherPlayer": "Other player…",
   "readPages": "Read ({count} pages)",
-  "@readPages": {"placeholders": {"count": {"type": "int"}}},
+  "@readPages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "playSection": "Play",
   "otherFiles": "Other files",
   "noPlayableFiles": "No playable files were found in this resource.",
   "playHistory": "Play history",
   "removedResource": "Resource #{id} (removed)",
-  "@removedResource": {"placeholders": {"id": {"type": "int"}}}
+  "@removedResource": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "pairTitle": "Pair this device",
+  "pairIntro": "This server only serves devices it knows. Read the code from Bakabase on the server, or ask someone at a paired device to approve this one.",
+  "pairCodeLabel": "6-digit code",
+  "pairSubmit": "Pair",
+  "pairAskInstead": "Ask for approval instead",
+  "pairWaiting": "Waiting for someone to approve this device…",
+  "pairCodeRejected": "That code was wrong or has expired. Read a fresh one from the server.",
+  "pairRequestRejected": "The request was turned down, or waited too long.",
+  "pairTooManyAttempts": "The server is not taking more attempts from here for now. Try again in a few minutes.",
+  "pairUnreachable": "The server stopped answering.",
+  "pairUnsupported": "This server is too old to pair with.",
+  "pairDeviceNameLabel": "Device name",
+  "denialUnauthenticated": "This device is not paired with that server.",
+  "denialSignatureExpired": "This phone's clock is off, so the server rejected the request. Fix the date and time, then try again.",
+  "denialDeviceRevoked": "This device was unpaired from that server. Pair it again.",
+  "denialRunsOnUserMachine": "That happens on the machine holding the files, so it cannot run from here."
 }

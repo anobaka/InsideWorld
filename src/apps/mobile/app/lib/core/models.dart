@@ -13,6 +13,8 @@ class ServerInfo {
     required this.appVersion,
     required this.protocolVersion,
     this.mode,
+    this.pairingSupported = false,
+    this.serverTime,
   });
 
   final String id;
@@ -24,12 +26,48 @@ class ServerInfo {
   /// discovery payloads.
   final int? mode;
 
+  /// Whether this server understands device pairing.
+  ///
+  /// A capability flag rather than a protocol bump, on purpose: raising the protocol
+  /// version would make every already-installed app refuse to connect as "too new".
+  /// So it is absent — and therefore false — on an older server, which is the truth.
+  final bool pairingSupported;
+
+  /// The server's clock at the moment it answered, so this device can measure its
+  /// own offset and sign with a timestamp the server will accept. Absent in discovery
+  /// payloads and on servers from before pairing.
+  final DateTime? serverTime;
+
+  /// Reads the server's clock reading, which arrives as UTC without saying so.
+  ///
+  /// The server sends `DateTime.UtcNow` through a serializer configured with
+  /// `"yyyy-MM-dd HH:mm:ss.fff"` — no offset, no trailing Z. Dart's [DateTime.parse]
+  /// reads a string like that as *local* time, so on a phone in UTC+8 the measured
+  /// clock offset would come out eight hours wrong and every signature this device
+  /// produced would be rejected as expired. The C# client assumes universal for the
+  /// same string; this is the same assumption, spelled out.
+  ///
+  /// A value that does say what it is — a trailing `Z`, or an explicit `+08:00` — is
+  /// left alone, so a server that starts sending proper ISO instants keeps working.
+  static DateTime? parseServerTime(String? value) {
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+
+    final saysZone = value.endsWith('Z') ||
+        RegExp(r'[+-]\d{2}:?\d{2}$').hasMatch(value);
+
+    return DateTime.tryParse(saysZone ? value : '${value}Z')?.toUtc();
+  }
+
   static ServerInfo fromJson(Map<String, dynamic> json) => ServerInfo(
         id: json['id'] as String,
         name: json['name'] as String? ?? 'Bakabase',
         appVersion: json['appVersion'] as String? ?? '',
         protocolVersion: (json['protocolVersion'] as num?)?.toInt() ?? 0,
         mode: (json['mode'] as num?)?.toInt(),
+        pairingSupported: json['pairingSupported'] as bool? ?? false,
+        serverTime: parseServerTime(json['serverTime'] as String?),
       );
 }
 

@@ -27,6 +27,10 @@ dependencies:
   # HMAC-SHA256 for the device request signature. The format is a contract with
   # the server, pinned to golden vectors on both sides.
   crypto: ^3.0.5
+  # The device key is bearer authority over someone's library until it is revoked,
+  # so it goes to the Keychain / EncryptedSharedPreferences rather than to
+  # shared_preferences alongside the server address.
+  flutter_secure_storage: ^9.2.2
   cached_network_image: ^3.4.1
   # In-app playback: libmpv decodes MKV/HEVC/DTS on-device, which is the whole
   # point of streaming /file/raw instead of transcoding on the host.

@@ -132,4 +132,51 @@ class AppLocalizationsZh extends AppLocalizations {
   String removedResource(int id) {
     return '资源 #$id（已删除）';
   }
+  @override
+  String get pairTitle => '配对此设备';
+
+  @override
+  String get pairIntro => '该服务端只服务它认识的设备。在服务端的 Bakabase 里读取配对码，或者请已配对设备旁的人批准这一台。';
+
+  @override
+  String get pairCodeLabel => '6 位配对码';
+
+  @override
+  String get pairSubmit => '配对';
+
+  @override
+  String get pairAskInstead => '改为请求批准';
+
+  @override
+  String get pairWaiting => '等待有人批准此设备…';
+
+  @override
+  String get pairCodeRejected => '配对码错误或已过期，请在服务端重新获取。';
+
+  @override
+  String get pairRequestRejected => '请求被拒绝，或等待超时。';
+
+  @override
+  String get pairTooManyAttempts => '服务端暂时不再接受来自此处的尝试，请几分钟后再试。';
+
+  @override
+  String get pairUnreachable => '服务端没有响应。';
+
+  @override
+  String get pairUnsupported => '该服务端版本过旧，不支持配对。';
+
+  @override
+  String get pairDeviceNameLabel => '设备名称';
+
+  @override
+  String get denialUnauthenticated => '此设备尚未与该服务端配对。';
+
+  @override
+  String get denialSignatureExpired => '此手机的时钟不准，服务端拒绝了请求。请校正日期与时间后重试。';
+
+  @override
+  String get denialDeviceRevoked => '此设备已被该服务端解除配对，请重新配对。';
+
+  @override
+  String get denialRunsOnUserMachine => '该操作发生在存放文件的机器上，无法从这里执行。';
 }

@@ -133,4 +133,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String removedResource(int id) {
     return 'Resource #$id (removed)';
   }
+  @override
+  String get pairTitle => 'Pair this device';
+
+  @override
+  String get pairIntro => 'This server only serves devices it knows. Read the code from Bakabase on the server, or ask someone at a paired device to approve this one.';
+
+  @override
+  String get pairCodeLabel => '6-digit code';
+
+  @override
+  String get pairSubmit => 'Pair';
+
+  @override
+  String get pairAskInstead => 'Ask for approval instead';
+
+  @override
+  String get pairWaiting => 'Waiting for someone to approve this device…';
+
+  @override
+  String get pairCodeRejected => 'That code was wrong or has expired. Read a fresh one from the server.';
+
+  @override
+  String get pairRequestRejected => 'The request was turned down, or waited too long.';
+
+  @override
+  String get pairTooManyAttempts => 'The server is not taking more attempts from here for now. Try again in a few minutes.';
+
+  @override
+  String get pairUnreachable => 'The server stopped answering.';
+
+  @override
+  String get pairUnsupported => 'This server is too old to pair with.';
+
+  @override
+  String get pairDeviceNameLabel => 'Device name';
+
+  @override
+  String get denialUnauthenticated => 'This device is not paired with that server.';
+
+  @override
+  String get denialSignatureExpired => 'This phone\'s clock is off, so the server rejected the request. Fix the date and time, then try again.';
+
+  @override
+  String get denialDeviceRevoked => 'This device was unpaired from that server. Pair it again.';
+
+  @override
+  String get denialRunsOnUserMachine => 'That happens on the machine holding the files, so it cannot run from here.';
 }

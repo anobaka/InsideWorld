@@ -1,12 +1,32 @@
 import 'package:dio/dio.dart';
 
+import 'credentials.dart';
 import 'list_string.dart';
 import 'models.dart';
+import 'signing_interceptor.dart';
 
 /// Why a request was turned away, from the `X-Bakabase-Remote-Access` header
 /// the server stamps on denials. Mirrors RemoteAccessDenialReason on the C#
 /// side; [unknown] covers values a newer server may add.
-enum RemoteAccessDenial { disabled, hostOnly, pathNotServable, transcodeDisabled, unknown }
+///
+/// The last four arrived with device pairing and each sends the user somewhere
+/// different, which is the whole reason they are separate values rather than one
+/// "refused": [unauthenticated] means pair this device, [deviceRevoked] means pair it
+/// again, [signatureExpired] means fix this phone's clock — telling someone their
+/// pairing is broken when their clock is off sends them to the wrong fix — and
+/// [runsOnUserMachine] is not a permission at all, but a statement that the action
+/// only means something on the machine holding the files.
+enum RemoteAccessDenial {
+  disabled,
+  hostOnly,
+  pathNotServable,
+  transcodeDisabled,
+  runsOnUserMachine,
+  unauthenticated,
+  signatureExpired,
+  deviceRevoked,
+  unknown,
+}
 
 class ApiException implements Exception {
   ApiException(this.message, {this.denial});
@@ -22,17 +42,38 @@ class ApiException implements Exception {
 /// app uses. One instance per connected server; the base URL is the address
 /// discovery (or the user) produced.
 class BakabaseApiClient {
-  BakabaseApiClient(this.baseUrl)
-      : _dio = Dio(BaseOptions(
+  BakabaseApiClient(
+    this.baseUrl, {
+    DeviceCredentials? credentials,
+    Duration clockOffset = Duration.zero,
+  })  : _credentials = credentials,
+        _dio = Dio(BaseOptions(
           baseUrl: baseUrl,
           connectTimeout: const Duration(seconds: 5),
           receiveTimeout: const Duration(seconds: 30),
           // Denials are handled below rather than thrown as raw DioExceptions.
           validateStatus: (_) => true,
-        ));
+        )) {
+    // Unpaired is a normal state: a server with RequirePairing off serves an
+    // anonymous device everything it is allowed to. So the interceptor is installed
+    // only when there is something to sign with, rather than signing with a blank
+    // key and having every request refused.
+    if (credentials != null) {
+      _dio.interceptors.add(DeviceSigningInterceptor(
+        credentials: () => credentials,
+        clockOffset: () => clockOffset,
+      ));
+    }
+  }
 
   final String baseUrl;
   final Dio _dio;
+
+  /// Null when this device has not paired with this server. Exposed so the UI can
+  /// tell "not paired" from "paired and refused".
+  final DeviceCredentials? _credentials;
+
+  bool get isPaired => _credentials != null;
 
   /// ResourceAdditionalItem.All. Must be a value the server's enum DEFINES:
   /// hand-built bit combinations (e.g. DisplayName|MediaLibraryName|Cover)
@@ -281,11 +322,16 @@ class BakabaseApiClient {
       throw ApiException('Could not reach the server: ${e.message}');
     }
 
+    // 401 as well as 403 since pairing landed: the gate answers 401 when a device
+    // is unknown or its signature did not check out, and 403 when a known device is
+    // refused this particular thing. Both carry the header, and reading only 403
+    // turned an unpaired device's every call into a bare "Server error (401)".
     final denialHeader = response.headers.value('X-Bakabase-Remote-Access');
-    if (denialHeader != null && response.statusCode == 403) {
+    if (denialHeader != null &&
+        (response.statusCode == 403 || response.statusCode == 401)) {
       throw ApiException(
         _messageOf(response.data) ?? 'The server refused this request.',
-        denial: _parseDenial(denialHeader),
+        denial: parseDenial(denialHeader),
       );
     }
 
@@ -324,11 +370,17 @@ class BakabaseApiClient {
   static String? _messageOf(dynamic data) =>
       data is Map<String, dynamic> ? data['message'] as String? : null;
 
-  static RemoteAccessDenial _parseDenial(String value) => switch (value) {
+  /// The header carries the enum's name, not its number — a bare 6 in a network log
+  /// tells nobody anything.
+  static RemoteAccessDenial parseDenial(String value) => switch (value) {
         'Disabled' => RemoteAccessDenial.disabled,
         'HostOnly' => RemoteAccessDenial.hostOnly,
         'PathNotServable' => RemoteAccessDenial.pathNotServable,
         'TranscodeDisabled' => RemoteAccessDenial.transcodeDisabled,
+        'RunsOnUserMachine' => RemoteAccessDenial.runsOnUserMachine,
+        'Unauthenticated' => RemoteAccessDenial.unauthenticated,
+        'SignatureExpired' => RemoteAccessDenial.signatureExpired,
+        'DeviceRevoked' => RemoteAccessDenial.deviceRevoked,
         _ => RemoteAccessDenial.unknown,
       };
 }

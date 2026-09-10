@@ -319,6 +319,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resource #{id} (removed)'**
   String removedResource(int id);
+  /// No description provided for @pairTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair this device'**
+  String get pairTitle;
+
+  /// No description provided for @pairIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'This server only serves devices it knows. Read the code from Bakabase on the server, or ask someone at a paired device to approve this one.'**
+  String get pairIntro;
+
+  /// No description provided for @pairCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit code'**
+  String get pairCodeLabel;
+
+  /// No description provided for @pairSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair'**
+  String get pairSubmit;
+
+  /// No description provided for @pairAskInstead.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask for approval instead'**
+  String get pairAskInstead;
+
+  /// No description provided for @pairWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for someone to approve this device…'**
+  String get pairWaiting;
+
+  /// No description provided for @pairCodeRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'That code was wrong or has expired. Read a fresh one from the server.'**
+  String get pairCodeRejected;
+
+  /// No description provided for @pairRequestRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The request was turned down, or waited too long.'**
+  String get pairRequestRejected;
+
+  /// No description provided for @pairTooManyAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'The server is not taking more attempts from here for now. Try again in a few minutes.'**
+  String get pairTooManyAttempts;
+
+  /// No description provided for @pairUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'The server stopped answering.'**
+  String get pairUnreachable;
+
+  /// No description provided for @pairUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This server is too old to pair with.'**
+  String get pairUnsupported;
+
+  /// No description provided for @pairDeviceNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Device name'**
+  String get pairDeviceNameLabel;
+
+  /// No description provided for @denialUnauthenticated.
+  ///
+  /// In en, this message translates to:
+  /// **'This device is not paired with that server.'**
+  String get denialUnauthenticated;
+
+  /// No description provided for @denialSignatureExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone\'s clock is off, so the server rejected the request. Fix the date and time, then try again.'**
+  String get denialSignatureExpired;
+
+  /// No description provided for @denialDeviceRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'This device was unpaired from that server. Pair it again.'**
+  String get denialDeviceRevoked;
+
+  /// No description provided for @denialRunsOnUserMachine.
+  ///
+  /// In en, this message translates to:
+  /// **'That happens on the machine holding the files, so it cannot run from here.'**
+  String get denialRunsOnUserMachine;
+
 }
 
 class _AppLocalizationsDelegate
