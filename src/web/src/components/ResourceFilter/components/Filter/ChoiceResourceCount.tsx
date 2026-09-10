@@ -52,37 +52,16 @@ export default function ChoiceResourceCount({
   const { t } = useTranslation();
   const state = useChoiceResourceCounts(store);
   const count = state.counts?.[choiceId];
-  const reservedWidth = state.reservedWidths?.[choiceId];
-  const hasCount = count !== undefined && count > 0;
 
-  if (!hasCount && reservedWidth === undefined) return null;
+  if (count === undefined || count <= 0) return null;
   const statusKey = getStatusKey(state);
 
   return (
     <span
-      aria-hidden={!hasCount}
       className={`ml-1 text-xs tabular-nums ${state.loading || state.stale ? "opacity-40" : "opacity-70"}`}
-      style={
-        reservedWidth === undefined
-          ? undefined
-          : {
-              display: "inline-block",
-              width: `${reservedWidth}ch`,
-              textAlign: "right",
-              flexShrink: 0,
-              whiteSpace: "nowrap",
-              visibility: hasCount ? undefined : "hidden",
-            }
-      }
-      title={
-        hasCount
-          ? statusKey
-            ? t(statusKey)
-            : t("property.reference.resourceCount", { count })
-          : undefined
-      }
+      title={statusKey ? t(statusKey) : t("property.reference.resourceCount", { count })}
     >
-      {hasCount ? `(${count.toLocaleString()})` : undefined}
+      ({count.toLocaleString()})
     </span>
   );
 }

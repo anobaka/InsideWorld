@@ -184,7 +184,7 @@ describe("filter value renderer", () => {
     state.filteredStatus.loading = false;
     await act(async () => root.render(<FilterValueRenderer property={property} />));
     expect(extra("choice", portalContainer).textContent).toBe("");
-    expect(badge("choice", portalContainer)!.style.width).toBe("3ch");
+    expect(badge("choice", portalContainer)).toBeNull();
 
     state.search = undefined;
     await act(async () => root.render(<FilterValueRenderer property={property} />));
@@ -194,14 +194,14 @@ describe("filter value renderer", () => {
   it("keeps global counts visible and availability unchanged during the first filtered request", async () => {
     state.globalCounts = { choice: 1_000, unused: 0 };
     await act(async () => root.render(<FilterValueRenderer property={property} />));
-    const width = badge("choice")!.style.width;
+    const previousBadge = badge("choice");
 
     state.search = { keyword: "new filter" };
     state.filteredStatus.loading = true;
     await act(async () => root.render(<FilterValueRenderer property={property} />));
 
     expect(extra("choice").textContent).toBe(`(${(1_000).toLocaleString()})`);
-    expect(badge("choice")!.style.width).toBe(width);
+    expect(badge("choice")).toBe(previousBadge);
     expect(badge("choice")!.title).toBe("property.reference.updatingCounts");
     expect(container.querySelector('[role="status"]')!.textContent).toBe(
       "property.reference.updatingCounts",
@@ -234,20 +234,23 @@ describe("filter value renderer", () => {
     expect(container.querySelector('[role="status"]')!.textContent).toBe("");
   });
 
-  it("preserves count widths as filtered values change digits or become zero", async () => {
+  it("displays compact filtered counts without reserving space for global totals", async () => {
     state.globalCounts = { choice: 1_000, unused: 0 };
     state.search = { keyword: "filter" };
     state.filteredCounts = { choice: 9, unused: 0 };
     await act(async () => root.render(<FilterValueRenderer property={property} />));
-    const width = `${(1_000).toLocaleString().length + 2}ch`;
-
-    expect(badge("choice")!.style.width).toBe(width);
+    expect(badge("choice")!.style.width).toBe("");
     expect(badge("unused")).toBeNull();
     for (const count of [10, 1_000, 0, 9]) {
       state.filteredCounts = { choice: count, unused: 0 };
       await act(async () => root.render(<FilterValueRenderer property={property} />));
       expect(extra("choice").textContent).toBe(count > 0 ? `(${count.toLocaleString()})` : "");
-      expect(badge("choice")!.style.width).toBe(width);
+      if (count > 0) {
+        expect(badge("choice")!.style.width).toBe("");
+        expect(badge("choice")!.style.minWidth).toBe("");
+      } else {
+        expect(badge("choice")).toBeNull();
+      }
       expect(option("choice").disabled).toBe(false);
       expect(option("unused").disabled).toBe(true);
     }
@@ -278,14 +281,14 @@ describe("filter value renderer", () => {
     state.search = { keyword: "first filter" };
     state.filteredCounts = { choice: 2, unused: 0 };
     await act(async () => root.render(<FilterValueRenderer property={property} />));
-    const width = badge("choice")!.style.width;
+    const previousBadge = badge("choice");
 
     state.search = { keyword: "failing filter" };
     state.filteredCounts = undefined;
     state.filteredStatus = { loading: false, error: true, stale: false };
     await act(async () => root.render(<FilterValueRenderer property={property} />));
     expect(extra("choice").textContent).toBe("(2)");
-    expect(badge("choice")!.style.width).toBe(width);
+    expect(badge("choice")).toBe(previousBadge);
     expect(badge("choice")!.title).toBe("property.reference.countsUpdateFailed");
     expect(option("choice").disabled).toBe(false);
     expect(option("unused").disabled).toBe(true);
@@ -296,7 +299,7 @@ describe("filter value renderer", () => {
     { field: "pool", changed: { pool: PropertyPool.Reserved } },
     { field: "type", changed: { type: PropertyType.MultipleChoice } },
   ])(
-    "isolates counts, width and captured extras when the property $field changes",
+    "isolates counts and captured extras when the property $field changes",
     async ({ changed }) => {
       state.globalCounts = { choice: 1_000, unused: 0 };
       await act(async () => root.render(<FilterValueRenderer property={property} />));
@@ -318,12 +321,8 @@ describe("filter value renderer", () => {
       state.globalStatus.loading = false;
       await act(async () => root.render(<FilterValueRenderer property={nextProperty} />));
       expect(extra("choice").textContent).toBe("(3)");
-      expect(badge("choice")!.style.width).toBe("3ch");
       expect(option("unused").disabled).toBe(false);
       expect(extra("choice", portalContainer).textContent).toBe(`(${(1_000).toLocaleString()})`);
-      expect(badge("choice", portalContainer)!.style.width).toBe(
-        `${(1_000).toLocaleString().length + 2}ch`,
-      );
       expect(option("unused", portalContainer).disabled).toBe(true);
     },
   );

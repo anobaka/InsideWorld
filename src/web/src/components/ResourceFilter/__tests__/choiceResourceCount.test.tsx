@@ -25,26 +25,27 @@ afterEach(async () => {
 });
 
 describe("filter choice resource count", () => {
-  it("keeps a mounted badge's slot width across digit changes, zero, and unavailable counts", async () => {
+  it("updates mounted counts at their natural width and removes zero or unavailable badges", async () => {
     const store = createChoiceResourceCountsStore();
 
-    store.publish({ counts: { choice: 1_000 }, reservedWidths: { choice: 7 } });
+    store.publish({ counts: { choice: 1_000 } });
     await act(async () => root.render(<ChoiceResourceCount choiceId="choice" store={store} />));
-    const badge = container.querySelector("span")!;
 
-    for (const count of [9, 10, 1_000, 0, undefined]) {
+    for (const count of [9, 10, 1_000, 0, undefined, 3]) {
       act(() =>
         store.publish({
           counts: count === undefined ? undefined : { choice: count },
-          reservedWidths: { choice: 7 },
         }),
       );
-      expect(container.querySelector("span")).toBe(badge);
-      expect(badge.style.width).toBe("7ch");
-      expect(badge.style.flexShrink).toBe("0");
-      expect(badge.style.whiteSpace).toBe("nowrap");
-      expect(badge.textContent).toBe(count ? `(${count.toLocaleString()})` : "");
-      expect(badge.getAttribute("aria-hidden")).toBe(String(!count));
+      if (count !== undefined && count > 0) {
+        const badge = container.querySelector("span")!;
+
+        expect(badge.style.width).toBe("");
+        expect(badge.style.minWidth).toBe("");
+        expect(badge.textContent).toBe(`(${count.toLocaleString()})`);
+      } else {
+        expect(container.innerHTML).toBe("");
+      }
     }
   });
 
@@ -52,27 +53,29 @@ describe("filter choice resource count", () => {
     const store = createChoiceResourceCountsStore();
     const counts = { choice: 9 };
 
-    store.publish({ counts, reservedWidths: { choice: 7 } });
+    store.publish({ counts });
     await act(async () => root.render(<ChoiceResourceCount choiceId="choice" store={store} />));
     const badge = container.querySelector("span")!;
 
     expect(badge.className).toContain("opacity-70");
-    act(() => store.publish({ counts, reservedWidths: { choice: 7 }, loading: true, stale: true }));
+    act(() => store.publish({ counts, loading: true, stale: true }));
+    expect(container.querySelector("span")).toBe(badge);
     expect(badge.textContent).toBe("(9)");
     expect(badge.className).toContain("opacity-40");
     expect(badge.title).toBe("property.reference.updatingCounts");
-    expect(badge.style.width).toBe("7ch");
+    expect(badge.style.width).toBe("");
 
-    act(() => store.publish({ counts, reservedWidths: { choice: 7 }, error: true, stale: true }));
+    act(() => store.publish({ counts, error: true, stale: true }));
+    expect(container.querySelector("span")).toBe(badge);
     expect(badge.textContent).toBe("(9)");
     expect(badge.title).toBe("property.reference.countsUpdateFailed");
     expect(badge.className).toContain("opacity-40");
   });
 
-  it("does not introduce placeholder badges without an assigned slot", async () => {
+  it("does not introduce placeholder badges while counts load", async () => {
     const store = createChoiceResourceCountsStore();
 
-    store.publish({ counts: { zero: 0 }, reservedWidths: { anotherChoice: 4 }, loading: true });
+    store.publish({ counts: { zero: 0 }, loading: true });
     await act(async () =>
       root.render(
         <>
@@ -144,7 +147,6 @@ describe("filter choice resource count", () => {
     const unsubscribe = store.subscribe(() => observed.push(store.getSnapshot()));
     const updated = {
       counts: { next: 10 },
-      reservedWidths: { next: 4 },
       loading: false,
       stale: false,
     };

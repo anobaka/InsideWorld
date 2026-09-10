@@ -2,8 +2,6 @@ import { useSyncExternalStore } from "react";
 
 export type ChoiceResourceCountsState = {
   counts?: Record<string, number>;
-  /** Count-slot widths in ch, including parentheses. */
-  reservedWidths?: Readonly<Record<string, number>>;
   loading?: boolean;
   error?: boolean;
   stale?: boolean;
