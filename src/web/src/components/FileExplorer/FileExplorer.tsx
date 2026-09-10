@@ -869,6 +869,17 @@ const FileExplorer = forwardRef<FileExplorerRef, FileExplorerProps>(
             </Button>
           )}
           {keyboard && <Shortcuts capabilities={capabilities} />}
+          {/*
+            Said once, where the paths are read. Everything in this tree is a path on
+            the machine holding the files, and typing one from this computer into the
+            box above finds nothing — which looks like a broken explorer rather than a
+            question about which disk is being browsed.
+          */}
+          {filesAreElsewhere && (
+            <span className="shrink-0 text-xs text-foreground-400 px-2">
+              {t<string>("fileExplorer.tip.pathsAreOnTheServer")}
+            </span>
+          )}
         </div>
         <div className={"grow min-h-0"}>
           <FileExplorerEntry

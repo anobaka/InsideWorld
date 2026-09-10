@@ -17,7 +17,6 @@
   "resourceSource.notConfigured.title": "Not configured yet",
   "resourceSource.notConfigured.description": "Please configure a {{platform}} account first before viewing data.",
   "resourceSource.notConfigured.goToConfigure": "Go to configure",
-
   "resourceSource.accounts.title": "{{platform}} Accounts",
   "resourceSource.accounts.add": "Add Account",
   "resourceSource.accounts.empty": "No accounts added yet",
@@ -41,7 +40,6 @@
   "resourceSource.accounts.tlsPreset": "TLS Fingerprint",
   "resourceSource.accounts.tlsPresetPlaceholder": "Select a TLS fingerprint...",
   "resourceSource.accounts.tlsPresetDescription": "Must match the browser type and version of the User-Agent. Auto-filled when using 'Login to Import'.",
-
   "resourceSource.steam.title": "Steam",
   "resourceSource.steam.description": "Games synced from your Steam library.",
   "resourceSource.steam.label.appId": "App ID",
@@ -54,7 +52,6 @@
   "resourceSource.steam.config.apiKey": "Steam Web API Key",
   "resourceSource.steam.config.getApiKey": "Get Steam API Key",
   "resourceSource.steam.config.steamId": "Steam ID",
-
   "resourceSource.dlsite.title": "DLsite Works",
   "resourceSource.dlsite.description": "Works synced from your DLsite purchases.",
   "resourceSource.dlsite.label.workId": "Work ID",
@@ -109,7 +106,6 @@
   "resourceSource.dlsite.le.installing": "LE installing",
   "resourceSource.dlsite.le.notAvailableOnPlatform": "LE not available on this platform",
   "resourceSource.dlsite.config.deleteArchiveAfterExtraction": "Delete archives after extraction",
-
   "resourceSource.exhentai.title": "ExHentai",
   "resourceSource.exhentai.description": "Galleries synced from your ExHentai favorites.",
   "resourceSource.exhentai.label.galleryId": "Gallery ID",
@@ -120,13 +116,10 @@
   "resourceSource.exhentai.action.openLocal": "Open local folder",
   "resourceSource.exhentai.action.deleteLocal": "Delete local files",
   "resourceSource.exhentai.action.deleteLocalConfirm": "Are you sure to delete local files for this gallery? This cannot be undone.",
-
   "resourceSource.steam.action.launch": "Launch in Steam",
   "resourceSource.steam.action.openLocal": "Open local folder",
-
   "resourceSource.pagination.pageSize": "Per page",
   "resourceSource.pagination.total": "{{total}} total",
-
   "resourceSource.config.tab.general": "General",
   "resourceSource.config.tab.accounts": "Accounts",
   "resourceSource.config.tab.localFiles": "Local Files",
@@ -142,7 +135,6 @@
   "resourceSource.metadataMapping.customFields": "Custom fields",
   "resourceSource.metadataMapping.reapplyStarted": "Re-apply task started",
   "resourceSource.metadataMapping.recommended": "Recommended",
-
   "metadataField.Steam.Name": "Name",
   "metadataField.Steam.Type": "Type",
   "metadataField.Steam.ShortDescription": "Short Description",
@@ -155,12 +147,10 @@
   "metadataField.Steam.Categories": "Categories",
   "metadataField.Steam.MetacriticScore": "Metacritic Score",
   "metadataField.Steam.ReleaseDate": "Release Date",
-
   "metadataField.DLsite.Name": "Name",
   "metadataField.DLsite.Introduction": "Introduction",
   "metadataField.DLsite.Rating": "Rating",
   "metadataField.DLsite.CoverUrls": "Cover Images",
-
   "metadataField.ExHentai.Name": "English Title",
   "metadataField.ExHentai.RawName": "Original Title",
   "metadataField.ExHentai.Introduction": "Introduction",
@@ -169,9 +159,9 @@
   "metadataField.ExHentai.CoverUrl": "Cover Image",
   "metadataField.ExHentai.FileCount": "File Count",
   "metadataField.ExHentai.PageCount": "Page Count",
-
   "menu.otherPlatforms": "Other Platforms",
   "menu.steam": "Steam",
   "menu.dlsite": "DLsite",
-  "menu.exhentai": "ExHentai"
+  "menu.exhentai": "ExHentai",
+  "resourceSource.steam.description.server": "Games synced from the Steam library on the server — not from the Steam installed on this computer."
 }

@@ -17,7 +17,6 @@
   "resourceSource.notConfigured.title": "尚未配置",
   "resourceSource.notConfigured.description": "请先配置 {{platform}} 账号后再查看数据。",
   "resourceSource.notConfigured.goToConfigure": "前往配置",
-
   "resourceSource.accounts.title": "{{platform}} 账号管理",
   "resourceSource.accounts.add": "添加账号",
   "resourceSource.accounts.empty": "尚未添加任何账号",
@@ -41,7 +40,6 @@
   "resourceSource.accounts.tlsPreset": "TLS 指纹",
   "resourceSource.accounts.tlsPresetPlaceholder": "选择 TLS 指纹...",
   "resourceSource.accounts.tlsPresetDescription": "必须与 User-Agent 的浏览器类型和版本一致。使用「登录导入」时会自动填写。",
-
   "resourceSource.steam.title": "Steam",
   "resourceSource.steam.description": "从 Steam 库同步的游戏。",
   "resourceSource.steam.label.appId": "App ID",
@@ -54,7 +52,6 @@
   "resourceSource.steam.config.apiKey": "Steam Web API Key",
   "resourceSource.steam.config.getApiKey": "获取 Steam API Key",
   "resourceSource.steam.config.steamId": "Steam ID",
-
   "resourceSource.dlsite.title": "DLsite 作品",
   "resourceSource.dlsite.description": "从 DLsite 购入列表同步的作品。",
   "resourceSource.dlsite.label.workId": "作品 ID",
@@ -109,7 +106,6 @@
   "resourceSource.dlsite.le.installing": "LE 安装中",
   "resourceSource.dlsite.le.notAvailableOnPlatform": "LE 在当前平台不可用",
   "resourceSource.dlsite.config.deleteArchiveAfterExtraction": "解压后删除压缩包",
-
   "resourceSource.exhentai.title": "ExHentai",
   "resourceSource.exhentai.description": "从 ExHentai 收藏夹同步的画廊。",
   "resourceSource.exhentai.label.galleryId": "画廊 ID",
@@ -120,13 +116,10 @@
   "resourceSource.exhentai.action.openLocal": "打开本地文件夹",
   "resourceSource.exhentai.action.deleteLocal": "删除本地文件",
   "resourceSource.exhentai.action.deleteLocalConfirm": "确定要删除此画廊的本地文件吗？此操作不可撤销。",
-
   "resourceSource.steam.action.launch": "通过 Steam 启动",
   "resourceSource.steam.action.openLocal": "打开本地文件夹",
-
   "resourceSource.pagination.pageSize": "每页",
   "resourceSource.pagination.total": "共 {{total}} 条",
-
   "resourceSource.config.tab.general": "通用配置",
   "resourceSource.config.tab.accounts": "账号配置",
   "resourceSource.config.tab.localFiles": "本地文件",
@@ -142,7 +135,6 @@
   "resourceSource.metadataMapping.customFields": "自定义字段",
   "resourceSource.metadataMapping.reapplyStarted": "重新应用任务已启动",
   "resourceSource.metadataMapping.recommended": "推荐",
-
   "metadataField.Steam.Name": "名称",
   "metadataField.Steam.Type": "类型",
   "metadataField.Steam.ShortDescription": "简短描述",
@@ -155,12 +147,10 @@
   "metadataField.Steam.Categories": "分类",
   "metadataField.Steam.MetacriticScore": "Metacritic 评分",
   "metadataField.Steam.ReleaseDate": "发售日期",
-
   "metadataField.DLsite.Name": "名称",
   "metadataField.DLsite.Introduction": "简介",
   "metadataField.DLsite.Rating": "评分",
   "metadataField.DLsite.CoverUrls": "封面图片",
-
   "metadataField.ExHentai.Name": "英文标题",
   "metadataField.ExHentai.RawName": "原始标题",
   "metadataField.ExHentai.Introduction": "简介",
@@ -169,9 +159,9 @@
   "metadataField.ExHentai.CoverUrl": "封面图片",
   "metadataField.ExHentai.FileCount": "文件数",
   "metadataField.ExHentai.PageCount": "页数",
-
   "menu.otherPlatforms": "其他平台",
   "menu.steam": "Steam",
   "menu.dlsite": "DLsite",
-  "menu.exhentai": "ExHentai"
+  "menu.exhentai": "ExHentai",
+  "resourceSource.steam.description.server": "从服务端上的 Steam 库同步的游戏——不是本机 Steam 里的游戏。"
 }

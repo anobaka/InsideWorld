@@ -56,5 +56,6 @@
   "thirdPartyConfig.field.maxRetries.description": "请求失败后的最大重试次数。",
   "thirdPartyConfig.field.requestTimeout.description": "等待响应的最大时间，超时后将放弃请求。",
   "thirdPartyConfig.field.namingConvention.label": "命名规则",
-  "thirdPartyConfig.field.namingConvention.description": "定义下载文件和文件夹的命名方式。可使用下方的可用变量。"
+  "thirdPartyConfig.field.namingConvention.description": "定义下载文件和文件夹的命名方式。可使用下方的可用变量。",
+  "thirdPartyConfig.tip.cookieCapturedHereUsedThere": "登录窗口在本机打开，网站看到的是本机的出口地址；而之后使用该 Cookie 的请求由服务端发出，用的是服务端的出口地址。把会话绑定到固定地址的网站会因此拒绝这些请求。"
 }

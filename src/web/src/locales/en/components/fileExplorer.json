@@ -120,5 +120,6 @@
   "fileExplorer.shortcutKey.d": "D",
   "fileExplorer.shortcutKey.g": "G",
   "fileExplorer.shortcutKey.space": "Space",
-  "fileExplorer.shortcutKey.n": "N"
+  "fileExplorer.shortcutKey.n": "N",
+  "fileExplorer.tip.pathsAreOnTheServer": "These paths are on the server"
 }

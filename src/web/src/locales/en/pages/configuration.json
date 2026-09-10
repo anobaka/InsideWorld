@@ -301,5 +301,7 @@
   "configuration.clientInfo.latestVersion.tip": "The client and the server are released separately and are often different versions. Updating here replaces this program only; the section below updates the server.",
   "configuration.remoteAccess.title.server": "Remote access (server)",
   "configuration.dataPath.restart.body.server": "The move is set up. Restarting the server switches it to the new data path; this client will reconnect once it is back.",
-  "configuration.dataPath.restart.button.server": "Restart the server now"
+  "configuration.dataPath.restart.button.server": "Restart the server now",
+  "configuration.dependency.installedOnTheServer": "These are installed on the server and used by it. Installing one from here installs it there.",
+  "configuration.dependency.localeEmulatorRunsOnThisMachine": "used on this machine"
 }

@@ -301,5 +301,7 @@
   "configuration.clientInfo.latestVersion.tip": "客户端与服务端分别发布，版本经常不同。这里的更新只更新本程序；下方的更新针对服务端。",
   "configuration.remoteAccess.title.server": "远程访问（服务端）",
   "configuration.dataPath.restart.body.server": "迁移配置已就绪，重启服务端后会切换到新数据路径；服务端恢复后本客户端会重新连接。",
-  "configuration.dataPath.restart.button.server": "立即重启服务端"
+  "configuration.dataPath.restart.button.server": "立即重启服务端",
+  "configuration.dependency.installedOnTheServer": "这些组件安装在服务端，也由服务端使用。在这里安装即安装到服务端。",
+  "configuration.dependency.localeEmulatorRunsOnThisMachine": "由本机使用"
 }

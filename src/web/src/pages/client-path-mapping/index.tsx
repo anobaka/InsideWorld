@@ -122,7 +122,7 @@ const ClientPathMappingPage = () => {
             {t("clientPathMapping.add")}
           </Button>
           <Button color="primary" isLoading={saving} size="sm" onPress={save}>
-            {t("common.save")}
+            {t("common.action.save")}
           </Button>
         </div>
       </div>
