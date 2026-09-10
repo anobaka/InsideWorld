@@ -69,9 +69,9 @@ namespace Bakabase.Service.Controllers
                     $"Cookie capture is not supported for target: {target}");
             }
 
-            var cookie = await orchestrator.CaptureAsync(flow);
+            var captured = await orchestrator.CaptureAsync(flow);
 
-            if (cookie == null)
+            if (captured == null)
             {
                 // Success + no data avoids HTTP 400 / global error toast; message explains cancel or unsupported environment.
                 return new SingletonResponse<CookieCaptureResult>(null)
@@ -82,7 +82,7 @@ namespace Bakabase.Service.Controllers
             }
 
 
-            return new SingletonResponse<CookieCaptureResult>(CookieCaptureResult.For(cookie));
+            return new SingletonResponse<CookieCaptureResult>(captured);
         }
 
         [HttpGet("tls-presets")]

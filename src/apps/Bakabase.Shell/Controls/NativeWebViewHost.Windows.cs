@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using Bakabase.Infrastructures.Components.Gui;
 
 namespace Bakabase.Controls;
 
@@ -98,8 +99,7 @@ public partial class NativeWebViewHost
             try
             {
                 var settings = _winWebView!.GetType().GetProperty("Settings")?.GetValue(_winWebView);
-                settings?.GetType().GetProperty("UserAgent")?.SetValue(settings,
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36");
+                settings?.GetType().GetProperty("UserAgent")?.SetValue(settings, WebViewUserAgent.Windows);
             }
             catch (Exception ex)
             {

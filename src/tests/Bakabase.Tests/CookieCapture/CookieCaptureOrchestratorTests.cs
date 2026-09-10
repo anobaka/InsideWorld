@@ -67,9 +67,14 @@ public class CookieCaptureOrchestratorTests
         var result = await captureTask;
 
         result.Should().NotBeNull();
-        result.Should().Contain("ipb_member_id=12345");
-        result.Should().Contain("ipb_pass_hash=hash");
-        result.Should().Contain("igneous=ig-token");
+        result!.Cookie.Should().Contain("ipb_member_id=12345");
+        result.Cookie.Should().Contain("ipb_pass_hash=hash");
+        result.Cookie.Should().Contain("igneous=ig-token");
+
+        // The window's own identity travels with the cookie: a site that handed the
+        // session to this browser will refuse a request that presents it as another.
+        result.UserAgent.Should().Be(session.UserAgent);
+        result.TlsPreset.Should().NotBeNull();
 
         // Stale cookies got wiped on init AND before each chain hop (3 hops = 1 init + 2 chain).
         var staleClears = session.Operations.Count(o => o == "DeleteCookie:https://exhentai.org/|yay");

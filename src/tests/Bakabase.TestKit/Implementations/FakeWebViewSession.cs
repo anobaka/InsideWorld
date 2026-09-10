@@ -38,6 +38,14 @@ public sealed class FakeWebViewSession : IWebViewSession
 
     public string? CurrentUrl { get; private set; }
 
+    /// <summary>
+    /// What this window would tell a site it is. Settable, and deliberately not a real
+    /// browser string by default: a test that asserts a captured cookie carries this value
+    /// is then proving the value came from the session rather than from whatever platform
+    /// the test happens to be running on.
+    /// </summary>
+    public string UserAgent { get; set; } = "Mozilla/5.0 (FakeWebView) Chrome/130.0.0.0";
+
     public void OnNavigated(Func<string, Task> handler)
     {
         ThrowIfDisposed();

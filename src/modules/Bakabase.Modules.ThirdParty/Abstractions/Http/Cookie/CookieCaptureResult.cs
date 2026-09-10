@@ -1,3 +1,4 @@
+using Bakabase.Infrastructures.Components.Gui;
 using Bakabase.Modules.ThirdParty.Helpers;
 
 namespace Bakabase.Modules.ThirdParty.Abstractions.Http.Cookie;
@@ -18,21 +19,22 @@ public class CookieCaptureResult
     public string? TlsPreset { get; set; }
 
     /// <summary>
-    /// What the embedded browser presents itself as. It is the host OS's Chrome string,
-    /// not the running browser's — the WebView is Chromium everywhere, and the platform is
-    /// the part sites key off.
+    /// Builds a result for a cookie a window just produced.
     /// </summary>
-    public static string WebViewUserAgent =>
-        OperatingSystem.IsMacOS()
-            ? "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
-            : OperatingSystem.IsLinux()
-                ? "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
-                : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
-
-    public static CookieCaptureResult For(string cookie) => new()
+    /// <param name="userAgent">
+    /// What that window presented itself as — <see cref="IWebViewSession.UserAgent"/>.
+    /// Falls back to the platform default for a caller with no session to ask, which is
+    /// the same string every platform host sets.
+    /// </param>
+    public static CookieCaptureResult For(string cookie, string? userAgent = null)
     {
-        Cookie = cookie,
-        UserAgent = WebViewUserAgent,
-        TlsPreset = TlsPresetHelper.InferPresetFromUserAgent(WebViewUserAgent)
-    };
+        var agent = string.IsNullOrWhiteSpace(userAgent) ? WebViewUserAgent.ForThisPlatform : userAgent;
+
+        return new CookieCaptureResult
+        {
+            Cookie = cookie,
+            UserAgent = agent,
+            TlsPreset = TlsPresetHelper.InferPresetFromUserAgent(agent)
+        };
+    }
 }

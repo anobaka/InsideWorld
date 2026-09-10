@@ -61,9 +61,9 @@ public sealed class CookieCaptureHandler(ILogger<CookieCaptureHandler> logger) :
         try
         {
             var orchestrator = context.RequestServices.GetRequiredService<CookieCaptureOrchestrator>();
-            var cookie = await orchestrator.CaptureAsync(flow, context.RequestAborted);
+            var captured = await orchestrator.CaptureAsync(flow, context.RequestAborted);
 
-            if (cookie == null)
+            if (captured == null)
             {
                 // Success with no data, matching the server: a cancelled sign-in is not an
                 // error, and a 400 here would raise a toast over something the user chose.
@@ -72,7 +72,9 @@ public sealed class CookieCaptureHandler(ILogger<CookieCaptureHandler> logger) :
                 return;
             }
 
-            await WriteAsync(context, HttpStatusCode.OK, null, CookieCaptureResult.For(cookie));
+            // Carries the user agent of the window that opened here, on this machine —
+            // which is the whole reason this runs on the client at all.
+            await WriteAsync(context, HttpStatusCode.OK, null, captured);
         }
         catch (Exception e)
         {

@@ -25,7 +25,16 @@ namespace Bakabase.Modules.ThirdParty.Abstractions.Http.Cookie;
 /// </summary>
 public class CookieCaptureOrchestrator(IGuiAdapter guiAdapter, ICookieCaptureLocalizer localizer)
 {
-    public async Task<string?> CaptureAsync(ICookieCaptureFlow flow, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Runs the flow and returns what it produced, or null if the user cancelled.
+    /// </summary>
+    /// <remarks>
+    /// The result carries the window's own user agent rather than one inferred later:
+    /// this method is the last point at which the window is still open to be asked, and
+    /// the cookie is worth little without the identity it was handed to.
+    /// </remarks>
+    public async Task<CookieCaptureResult?> CaptureAsync(ICookieCaptureFlow flow,
+        CancellationToken cancellationToken = default)
     {
         var options = new WebViewSessionOptions
         {
@@ -61,7 +70,12 @@ public class CookieCaptureOrchestrator(IGuiAdapter guiAdapter, ICookieCaptureLoc
         }
 
         session.SetStatusText(localizer.ExtractingCookies);
-        return await session.GetCookiesAsync(flow.CookieUrls);
+
+        var cookie = await session.GetCookiesAsync(flow.CookieUrls);
+
+        // No cookies is the same answer as a cancel to every caller: there is nothing to
+        // sign in with either way.
+        return string.IsNullOrEmpty(cookie) ? null : CookieCaptureResult.For(cookie, session.UserAgent);
     }
 
     private static async Task HandleNavigatedAsync(

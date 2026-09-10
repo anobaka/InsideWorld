@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Avalonia.Platform;
+using Bakabase.Infrastructures.Components.Gui;
 
 namespace Bakabase.Controls;
 
@@ -56,8 +57,7 @@ public partial class NativeWebViewHost
         var settings = WebKitGtk.webkit_web_view_get_settings(_linuxWebView);
         if (settings != IntPtr.Zero)
         {
-            WebKitGtk.webkit_settings_set_user_agent(settings,
-                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36");
+            WebKitGtk.webkit_settings_set_user_agent(settings, WebViewUserAgent.Linux);
         }
 
         _initialized = true;

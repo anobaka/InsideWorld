@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Avalonia.Platform;
+using Bakabase.Infrastructures.Components.Gui;
 
 namespace Bakabase.Controls;
 
@@ -61,8 +62,7 @@ public partial class NativeWebViewHost
         // Setting autoresizingMask causes double-sizing issues on Retina displays.
 
         // Set a modern User-Agent to avoid "browser version too low" errors
-        var userAgent = ObjC.CreateNSString(
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36");
+        var userAgent = ObjC.CreateNSString(WebViewUserAgent.MacOS);
         ObjC.SendVoid_IntPtr(_macWebView, ObjC.Sel("setCustomUserAgent:"), userAgent);
         ObjC.SendVoid(userAgent, ObjC.Sel("release"));
 
