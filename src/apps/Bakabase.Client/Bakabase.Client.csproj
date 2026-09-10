@@ -34,4 +34,11 @@
       <PackageReference Include="Yarp.ReverseProxy" Version="2.3.0" />
     </ItemGroup>
 
+    <ItemGroup>
+        <!-- The connect page. Embedded so it cannot go missing from an install, and so
+             nothing on disk can be swapped for a page that would run at this client's
+             own origin with its /client API in reach. -->
+        <EmbeddedResource Include="Assets\connect.html" />
+    </ItemGroup>
+
 </Project>

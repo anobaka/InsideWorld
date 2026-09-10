@@ -1,6 +1,7 @@
 using System.Net;
 using Bakabase.Client.Abstractions;
 using Bakabase.Client.Components.Connection;
+using Bakabase.Client.Components.Discovery;
 using Bakabase.Client.Components.UserMachine;
 using Bakabase.Infrastructures.Components.App;
 using Bakabase.Client.Components.BatchPlay;
@@ -72,6 +73,10 @@ public class ClientStartup
             sp.GetRequiredService<ActiveConnection>(),
             sp.GetRequiredService<IUpstreamContextProbe>(),
             AppService.CoreVersion.ToString()));
+
+        // Finding servers to connect to. Only the connect page uses it, and only before
+        // there is a server — after that this client knows exactly where to go.
+        services.TryAddSingleton<IServerDiscovery, UdpProbeClient>();
 
         // Actions whose effect lands on whatever machine runs them. Anything declared in
         // UserMachineRoutes without a handler here is answered as "this client is
@@ -193,7 +198,13 @@ public class ClientStartup
             // are still refused upstream, with a reason saying so, until the client
             // learns to run them itself — so nothing silently happens on the wrong
             // computer in the meantime.
-            endpoints.MapFallback((HttpContext context, UpstreamForwarder forwarder) =>
+            //
+            // The pattern is spelled out because MapFallback's default one is
+            // "{*path:nonfile}", and nonfile excludes every path whose last segment
+            // contains a dot. That would drop the entire frontend on the floor — the
+            // server sends it as /assets/index-<hash>.js and friends — and leave the
+            // window blank with a 404 per asset.
+            endpoints.MapFallback("/{**path}", (HttpContext context, UpstreamForwarder forwarder) =>
                 forwarder.ForwardAsync(context));
         });
     }

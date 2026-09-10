@@ -45,6 +45,16 @@ public sealed class UpstreamForwarder(
 
         if (string.IsNullOrEmpty(destination))
         {
+            // A window asking for a page has somewhere better to be than a JSON refusal
+            // it cannot render. Everything else — the frontend's own fetches, a player
+            // pulling a stream — still gets the refusal, which is what those callers
+            // are written against.
+            if (WantsAPage(context.Request))
+            {
+                context.Response.Redirect(ClientApiEndpoints.ConnectPath);
+                return;
+            }
+
             await WriteUnavailable(context, ClientForwardingFailure.NotConnected,
                 "This client is not connected to a server yet.");
             return;
@@ -72,6 +82,35 @@ public sealed class UpstreamForwarder(
 
         await WriteUnavailable(context, ClientForwardingFailure.ServerUnreachable,
             "The Bakabase server is not answering. Check that it is running and reachable.");
+    }
+
+    /// <summary>
+    /// Whether this request is a browser navigating, as opposed to code fetching.
+    /// </summary>
+    /// <remarks>
+    /// Read from <c>Sec-Fetch-Mode</c> where it is present — it says outright whether
+    /// the browser is navigating — and from <c>Accept</c> otherwise. Both are needed:
+    /// the header is not sent by every embedded web view, and <c>Accept: text/html</c>
+    /// alone would also match a <c>fetch</c> that happens to ask for HTML. Getting it
+    /// wrong in one direction shows a JSON page; in the other it hands the frontend a
+    /// redirect where it expected an error it knows how to display.
+    /// </remarks>
+    public static bool WantsAPage(HttpRequest request)
+    {
+        if (!HttpMethods.IsGet(request.Method))
+        {
+            return false;
+        }
+
+        var mode = request.Headers["Sec-Fetch-Mode"].ToString();
+
+        if (!string.IsNullOrEmpty(mode))
+        {
+            return mode.Equals("navigate", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return request.Headers.Accept.ToString()
+            .Contains("text/html", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>

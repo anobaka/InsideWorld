@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bakabase.Client.Abstractions.Models;
 using Bakabase.Client.Components.Connection;
+using Bakabase.Client.Components.Discovery;
 using Bakabase.Client.Components.UserMachine;
 using Bakabase.Modules.RemoteAccess.Abstractions.Models;
 using Microsoft.AspNetCore.Builder;
@@ -36,8 +37,44 @@ public static class ClientApiEndpoints
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
+    /// <summary>
+    /// Where a client with no server sends the window.
+    /// </summary>
+    /// <remarks>
+    /// A path of its own rather than <c>/</c>, so the root always means one thing: hand
+    /// this request to the server. There is simply nothing to hand it to yet, and the
+    /// forwarder redirects here instead of answering a browser with a JSON refusal.
+    /// </remarks>
+    public const string ConnectPath = Prefix + "/connect-page";
+
     public static void Map(IEndpointRouteBuilder endpoints, string clientVersion)
     {
+        // The one page this client serves itself. It is not the web frontend — that
+        // still comes from the server, as it must — but the client cannot ask for a
+        // server address without somewhere to ask it.
+        endpoints.MapGet(ConnectPath, async (HttpContext context) =>
+        {
+            context.Response.ContentType = "text/html; charset=utf-8";
+
+            // Never cached: it hands over to the real frontend the moment a server is
+            // attached, and a cached copy would keep showing a setup screen for a
+            // client that is already set up.
+            context.Response.Headers.CacheControl = "no-store";
+
+            await context.Response.WriteAsync(ConnectPage.Html, context.RequestAborted);
+        });
+
+        endpoints.MapGet($"{Prefix}/discover",
+            async (HttpContext context, IServerDiscovery discovery) =>
+            {
+                // Bounded rather than open-ended: this runs while someone watches a
+                // spinner, and a server that has not answered in three seconds is not
+                // going to.
+                var servers = await discovery.DiscoverAsync(TimeSpan.FromSeconds(3), context.RequestAborted);
+
+                await WriteAsync(context, servers);
+            });
+
         endpoints.MapGet($"{Prefix}/status",
             async (HttpContext context, IClientConnectionStore store, ActiveConnection connection,
                 IUpstreamContextProbe probe, UserMachineDispatcher dispatcher) =>

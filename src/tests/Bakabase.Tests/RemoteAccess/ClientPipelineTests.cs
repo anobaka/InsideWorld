@@ -94,10 +94,22 @@ public class ClientPipelineTests
     /// point of most of these.
     /// </summary>
     private async Task<HttpResponseMessage> Send(string path, string? host = null, string? origin = null,
-        HttpMethod? method = null, string? body = null)
+        HttpMethod? method = null, string? body = null, string? accept = null, string? fetchMode = null)
     {
-        using var client = new HttpClient();
+        // Redirects are the subject of some of these, so they are never followed.
+        using var handler = new HttpClientHandler {AllowAutoRedirect = false};
+        using var client = new HttpClient(handler);
         var request = new HttpRequestMessage(method ?? HttpMethod.Get, $"http://127.0.0.1:{_port}{path}");
+
+        if (accept != null)
+        {
+            request.Headers.Add("Accept", accept);
+        }
+
+        if (fetchMode != null)
+        {
+            request.Headers.Add("Sec-Fetch-Mode", fetchMode);
+        }
 
         request.Headers.Host = host ?? $"127.0.0.1:{_port}";
 
@@ -160,6 +172,90 @@ public class ClientPipelineTests
 
         Assert.AreEqual((int) ClientMode.PureClient, data.GetProperty("clientMode").GetInt32());
         Assert.IsTrue(data.GetProperty("cookieCaptureAvailable").GetBoolean());
+    }
+
+    [TestMethod]
+    public async Task A_window_with_no_server_is_sent_somewhere_it_can_do_something()
+    {
+        // The whole point: a freshly installed client opens its window at this origin
+        // with nothing attached. Answering that with a JSON refusal leaves the user
+        // looking at machine-readable text and no way to enter an address.
+        var response = await Send("/", accept: "text/html");
+
+        Assert.AreEqual(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.AreEqual(ClientApiEndpoints.ConnectPath, response.Headers.Location?.ToString());
+    }
+
+    [TestMethod]
+    public async Task The_connect_page_is_served_by_the_client_itself()
+    {
+        var response = await Send(ClientApiEndpoints.ConnectPath);
+        var body = await response.Content.ReadAsStringAsync();
+
+        Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        StringAssert.StartsWith(response.Content.Headers.ContentType?.MediaType!, "text/html");
+
+        // It reaches the client's own API and nothing else — a page here that fetched
+        // from the server would be asking the very thing that is not there yet.
+        StringAssert.Contains(body, "/client/discover");
+        StringAssert.Contains(body, "/client/status");
+        StringAssert.Contains(body, "'/pair/code'");
+        StringAssert.Contains(body, "'/pair/claim'");
+
+        // Self-contained: no build step produced it, so nothing it needs can be missing
+        // from an install.
+        Assert.IsFalse(body.Contains("<script src", StringComparison.OrdinalIgnoreCase));
+        Assert.IsFalse(body.Contains("<link rel=\"stylesheet", StringComparison.OrdinalIgnoreCase));
+
+        // Not cached: it hands over to the real frontend the moment a server is
+        // attached, and a cached copy would keep greeting a client that is set up.
+        Assert.IsTrue(response.Headers.CacheControl?.NoStore == true);
+    }
+
+    [TestMethod]
+    public async Task A_fetch_with_no_server_still_gets_the_error_the_frontend_reads()
+    {
+        // Only a navigation is redirected. The frontend's own calls are written against
+        // this envelope, and handing them a redirect to an HTML page instead would turn
+        // a legible "not connected" into a parse failure.
+        var response = await Send("/resource/search", accept: "application/json");
+
+        Assert.AreEqual(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.AreEqual(nameof(ClientForwardingFailure.NotConnected),
+            response.Headers.GetValues("X-Bakabase-Client").First());
+    }
+
+    [TestMethod]
+    public async Task A_page_request_that_is_not_a_navigation_is_not_redirected()
+    {
+        // Sec-Fetch-Mode is what the browser itself says it is doing, and it beats
+        // guessing from Accept.
+        var response = await Send("/resource/search", accept: "text/html", fetchMode: "cors");
+
+        Assert.AreEqual(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+    }
+
+    [TestMethod]
+    public async Task A_path_that_looks_like_a_file_is_forwarded_like_anything_else()
+    {
+        // MapFallback's default pattern excludes paths whose last segment has a dot.
+        // The server's whole frontend arrives that way — /assets/index-<hash>.js and
+        // friends — so taking the default would 404 every asset and leave the window
+        // blank on a client that had connected perfectly well.
+        foreach (var path in new[]
+                 {
+                     "/favicon.ico",
+                     "/assets/index-a1b2c3.js",
+                     "/assets/index-a1b2c3.css",
+                     "/tampermonkey/script/bakabase.user.js"
+                 })
+        {
+            var response = await Send(path);
+
+            Assert.AreEqual(HttpStatusCode.ServiceUnavailable, response.StatusCode, path);
+            Assert.AreEqual(nameof(ClientForwardingFailure.NotConnected),
+                response.Headers.GetValues("X-Bakabase-Client").First(), path);
+        }
     }
 
     [TestMethod]
