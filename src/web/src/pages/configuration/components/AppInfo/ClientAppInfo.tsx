@@ -1,16 +1,21 @@
 "use client";
 
 import type { SettingItem } from "@/pages/configuration/components/SettingsSection";
-import type { ClientStatus, ClientUpdaterState, ClientVersionInfo } from "@/core/clientApi";
+import type {
+  ClientAppInfo as ClientAppInfoModel,
+  ClientStatus,
+  ClientUpdaterState,
+  ClientVersionInfo,
+} from "@/core/clientApi";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
-import { CheckCircleOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, FolderOpenOutlined, InfoCircleOutlined } from "@ant-design/icons";
 
 import { clientApi } from "@/core/clientApi";
 import { UpdaterStatus, RemoteDevicePlatform } from "@/sdk/constants";
-import { Button, Chip, Divider, Modal, Progress, Tooltip } from "@/components/bakaui";
+import { Button, Chip, Divider, Modal, Progress, Snippet, Tooltip } from "@/components/bakaui";
 import ExternalLink from "@/components/ExternalLink";
 import SettingsSection from "@/pages/configuration/components/SettingsSection";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
@@ -34,6 +39,7 @@ const ClientAppInfo: React.FC<{ query?: string }> = ({ query }) => {
   const isPureClient = useIsPureClient();
 
   const [status, setStatus] = useState<ClientStatus>();
+  const [paths, setPaths] = useState<ClientAppInfoModel>();
   const [updater, setUpdater] = useState<ClientUpdaterState>();
   const [newVersion, setNewVersion] = useState<ClientVersionInfo>();
   const timer = useRef<ReturnType<typeof setInterval>>();
@@ -55,6 +61,10 @@ const ClientAppInfo: React.FC<{ query?: string }> = ({ query }) => {
     clientApi
       .status()
       .then(setStatus)
+      .catch(() => {});
+    clientApi
+      .appInfo()
+      .then(setPaths)
       .catch(() => {});
     clientApi.updater
       .newVersion()
@@ -207,6 +217,41 @@ const ClientAppInfo: React.FC<{ query?: string }> = ({ query }) => {
     );
   };
 
+  const directoryRow = (
+    id: "data" | "log" | "components",
+    label: string,
+    path: string | undefined,
+    tip?: string,
+  ): SettingItem[] =>
+    path
+      ? [
+          {
+            id: `client-${id}-path`,
+            label,
+            tip,
+            keywords: ["path", "directory", "folder", "路径", "目录", "客户端"],
+            render: () => (
+              <div className="flex items-center gap-1 flex-wrap">
+                <Snippet hideSymbol size="sm" variant="bordered">
+                  {path}
+                </Snippet>
+                {/* Not the shared open-folder button: that one is a forwarded route
+                    and would translate this path as though it were the server's. */}
+                <Button
+                  isIconOnly
+                  color="primary"
+                  size="sm"
+                  variant="light"
+                  onPress={() => clientApi.openDirectory(id)}
+                >
+                  <FolderOpenOutlined className="text-base" />
+                </Button>
+              </div>
+            ),
+          },
+        ]
+      : [];
+
   const items: SettingItem[] = [
     {
       id: "clientVersion",
@@ -234,6 +279,19 @@ const ClientAppInfo: React.FC<{ query?: string }> = ({ query }) => {
         </div>
       ),
     },
+    ...directoryRow(
+      "data",
+      t("configuration.clientInfo.dataDirectory"),
+      paths?.dataDirectory,
+      t("configuration.clientInfo.dataDirectory.tip"),
+    ),
+    ...directoryRow("log", t("configuration.clientInfo.logDirectory"), paths?.logDirectory),
+    ...directoryRow(
+      "components",
+      t("configuration.clientInfo.componentsDirectory"),
+      paths?.componentsDirectory,
+      t("configuration.clientInfo.componentsDirectory.tip"),
+    ),
     {
       id: "clientLatestVersion",
       label: t("configuration.clientInfo.latestVersion"),

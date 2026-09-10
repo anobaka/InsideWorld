@@ -303,5 +303,10 @@
   "configuration.dataPath.restart.body.server": "The move is set up. Restarting the server switches it to the new data path; this client will reconnect once it is back.",
   "configuration.dataPath.restart.button.server": "Restart the server now",
   "configuration.dependency.installedOnTheServer": "These are installed on the server and used by it. Installing one from here installs it there.",
-  "configuration.dependency.localeEmulatorRunsOnThisMachine": "used on this machine"
+  "configuration.dependency.localeEmulatorRunsOnThisMachine": "used on this machine",
+  "configuration.clientInfo.dataDirectory": "Client data path",
+  "configuration.clientInfo.dataDirectory.tip": "Where this client keeps the servers it knows, their keys and its path mappings. Separate from the server's, and separate from an all-in-one Bakabase on this same machine.",
+  "configuration.clientInfo.logDirectory": "Client log path",
+  "configuration.clientInfo.componentsDirectory": "Client components path",
+  "configuration.clientInfo.componentsDirectory.tip": "Locale Emulator has to be installed here for this client to launch a work with it — the component list below installs on the server, which cannot open a window on this screen."
 }

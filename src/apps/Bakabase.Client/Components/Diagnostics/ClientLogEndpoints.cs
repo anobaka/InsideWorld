@@ -1,11 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Bakabase.Client.Components.UserMachine;
 using Bakabase.Infrastructures.Components.App;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Bakabase.Client.Components.Diagnostics;
@@ -63,31 +61,10 @@ public static class ClientLogEndpoints
         // Deliberately takes no path. `/tool/open` is a forwarded route: the client
         // translates the server path it is given and refuses one that maps nowhere, which
         // is exactly the wrong treatment for a directory this process owns on this disk.
-        endpoints.MapPost($"{Prefix}/open", async (HttpContext context, ILoggerFactory loggers) =>
-        {
-            var directory = LogDirectory(context);
-
-            if (directory == null || !Directory.Exists(directory))
-            {
-                context.Response.StatusCode = StatusCodes.Status404NotFound;
-                await WriteAsync(context, new {opened = false});
-                return;
-            }
-
-            try
-            {
-                context.RequestServices.GetRequiredService<IShellOpener>().Reveal(directory, false);
-                await WriteAsync(context, new {opened = true});
-            }
-            catch (Exception e)
-            {
-                loggers.CreateLogger(typeof(ClientLogEndpoints))
-                    .LogError(e, "Failed to open the log directory {Directory}", directory);
-
-                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                await WriteAsync(context, new {opened = false});
-            }
-        });
+        // The log page keeps its own route rather than naming a directory through
+        // /client/app/open, because from here there is only one directory to mean.
+        endpoints.MapPost($"{Prefix}/open", (HttpContext context, ILoggerFactory loggers) =>
+            ClientAppEndpoints.OpenAsync(context, LogDirectory(context), loggers));
     }
 
     /// <summary>

@@ -303,5 +303,10 @@
   "configuration.dataPath.restart.body.server": "迁移配置已就绪，重启服务端后会切换到新数据路径；服务端恢复后本客户端会重新连接。",
   "configuration.dataPath.restart.button.server": "立即重启服务端",
   "configuration.dependency.installedOnTheServer": "这些组件安装在服务端，也由服务端使用。在这里安装即安装到服务端。",
-  "configuration.dependency.localeEmulatorRunsOnThisMachine": "由本机使用"
+  "configuration.dependency.localeEmulatorRunsOnThisMachine": "由本机使用",
+  "configuration.clientInfo.dataDirectory": "客户端数据路径",
+  "configuration.clientInfo.dataDirectory.tip": "本客户端在这里保存它认识的服务端、对应密钥与路径映射。与服务端的数据目录无关，也与同机上的一体版无关。",
+  "configuration.clientInfo.logDirectory": "客户端日志路径",
+  "configuration.clientInfo.componentsDirectory": "客户端组件路径",
+  "configuration.clientInfo.componentsDirectory.tip": "Locale Emulator 需要装在这里，本客户端才能用它启动作品——下方的组件列表装的是服务端，而服务端无法在这块屏幕上弹窗。"
 }

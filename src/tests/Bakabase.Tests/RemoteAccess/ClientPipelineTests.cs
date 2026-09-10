@@ -317,6 +317,47 @@ public class ClientPipelineTests
     }
 
     [TestMethod]
+    public async Task The_clients_own_paths_are_answered_here_rather_than_the_servers()
+    {
+        // /app/info is forwarded and describes the server: its data directory, its cache.
+        // Every path in it is on another machine, so none of them can be opened from
+        // here — which is why the client publishes its own.
+        var response = await Send(ClientAppEndpoints.Prefix + "/info");
+
+        Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        Assert.IsFalse(response.Headers.Contains("X-Bakabase-Client"));
+
+        var data = JsonDocument.Parse(await response.Content.ReadAsStringAsync())
+            .RootElement.GetProperty("data");
+
+        // A test host has no application data directory, so it reports having no paths
+        // rather than inventing some.
+        Assert.IsFalse(data.GetProperty("available").GetBoolean());
+        Assert.IsTrue(data.GetProperty("version").GetString()?.Length > 0);
+    }
+
+    [TestMethod]
+    public async Task A_directory_the_client_does_not_publish_is_not_opened()
+    {
+        // The page names a directory rather than passing a path, and the client resolves
+        // the name itself. A page that could pass a path could pass any path.
+        foreach (var name in new[] {"data", "log", "components", "..", "/etc", ""})
+        {
+            var response = await Send($"{ClientAppEndpoints.Prefix}/open?directory={name}",
+                method: HttpMethod.Post, body: "{}");
+
+            // Everything is 404 in a test host: the known names have nowhere to resolve
+            // to, and the invented ones are not names at all.
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode, name);
+        }
+
+        // And the names themselves are the three the client publishes, so a new one
+        // cannot be added on the page's side alone.
+        CollectionAssert.AreEquivalent(new[] {"data", "log", "components"},
+            ClientAppEndpoints.Directories.Keys.ToArray());
+    }
+
+    [TestMethod]
     public async Task The_tray_takes_a_running_state_even_where_there_is_no_tray()
     {
         // The window reports what the server's task feed says, because in this flavour

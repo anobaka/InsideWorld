@@ -104,6 +104,16 @@ export interface ClientUpdaterState {
 export type ClientVersionInfo =
   BakabaseInfrastructuresComponentsAppUpgradeAbstractionsAppVersionInfo;
 
+/** The client's own paths. All absent in a host with no application data directory. */
+export interface ClientAppInfo {
+  version: string;
+  available: boolean;
+  dataDirectory?: string;
+  logDirectory?: string;
+  /** Where an installation of Locale Emulator has to sit for this client to use it. */
+  componentsDirectory?: string;
+}
+
 const call = async <T>(path: string, init?: RequestInit): Promise<T> => {
   const rsp = await fetch(`/client${path}`, {
     ...init,
@@ -167,6 +177,20 @@ export const clientApi = {
 
     return call<ClientLogPage>(`/log${suffix ? `?${suffix}` : ""}`);
   },
+
+  /**
+   * Where this client keeps its own things. `BApi.app.getAppInfo` is forwarded and
+   * describes the server, whose paths belong to another machine and cannot be opened
+   * from here.
+   */
+  appInfo: () => call<ClientAppInfo>("/app/info"),
+
+  /**
+   * Reveals one of this client's own directories, named rather than pathed: a page that
+   * could name a path could name any path, so the client resolves the name itself.
+   */
+  openDirectory: (directory: "data" | "log" | "components") =>
+    post<{ opened: boolean }>(`/app/open?directory=${directory}`),
 
   /**
    * Shows the client's log directory in this machine's file manager.

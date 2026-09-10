@@ -228,6 +228,7 @@ public class ClientStartup(IConfiguration configuration, IWebHostEnvironment env
             ClientApiEndpoints.Map(endpoints, AppService.CoreVersion.ToString());
             ClientUpdaterEndpoints.Map(endpoints);
             ClientLogEndpoints.Map(endpoints);
+            ClientAppEndpoints.Map(endpoints);
             ClientTrayEndpoints.Map(endpoints);
 
             // Everything else is the server's. Actions that have to run on this machine
