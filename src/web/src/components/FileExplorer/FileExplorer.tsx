@@ -45,6 +45,7 @@ import RootEntry from "@/core/models/FileExplorer/RootEntry";
 import { Button, Chip, Input, Tooltip, toast } from "@/components/bakaui";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
 import FolderSelector from "@/components/FolderSelector";
+import { useIsRemoteClient } from "@/stores/remoteAccess";
 
 export type FileExplorerProps = {
   rootPath?: string;
@@ -106,6 +107,10 @@ const FileExplorer = forwardRef<FileExplorerRef, FileExplorerProps>(
     const { t } = useTranslation();
     const forceUpdate = useUpdate();
     const { createPortal } = useBakabaseContext();
+
+    // Asks about files, not about actions: this explorer browses whichever machine
+    // holds them, and in every flavour but the all-in-one that is not this one.
+    const filesAreElsewhere = useIsRemoteClient();
 
     const initializedRootPathRef = useRef<string>();
     const initializeSeqRef = useRef(0);
@@ -843,18 +848,26 @@ const FileExplorer = forwardRef<FileExplorerRef, FileExplorerProps>(
               )}
             </Button>
           </Tooltip>
-          <Button
-            className={"shrink-0"}
-            radius={"none"}
-            size={"sm"}
-            startContent={<FolderOpenOutlined className={"text-base"} />}
-            variant={"light"}
-            onClick={() => {
-              BApi.file.openRecycleBin();
-            }}
-          >
-            {t<string>("Recycle bin")}
-          </Button>
+          {/*
+            Only where the files actually are. Deleting happens on the machine holding
+            them, so on any other one this opens a recycle bin that has never seen a
+            file this explorer showed — and no path mapping can change that, because
+            there is nothing to map it to.
+          */}
+          {!filesAreElsewhere && (
+            <Button
+              className={"shrink-0"}
+              radius={"none"}
+              size={"sm"}
+              startContent={<FolderOpenOutlined className={"text-base"} />}
+              variant={"light"}
+              onClick={() => {
+                BApi.file.openRecycleBin();
+              }}
+            >
+              {t<string>("Recycle bin")}
+            </Button>
+          )}
           {keyboard && <Shortcuts capabilities={capabilities} />}
         </div>
         <div className={"grow min-h-0"}>

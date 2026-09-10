@@ -427,5 +427,11 @@
   "mobileApp.sidestoreSource": "SideStore source",
   "mobileApp.sidestoreSourceLink": "source.json",
   "mobileApp.unsignedIpa": "Unsigned IPA (import via SideStore's + button)",
-  "mobileApp.iosLimits": "Free Apple IDs allow up to 3 sideloaded apps with 7-day signing; SideStore re-signs automatically on the same Wi-Fi."
+  "mobileApp.iosLimits": "Free Apple IDs allow up to 3 sideloaded apps with 7-day signing; SideStore re-signs automatically on the same Wi-Fi.",
+  "client.failure.pathNotMapped": "That folder is not on this computer",
+  "client.failure.addMapping": "Set it up",
+  "client.failure.needsNewerClient": "This client cannot do that yet",
+  "client.failure.notConnected": "Not connected to a server",
+  "client.failure.serverUnreachable": "The server is not answering",
+  "client.failure.refused": "Refused by this client"
 }

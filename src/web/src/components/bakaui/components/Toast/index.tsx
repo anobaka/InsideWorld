@@ -2,7 +2,14 @@ import type { ToastOptions } from "@react-stately/toast";
 
 import { addToast, type ToastProps } from "@heroui/react";
 
-type SimpleProps = { title: string; description?: string } & ToastOptions;
+// endContent is HeroUI's slot for an action beside the message. It was not in this
+// wrapper's shape, so a toast that wanted to offer the user somewhere to go had to
+// bypass the wrapper entirely.
+type SimpleProps = {
+  title: string;
+  description?: string;
+  endContent?: ToastProps["endContent"];
+} & ToastOptions;
 
 // 通用toast方法
 function showToast(color: ToastProps["color"], titleOrProps: string | SimpleProps) {

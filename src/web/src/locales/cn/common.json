@@ -427,5 +427,11 @@
   "mobileApp.sidestoreSource": "SideStore 源",
   "mobileApp.sidestoreSourceLink": "source.json",
   "mobileApp.unsignedIpa": "未签名 IPA（在 SideStore 中用 + 导入安装）",
-  "mobileApp.iosLimits": "免费 Apple ID 最多可侧载 3 个应用、签名 7 天有效；SideStore 会在同一 Wi-Fi 下自动续签。"
+  "mobileApp.iosLimits": "免费 Apple ID 最多可侧载 3 个应用、签名 7 天有效；SideStore 会在同一 Wi-Fi 下自动续签。",
+  "client.failure.pathNotMapped": "这个文件夹不在本机上",
+  "client.failure.addMapping": "去设置",
+  "client.failure.needsNewerClient": "当前客户端还不支持该操作",
+  "client.failure.notConnected": "尚未连接服务端",
+  "client.failure.serverUnreachable": "服务端没有响应",
+  "client.failure.refused": "被本客户端拒绝"
 }
