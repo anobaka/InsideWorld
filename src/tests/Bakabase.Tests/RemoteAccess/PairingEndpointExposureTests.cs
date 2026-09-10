@@ -34,6 +34,20 @@ public class PairingEndpointExposureTests
         "/remote-access/devices"
     ];
 
+    /// <summary>
+    /// The management routes a device other than the host may call. Written out rather
+    /// than derived, because each one is a decision.
+    /// </summary>
+    private static readonly string[] PairedDeviceRoutes =
+    [
+        "GET /remote-access/devices",
+        "DELETE /remote-access/devices/{id}",
+        "PUT /remote-access/devices/{id}/name",
+        "GET /remote-access/pairing/requests",
+        "POST /remote-access/pairing/requests/{id}/approve",
+        "POST /remote-access/pairing/requests/{id}/reject"
+    ];
+
     private sealed record Route(string Method, string Path, bool RemoteAccessible)
     {
         public override string ToString() => $"{Method} {Path}";
@@ -88,12 +102,59 @@ public class PairingEndpointExposureTests
 
         Assert.IsTrue(routes.Length >= 5, $"expected the management routes to exist, found {routes.Length}");
 
-        // Marking one of these would let any LAN caller approve its own pairing request.
-        var marked = routes.Where(r => r.RemoteAccessible).Select(r => r.ToString()).ToArray();
-        Assert.AreEqual(0, marked.Length, $"must not be [RemoteAccessible]: {string.Join(", ", marked)}");
-
+        // The property that matters, and the one [RemoteAccessible] does not provide:
+        // being in this list means a caller with no key at all gets through. Approving
+        // your own pairing request is exactly what that would allow.
         var listed = routes.Where(r => IsAllowlisted(r.Path)).Select(r => r.ToString()).ToArray();
         Assert.AreEqual(0, listed.Length, $"must not be in the anonymous allowlist: {string.Join(", ", listed)}");
+    }
+
+    [TestMethod]
+    public void Only_the_decided_management_routes_are_open_to_a_paired_device()
+    {
+        // A paired device may look after devices — see them, name them, cut one off, and
+        // let a new one in. That was a deliberate decision: a headless server has nobody
+        // standing at it to click approve, and the alternative is reading a code out of a
+        // container's log every time somebody gets a new phone.
+        //
+        // It is a decision about six routes, not a direction to travel in, so the list is
+        // written out. Adding a seventh fails here, which is the moment to ask whether a
+        // phone should be able to do that at all.
+        var open = Routes()
+            .Where(r => ManagementPrefixes.Any(p => r.Path.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
+            .Where(r => r.RemoteAccessible)
+            .Select(r => r.ToString())
+            .ToArray();
+
+        CollectionAssert.AreEquivalent(PairedDeviceRoutes, open,
+            $"open to a paired device: {string.Join(", ", open)}");
+    }
+
+    [TestMethod]
+    public void Nothing_that_configures_the_server_is_open_to_another_device()
+    {
+        // These decide whether remote access exists at all, what it may transcode, and
+        // whether pairing is required — and the settings page also hands out every
+        // address this server can be reached on. They belong to whoever is sitting at the
+        // machine. Issuing a pairing code sits here too: it hands out access with no
+        // approval step, which is a different thing from approving a request that names
+        // the device asking.
+        string[] hostOnly =
+        [
+            "GET /remote-access/settings",
+            "PUT /remote-access/mode",
+            "PUT /remote-access/live-transcode",
+            "PUT /remote-access/require-pairing",
+            "POST /remote-access/pairing/code"
+        ];
+
+        var routes = Routes().ToDictionary(r => r.ToString(), r => r.RemoteAccessible);
+
+        foreach (var route in hostOnly)
+        {
+            Assert.IsTrue(routes.ContainsKey(route), $"{route} no longer exists under that name");
+            Assert.IsFalse(routes[route], $"{route} must stay host-only");
+        }
     }
 
     [TestMethod]

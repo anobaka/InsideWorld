@@ -5934,6 +5934,13 @@ export interface BootstrapModelsResponseModelsListResponse1BakabaseServiceModels
   data?: BakabaseServiceModelsViewRemoteAccessDeviceViewModel[];
 }
 
+export interface BootstrapModelsResponseModelsListResponse1BakabaseServiceModelsViewRemoteAccessPendingRequestViewModel {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseServiceModelsViewRemoteAccessPendingRequestViewModel[];
+}
+
 export interface BootstrapModelsResponseModelsListResponse1BakabaseServiceModelsViewResourceEnhancements {
   /** @format int32 */
   code: number;
@@ -21871,6 +21878,35 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     getRemoteAccessDevicesUrl: () => {
       const baseUrl = this.baseUrl || "";
       let path = `/remote-access/devices`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags RemoteAccess
+     * @name GetRemoteAccessPairingRequests
+     * @request GET:/remote-access/pairing/requests
+     */
+    getRemoteAccessPairingRequests: (params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseServiceModelsViewRemoteAccessPendingRequestViewModel,
+        any
+      >({
+        path: `/remote-access/pairing/requests`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getRemoteAccessPairingRequests
+     * @name getRemoteAccessPairingRequestsUrl
+     */
+    getRemoteAccessPairingRequestsUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/remote-access/pairing/requests`;
       
       return baseUrl + path;
     },

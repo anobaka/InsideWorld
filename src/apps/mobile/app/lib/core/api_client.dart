@@ -302,6 +302,49 @@ class BakabaseApiClient {
   String streamUrl(String path) =>
       path.contains('!') ? playFileUrl(path) : rawFileUrl(path);
 
+  /// Every device this server has let in.
+  ///
+  /// Readable from any paired device, which is what makes it worth having here: a
+  /// headless server has no screen to show this on, and the phone is often the only
+  /// place its owner can see who else has access.
+  Future<List<RemoteDevice>> devices() async {
+    return _listOf(await _get('/remote-access/devices'))
+        .map(RemoteDevice.fromJson)
+        .whereType<RemoteDevice>()
+        .toList();
+  }
+
+  /// Devices waiting to be let in.
+  Future<List<PendingPairingRequest>> pairingRequests() async {
+    return _listOf(await _get('/remote-access/pairing/requests'))
+        .map(PendingPairingRequest.fromJson)
+        .whereType<PendingPairingRequest>()
+        .toList();
+  }
+
+  /// Lets a waiting device in. The approval records this device as the approver.
+  Future<void> approvePairingRequest(String requestId) =>
+      _request('POST', '/remote-access/pairing/requests/$requestId/approve');
+
+  Future<void> rejectPairingRequest(String requestId) =>
+      _request('POST', '/remote-access/pairing/requests/$requestId/reject');
+
+  /// Takes a device's access away — including this one's, which is the case that
+  /// matters: somebody whose phone was stolen needs to cut it off from whatever
+  /// device they still have.
+  Future<void> revokeDevice(String deviceId) =>
+      _request('DELETE', '/remote-access/devices/$deviceId');
+
+  Future<void> renameDevice(String deviceId, String name) => _request(
+        'PUT',
+        '/remote-access/devices/$deviceId/name',
+        body: {'name': name},
+      );
+
+  /// This device's own id, or null when it has not paired. Lets the device list
+  /// point out which row is the phone in the user's hand.
+  String? get deviceId => _credentials?.deviceId;
+
   Future<Map<String, dynamic>> _get(String path) => _request('GET', path);
 
   Future<Map<String, dynamic>> _request(

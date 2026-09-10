@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/api_client.dart';
 import '../../core/connection.dart';
 import '../../core/models.dart';
+import '../connect/devices_page.dart';
 import '../history/history_page.dart';
 import '../resource/resource_page.dart';
 import '../../l10n/app_localizations.dart';
@@ -197,6 +198,17 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
               Uri.parse(_api.baseUrl),
               mode: LaunchMode.externalApplication,
             ),
+          ),
+          IconButton(
+            // Only where it can do anything: an unpaired device may not manage
+            // devices, and there is nothing for it to manage.
+            tooltip: l10n.devicesTooltip,
+            icon: const Icon(Icons.devices),
+            onPressed: !_api.isPaired
+                ? null
+                : () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(builder: (_) => DevicesPage(api: _api)),
+                    ),
           ),
           IconButton(
             tooltip: l10n.switchServerTooltip,

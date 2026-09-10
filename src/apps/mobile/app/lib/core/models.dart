@@ -182,3 +182,91 @@ class PlayableItem {
         displayName: json['displayName'] as String?,
       );
 }
+
+/// A device the server has let in.
+///
+/// Carries no key: the key exists on the server only to check signatures, and is
+/// never sent anywhere, including here.
+class RemoteDevice {
+  const RemoteDevice({
+    required this.id,
+    required this.name,
+    required this.platform,
+    this.createdAt,
+    this.lastSeenAt,
+    this.approvedByDeviceId,
+  });
+
+  final String id;
+  final String name;
+
+  /// RemoteDevicePlatform: 0 unknown, 1 Windows, 2 macOS, 3 Linux, 4 Android, 5 iOS.
+  final int platform;
+
+  final DateTime? createdAt;
+
+  /// Null until the device makes its first signed request.
+  final DateTime? lastSeenAt;
+
+  /// Which device let this one in. Null for the first, which used a code.
+  final String? approvedByDeviceId;
+
+  static RemoteDevice? fromJson(Map<String, dynamic> json) {
+    final id = json['id'] as String?;
+
+    if (id == null || id.isEmpty) {
+      return null;
+    }
+
+    return RemoteDevice(
+      id: id,
+      name: json['name'] as String? ?? id,
+      platform: (json['platform'] as num?)?.toInt() ?? 0,
+      // Same timezone-less format as the server's clock reading, and read the
+      // same way — see ServerInfo.parseServerTime.
+      createdAt: ServerInfo.parseServerTime(json['createdAt'] as String?),
+      lastSeenAt: ServerInfo.parseServerTime(json['lastSeenAt'] as String?),
+      approvedByDeviceId: json['approvedByDeviceId'] as String?,
+    );
+  }
+}
+
+/// A device asking to be let in.
+class PendingPairingRequest {
+  const PendingPairingRequest({
+    required this.id,
+    required this.deviceName,
+    required this.platform,
+    this.remoteAddress,
+    this.requestedAt,
+    this.expiresAt,
+  });
+
+  final String id;
+  final String deviceName;
+  final int platform;
+
+  /// Where it came from, so whoever approves can sanity-check it against the
+  /// device they are holding.
+  final String? remoteAddress;
+
+  final DateTime? requestedAt;
+  final DateTime? expiresAt;
+
+  static PendingPairingRequest? fromJson(Map<String, dynamic> json) {
+    final id = json['id'] as String?;
+
+    if (id == null || id.isEmpty) {
+      return null;
+    }
+
+    return PendingPairingRequest(
+      id: id,
+      deviceName: json['deviceName'] as String? ?? '',
+      platform: (json['platform'] as num?)?.toInt() ?? 0,
+      remoteAddress: json['remoteAddress'] as String?,
+      requestedAt: ServerInfo.parseServerTime(json['requestedAt'] as String?),
+      expiresAt: ServerInfo.parseServerTime(json['expiresAt'] as String?),
+    );
+  }
+}

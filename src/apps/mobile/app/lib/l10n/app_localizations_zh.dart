@@ -179,4 +179,78 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get denialRunsOnUserMachine => '该操作发生在存放文件的机器上，无法从这里执行。';
+
+  @override
+  String get cancel => '取消';
+
+  @override
+  String get save => '保存';
+
+  @override
+  String get retry => '重试';
+
+  @override
+  String get devicesTooltip => '设备';
+
+  @override
+  String get devicesTitle => '设备';
+
+  @override
+  String get devicesWaiting => '等待放行';
+
+  @override
+  String get devicesPaired => '已有访问权限的设备';
+
+  @override
+  String get devicesNone => '还没有设备与该服务端配对。';
+
+  @override
+  String get devicesUnknownAddress => '地址未知';
+
+  @override
+  String get devicesApprove => '批准';
+
+  @override
+  String get devicesReject => '拒绝';
+
+  @override
+  String get devicesThisDevice => '本设备';
+
+  @override
+  String get devicesNeverSeen => '还没有连接过';
+
+  @override
+  String get devicesSeenJustNow => '刚刚在线';
+
+  @override
+  String get deviceRenameTitle => '重命名';
+
+  @override
+  String get deviceRevoke => '移除访问权限';
+
+  @override
+  String get deviceRevokeBody => '该设备需要重新配对才能再访问此服务端。';
+
+  @override
+  String get deviceRevokeSelfBody => '这就是你正在使用的设备。移除它的访问权限会断开与该服务端的连接，需要重新配对才能回来。';
+
+  @override
+  String devicesSeenMinutesAgo(int minutes) {
+    return '$minutes 分钟前在线';
+  }
+
+  @override
+  String devicesSeenHoursAgo(int hours) {
+    return '$hours 小时前在线';
+  }
+
+  @override
+  String devicesSeenDaysAgo(int days) {
+    return '$days 天前在线';
+  }
+
+  @override
+  String deviceRevokeTitle(String name) {
+    return '移除 $name？';
+  }
 }

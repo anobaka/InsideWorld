@@ -180,4 +180,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get denialRunsOnUserMachine => 'That happens on the machine holding the files, so it cannot run from here.';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get retry => 'Try again';
+
+  @override
+  String get devicesTooltip => 'Devices';
+
+  @override
+  String get devicesTitle => 'Devices';
+
+  @override
+  String get devicesWaiting => 'Waiting to be let in';
+
+  @override
+  String get devicesPaired => 'Devices with access';
+
+  @override
+  String get devicesNone => 'No devices are paired with this server.';
+
+  @override
+  String get devicesUnknownAddress => 'Address unknown';
+
+  @override
+  String get devicesApprove => 'Approve';
+
+  @override
+  String get devicesReject => 'Reject';
+
+  @override
+  String get devicesThisDevice => 'This device';
+
+  @override
+  String get devicesNeverSeen => 'Has not connected yet';
+
+  @override
+  String get devicesSeenJustNow => 'Seen just now';
+
+  @override
+  String get deviceRenameTitle => 'Rename';
+
+  @override
+  String get deviceRevoke => 'Remove access';
+
+  @override
+  String get deviceRevokeBody => 'That device will have to pair again before it can reach this server.';
+
+  @override
+  String get deviceRevokeSelfBody => 'This is the device you are using. Removing its access disconnects you from this server, and you will have to pair again to come back.';
+
+  @override
+  String devicesSeenMinutesAgo(int minutes) {
+    return 'Seen $minutes min ago';
+  }
+
+  @override
+  String devicesSeenHoursAgo(int hours) {
+    return 'Seen $hours h ago';
+  }
+
+  @override
+  String devicesSeenDaysAgo(int days) {
+    return 'Seen $days d ago';
+  }
+
+  @override
+  String deviceRevokeTitle(String name) {
+    return 'Remove $name?';
+  }
 }

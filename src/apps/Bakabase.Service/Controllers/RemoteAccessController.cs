@@ -268,6 +268,14 @@ namespace Bakabase.Service.Controllers
         /// that ever carries one; the settings page can afterwards see that a code
         /// exists and when it lapses, but not what it is.
         /// </summary>
+        /// <summary>
+        /// Issues a code that pairs whoever types it.
+        /// </summary>
+        /// <remarks>
+        /// Host-only, unlike approving a request. A code lets in a device nobody has
+        /// looked at — it is bearer access, and a phone that could mint one could pair
+        /// anything without the approval step ever happening.
+        /// </remarks>
         [HttpPost("pairing/code")]
         [SwaggerOperation(OperationId = "IssueRemoteAccessPairingCode")]
         public async Task<SingletonResponse<RemoteAccessIssuedPairingCodeViewModel>> IssuePairingCode()
@@ -278,8 +286,15 @@ namespace Bakabase.Service.Controllers
                 new RemoteAccessIssuedPairingCodeViewModel {Code = issue.Code, ExpiresAt = issue.ExpiresAt});
         }
 
+        /// <summary>
+        /// Lets a device in. Callable from any device that is already paired, which is
+        /// the decision that makes a headless server usable at all: nobody can walk over
+        /// to a container and click a button, and the alternative — a code read out of
+        /// the server's log — is a worse thing to ask of somebody every time.
+        /// </summary>
         [HttpPost("pairing/requests/{id}/approve")]
         [SwaggerOperation(OperationId = "ApproveRemoteDevicePairingRequest")]
+        [RemoteAccessible]
         public async Task<BaseResponse> ApprovePairingRequest(string id)
         {
             var approver = HttpContext.GetRemoteAccessContext()?.Device?.Id ?? HostApproverId;
@@ -293,6 +308,7 @@ namespace Bakabase.Service.Controllers
 
         [HttpPost("pairing/requests/{id}/reject")]
         [SwaggerOperation(OperationId = "RejectRemoteDevicePairingRequest")]
+        [RemoteAccessible]
         public async Task<BaseResponse> RejectPairingRequest(string id)
         {
             await deviceService.RejectRequestAsync(id, HttpContext.RequestAborted);
@@ -301,16 +317,52 @@ namespace Bakabase.Service.Controllers
             return BaseResponseBuilder.Ok;
         }
 
+        /// <summary>
+        /// Every device that can reach this server, and what is waiting to.
+        /// </summary>
+        /// <remarks>
+        /// Readable from any paired device, because a device that may approve another
+        /// has to be able to see what it is approving and what it let in previously.
+        /// Carries no keys — those exist on the server only to verify signatures.
+        /// </remarks>
         [HttpGet("devices")]
         [SwaggerOperation(OperationId = "GetRemoteAccessDevices")]
+        [RemoteAccessible]
         public ListResponse<RemoteAccessDeviceViewModel> GetDevices()
         {
             return new ListResponse<RemoteAccessDeviceViewModel>(
                 deviceService.GetDevices().Select(ToViewModel).ToList());
         }
 
+        /// <summary>
+        /// Devices waiting to be let in.
+        /// </summary>
+        /// <remarks>
+        /// Its own route rather than the settings page's copy of the same list: that one
+        /// also carries the server's reachable addresses and its mode, which are the host's
+        /// business and nobody else's.
+        /// </remarks>
+        [HttpGet("pairing/requests")]
+        [SwaggerOperation(OperationId = "GetRemoteAccessPairingRequests")]
+        [RemoteAccessible]
+        public ListResponse<RemoteAccessPendingRequestViewModel> GetPendingRequests()
+        {
+            return new ListResponse<RemoteAccessPendingRequestViewModel>(
+                deviceService.GetPendingRequests().Select(ToViewModel).ToList());
+        }
+
+        /// <summary>
+        /// Takes a device's access away.
+        /// </summary>
+        /// <remarks>
+        /// Also from another paired device, and deliberately including the caller itself:
+        /// somebody whose phone is in a stranger's hands needs to be able to cut it off
+        /// from whatever device they still have, and a lost phone is exactly the case
+        /// where the host machine is not the one to hand.
+        /// </remarks>
         [HttpDelete("devices/{id}")]
         [SwaggerOperation(OperationId = "RevokeRemoteAccessDevice")]
+        [RemoteAccessible]
         public async Task<BaseResponse> RevokeDevice(string id)
         {
             await deviceService.RevokeAsync(id, HttpContext.RequestAborted);
@@ -325,6 +377,7 @@ namespace Bakabase.Service.Controllers
 
         [HttpPut("devices/{id}/name")]
         [SwaggerOperation(OperationId = "RenameRemoteAccessDevice")]
+        [RemoteAccessible]
         public async Task<BaseResponse> RenameDevice(string id, [FromBody] RemoteAccessDeviceNameInputModel model)
         {
             var renamed = await deviceService.RenameAsync(id, model.Name ?? string.Empty, HttpContext.RequestAborted);

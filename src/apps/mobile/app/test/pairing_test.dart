@@ -145,4 +145,62 @@ void main() {
       expect(BakabaseApiClient.parseDenial('SomethingNew'), RemoteAccessDenial.unknown);
     });
   });
+
+  group('the devices a server has let in', () {
+    test('a device reads back with its timestamps as UTC', () {
+      // Same trap as the server's clock reading: these arrive as
+      // "yyyy-MM-dd HH:mm:ss.fff" with nothing saying they are UTC, and reading
+      // them as local time would show a phone in UTC+8 as last seen eight hours
+      // in the future.
+      final device = RemoteDevice.fromJson({
+        'id': 'dev-1',
+        'name': 'Desk-PC',
+        'platform': 1,
+        'createdAt': '2026-09-01 10:00:00.000',
+        'lastSeenAt': '2026-09-10 03:56:04.123',
+        'approvedByDeviceId': 'dev-0',
+      });
+
+      expect(device, isNotNull);
+      expect(device!.name, 'Desk-PC');
+      expect(device.lastSeenAt!.isUtc, isTrue);
+      expect(device.lastSeenAt!.hour, 3);
+      expect(device.approvedByDeviceId, 'dev-0');
+    });
+
+    test('a device that has never connected has no last-seen', () {
+      final device = RemoteDevice.fromJson({'id': 'dev-2', 'name': 'Phone', 'platform': 4});
+
+      expect(device!.lastSeenAt, isNull);
+      expect(device.approvedByDeviceId, isNull);
+    });
+
+    test('a row with no id is not a device', () {
+      // Nothing can be revoked or renamed without one, and a tile that acts on an
+      // empty id would act on whatever the server has at that route.
+      expect(RemoteDevice.fromJson({'name': 'Nameless'}), isNull);
+      expect(RemoteDevice.fromJson({'id': '', 'name': 'Nameless'}), isNull);
+      expect(PendingPairingRequest.fromJson({'deviceName': 'Phone'}), isNull);
+    });
+
+    test('a request keeps the address an approver checks it against', () {
+      final request = PendingPairingRequest.fromJson({
+        'id': 'req-1',
+        'deviceName': 'New phone',
+        'platform': 5,
+        'remoteAddress': '192.168.1.42',
+        'requestedAt': '2026-09-10 03:50:00.000',
+        'expiresAt': '2026-09-10 04:00:00.000',
+      });
+
+      expect(request!.remoteAddress, '192.168.1.42');
+      expect(request.expiresAt!.isUtc, isTrue);
+      expect(request.deviceName, 'New phone');
+    });
+
+    test('a platform a newer server invented reads as unknown, not a crash', () {
+      expect(RemoteDevice.fromJson({'id': 'x', 'name': 'x'})!.platform, 0);
+      expect(RemoteDevice.fromJson({'id': 'x', 'name': 'x', 'platform': 99})!.platform, 99);
+    });
+  });
 }
