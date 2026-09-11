@@ -433,5 +433,8 @@
   "client.failure.needsNewerClient": "This client cannot do that yet",
   "client.failure.notConnected": "Not connected to a server",
   "client.failure.serverUnreachable": "The server is not answering",
-  "client.failure.refused": "Refused by this client"
+  "client.failure.refused": "Refused by this client",
+  "clientVersion.clientBehind": "This client ({{client}}) is older than the server ({{server}}). Features the server has added may not work here until it updates.",
+  "clientVersion.serverBehind": "The server ({{server}}) is older than this client ({{client}}). Some things here may ask for a server that has been updated.",
+  "clientVersion.differ": "This client ({{client}}) and the server ({{server}}) are different versions."
 }

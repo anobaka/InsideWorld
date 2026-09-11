@@ -433,5 +433,8 @@
   "client.failure.needsNewerClient": "当前客户端还不支持该操作",
   "client.failure.notConnected": "尚未连接服务端",
   "client.failure.serverUnreachable": "服务端没有响应",
-  "client.failure.refused": "被本客户端拒绝"
+  "client.failure.refused": "被本客户端拒绝",
+  "clientVersion.clientBehind": "本客户端（{{client}}）比服务端（{{server}}）旧。服务端新增的功能在这里可能用不了，更新客户端即可。",
+  "clientVersion.serverBehind": "服务端（{{server}}）比本客户端（{{client}}）旧。这里的部分功能可能需要更新服务端才能使用。",
+  "clientVersion.differ": "本客户端（{{client}}）与服务端（{{server}}）版本不一致。"
 }
