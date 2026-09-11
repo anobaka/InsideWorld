@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
-using Bakabase.Client.Components.Diagnostics;
+using Bakabase.Client.Remoting.Components.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Bakabase.Tests.RemoteAccess;

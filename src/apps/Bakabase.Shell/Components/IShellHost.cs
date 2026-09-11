@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 
-namespace Bakabase.Components;
+namespace Bakabase.Shell.Components;
 
 /// <summary>
 /// Everything the Avalonia shell needs from whatever is running behind it.

@@ -1,7 +1,7 @@
 using Bakabase.Infrastructures.Components.Gui;
 using Bakabase.Infrastructures.Components.SystemService;
 
-namespace Bakabase.Components;
+namespace Bakabase.Shell.Components;
 
 public class CrossPlatformSystemService : ISystemService
 {

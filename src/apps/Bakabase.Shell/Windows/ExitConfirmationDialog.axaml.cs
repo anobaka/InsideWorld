@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Bakabase.Resources;
+using Bakabase.Shell.Resources;
 
-namespace Bakabase.Windows;
+namespace Bakabase.Shell.Windows;
 
 /// <summary>What the user decided when asked to close the app.</summary>
 public enum ExitChoice

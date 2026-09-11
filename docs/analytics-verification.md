@@ -20,7 +20,7 @@ cd src/web && yarn install
 yarn gen-sdk
 
 # 5. 启动后端 + 前端
-dotnet run --project src/apps/Bakabase &
+dotnet run --project src/apps/Bakabase.App &
 cd src/web && yarn dev
 ```
 

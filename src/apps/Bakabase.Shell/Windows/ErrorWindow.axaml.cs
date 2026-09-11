@@ -2,7 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 
-namespace Bakabase.Windows;
+namespace Bakabase.Shell.Windows;
 
 public partial class ErrorWindow : Window
 {

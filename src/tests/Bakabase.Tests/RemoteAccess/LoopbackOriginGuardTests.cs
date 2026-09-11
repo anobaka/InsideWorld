@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Bakabase.Client.Components.Forwarding;
+using Bakabase.Client.Remoting.Components.Forwarding;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Bakabase.Tests.RemoteAccess;

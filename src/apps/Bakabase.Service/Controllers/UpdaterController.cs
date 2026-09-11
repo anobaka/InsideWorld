@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using Bakabase.Abstractions.Components.Gui;
+using Bakabase.Infrastructures.Components.Gui;
 using Bakabase.Infrastructures.Components.App.Upgrade;
 using Bakabase.Infrastructures.Components.App.Upgrade.Abstractions;
 using Bootstrap.Components.Miscellaneous.ResponseBuilders;

@@ -4,7 +4,7 @@
       The thin client's entry point. Everything visual lives in Bakabase.Shell; what
       remains here is the process entry, the packaging inputs, and the one thing that
       makes this flavour the client — the reference to Bakabase.Client, wrapped as an
-      IShellHost. Its all-in-one twin is Bakabase/Bakabase.csproj; the two differ only
+      IShellHost. Its all-in-one twin is Bakabase.App/Bakabase.App.csproj; the two differ only
       in which host they put behind the same shell.
     -->
     <PropertyGroup>
@@ -15,7 +15,7 @@
         <ApplicationIcon>..\Bakabase.Shell\Assets\favicon.ico</ApplicationIcon>
         <AssemblyName>Bakabase.Client</AssemblyName>
         <RootNamespace>Bakabase.Client.App</RootNamespace>
-        <ApplicationManifest>..\Bakabase\app.manifest</ApplicationManifest>
+        <ApplicationManifest>..\Bakabase.App\app.manifest</ApplicationManifest>
     </PropertyGroup>
 
     <ItemGroup>
@@ -32,7 +32,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Bakabase.Shell\Bakabase.Shell.csproj" />
-        <ProjectReference Include="..\Bakabase.Client\Bakabase.Client.csproj" />
+        <ProjectReference Include="..\Bakabase.Client.Remoting\Bakabase.Client.Remoting.csproj" />
     </ItemGroup>
 
     <!-- Copy favicon.png to output for macOS Dock icon -->

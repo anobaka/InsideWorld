@@ -3,7 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Bakabase.Infrastructures.Components.App.Relocation;
 
-namespace Bakabase.Windows;
+namespace Bakabase.Shell.Windows;
 
 public partial class RelocationSplashWindow : Window
 {

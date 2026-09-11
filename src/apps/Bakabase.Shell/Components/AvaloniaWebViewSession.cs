@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
-using Bakabase.Controls;
+using Bakabase.Shell.Controls;
 using Bakabase.Infrastructures.Components.Gui;
-using Bakabase.Windows;
+using Bakabase.Shell.Windows;
 
-namespace Bakabase.Components;
+namespace Bakabase.Shell.Components;
 
 /// <summary>
 /// Avalonia-backed implementation of <see cref="IWebViewSession"/>. Wraps a single

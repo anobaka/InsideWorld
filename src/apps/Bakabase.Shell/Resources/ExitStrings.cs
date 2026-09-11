@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Resources;
 
-namespace Bakabase.Resources;
+namespace Bakabase.Shell.Resources;
 
 /// <summary>
 /// Strings for the exit experience (confirmation dialog + shutdown progress window).
@@ -17,7 +17,7 @@ namespace Bakabase.Resources;
 internal static class ExitStrings
 {
     private static readonly ResourceManager Manager =
-        new("Bakabase.Resources.ExitResource", typeof(ExitStrings).Assembly);
+        new("Bakabase.Shell.Resources.ExitResource", typeof(ExitStrings).Assembly);
 
     /// <param name="fallback">
     /// Used when the satellite assembly is missing from the package. Quitting the app must

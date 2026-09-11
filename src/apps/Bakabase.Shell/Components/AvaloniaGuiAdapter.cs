@@ -7,14 +7,13 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
-using Bakabase.Abstractions.Components.Gui;
 using Bakabase.Infrastructures.Components.Gui;
 using Bakabase.Infrastructures.Components.SystemService;
-using Bakabase.Controls;
-using Bakabase.Windows;
+using Bakabase.Shell.Controls;
+using Bakabase.Shell.Windows;
 using Bootstrap.Extensions;
 
-namespace Bakabase.Components;
+namespace Bakabase.Shell.Components;
 
 public class AvaloniaGuiAdapter : GuiAdapter, ITrayIconController
 {

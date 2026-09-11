@@ -99,19 +99,19 @@ jobs:
           - os: windows-latest
             rid: win-x64
             artifact: win-x64
-            csproj: Bakabase/src/apps/Bakabase/Bakabase.csproj
+            csproj: Bakabase/src/apps/Bakabase.App/Bakabase.App.csproj
             nuget-path: ~\\.nuget\\packages
             runtimeMode: WINFORMS
           - os: macos-15
             rid: osx-x64
             artifact: osx-x64
-            csproj: Bakabase/src/apps/Bakabase/Bakabase.csproj
+            csproj: Bakabase/src/apps/Bakabase.App/Bakabase.App.csproj
             nuget-path: ~/.nuget/packages
             runtimeMode: MACOS
           - os: macos-latest
             rid: osx-arm64
             artifact: osx-arm64
-            csproj: Bakabase/src/apps/Bakabase/Bakabase.csproj
+            csproj: Bakabase/src/apps/Bakabase.App/Bakabase.App.csproj
             nuget-path: ~/.nuget/packages
             runtimeMode: MACOS
           - os: ubuntu-latest
@@ -231,7 +231,7 @@ jobs:
   # the all-in-one publishes.
   #
   # There is no -p:AppFlavor=: the flavour is decided by which entry project gets
-  # published. Bakabase.csproj puts the server behind the shell, Bakabase.Client.App
+  # published. Bakabase.App.csproj puts the server behind the shell, Bakabase.Client.App
   # puts the forwarding layer there, and nothing else differs.
   build-client:
     runs-on: ${{ matrix.os }}
@@ -284,7 +284,7 @@ jobs:
       # No frontend download here, on purpose (R12 in the execution plan). The client
       # gets the frontend from whichever server it connects to, so shipping a copy
       # would add weight and raise the question of which one wins. The one page it
-      # serves itself — the connect screen — is embedded in Bakabase.Client.Core.
+      # serves itself — the connect screen — is embedded in Bakabase.Client.Remoting.
       - name: Verify no frontend was packed
         shell: bash
         run: |
@@ -292,7 +292,7 @@ jobs:
             echo "::error::The client publish contains a web/ directory. The client must not ship the frontend."
             exit 1
           fi
-          test -f ./publish/Bakabase.Client.Core.dll
+          test -f ./publish/Bakabase.Client.Remoting.dll
 
       - name: Install Velopack CLI
         run: dotnet tool install -g vpk --version 1.2.0

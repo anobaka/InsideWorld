@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using Bakabase.Client.Abstractions.Models;
-using Bakabase.Client.Components.Paths;
+using Bakabase.Client.Remoting.Abstractions.Models;
+using Bakabase.Client.Remoting.Components.Paths;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Bakabase.Tests.RemoteAccess;

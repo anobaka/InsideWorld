@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bakabase.Infrastructures", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bakabase.Tests", "tests\Bakabase.Tests\Bakabase.Tests.csproj", "{C0B8AA1F-37B0-4D9F-A25D-6A26DDED605B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bakabase", "apps\Bakabase\Bakabase.csproj", "{D12DCFFB-0F96-4221-B4A7-BEADEA5CFE57}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bakabase.App", "apps\Bakabase.App\Bakabase.App.csproj", "{D12DCFFB-0F96-4221-B4A7-BEADEA5CFE57}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bakabase.Abstractions", "abstractions\Bakabase.Abstractions\Bakabase.Abstractions.csproj", "{8686512A-39C1-4EEE-A3F5-101D50D07763}"
 EndProject
@@ -99,7 +99,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bakabase.Modules.Text", "mo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bakabase.Shell", "apps\Bakabase.Shell\Bakabase.Shell.csproj", "{59F9F19E-1178-4DEB-B41D-4C0B450C305B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bakabase.Client", "apps\Bakabase.Client\Bakabase.Client.csproj", "{68DF3DA3-60E7-4206-99CE-EF30CF708DC1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bakabase.Client.Remoting", "apps\Bakabase.Client.Remoting\Bakabase.Client.Remoting.csproj", "{68DF3DA3-60E7-4206-99CE-EF30CF708DC1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bakabase.Client.App", "apps\Bakabase.Client.App\Bakabase.Client.App.csproj", "{BDE5AC08-AE22-4B05-97A2-BD16B5094D5D}"
 EndProject

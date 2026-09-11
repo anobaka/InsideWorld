@@ -180,7 +180,7 @@ namespace Bakabase.Service.Components
             services.AddBTask<BTaskEventHandler>();
             services.AddTransient(sp =>
                 sp.GetService<Bakabase.Infrastructures.Components.Gui.IGuiAdapter>()
-                    as Bakabase.Abstractions.Components.Gui.ITrayIconController);
+                    as Bakabase.Infrastructures.Components.Gui.ITrayIconController);
             services.AddSingleton<DynamicTaskRegistry>();
             services.AddSingleton<IPrepareCacheTrigger, PrepareCacheTrigger>();
 

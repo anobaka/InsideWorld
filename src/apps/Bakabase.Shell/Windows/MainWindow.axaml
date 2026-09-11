@@ -1,10 +1,10 @@
 <Window
-    x:Class="Bakabase.Windows.MainWindow"
+    x:Class="Bakabase.Shell.Windows.MainWindow"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls="clr-namespace:Bakabase.Controls;assembly=Bakabase.Shell"
+    xmlns:controls="clr-namespace:Bakabase.Shell.Controls;assembly=Bakabase.Shell"
     Icon="/Assets/favicon.png"
     Title="MainWindow"
     WindowStartupLocation="CenterScreen"

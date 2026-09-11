@@ -6,7 +6,7 @@ paths:
   - "**/legacy/**"
   - "**/modules/**"
   - "**/Bakabase.Service/**"
-  - "**/apps/Bakabase/**"
+  - "**/apps/Bakabase.App/**"
   - "**/apps/Bakabase.Shell/**"
 ---
 

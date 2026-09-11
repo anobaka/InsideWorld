@@ -1,7 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 
-namespace Bakabase.Windows;
+namespace Bakabase.Shell.Windows;
 
 public partial class MainWindow : Window
 {

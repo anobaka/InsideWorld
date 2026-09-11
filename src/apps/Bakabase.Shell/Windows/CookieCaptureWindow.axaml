@@ -1,8 +1,8 @@
 <Window
-    x:Class="Bakabase.Windows.CookieCaptureWindow"
+    x:Class="Bakabase.Shell.Windows.CookieCaptureWindow"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="clr-namespace:Bakabase.Controls;assembly=Bakabase.Shell"
+    xmlns:controls="clr-namespace:Bakabase.Shell.Controls;assembly=Bakabase.Shell"
     Icon="/Assets/favicon.png"
     Title="Cookie Capture"
     Width="1024"

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Platform;
 
-namespace Bakabase.Controls;
+namespace Bakabase.Shell.Controls;
 
 /// <summary>
 /// Cross-platform WebView host using Avalonia's NativeControlHost.

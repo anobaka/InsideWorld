@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Bakabase.Abstractions.Components.Gui;
+using Bakabase.Infrastructures.Components.Gui;
 using Bakabase.Abstractions.Components.Tasks;
 using Bakabase.Abstractions.Models.View;
 using Bakabase.InsideWorld.Business.Components.Gui;

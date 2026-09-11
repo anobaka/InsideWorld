@@ -1,9 +1,12 @@
 using Avalonia;
-using Bakabase.Client.Components;
-using Bakabase.Components;
+using Bakabase.Client.Remoting.Components;
+using Bakabase.Shell.Components;
 using Bakabase.Infrastructures.Components.App;
 using Bakabase.Infrastructures.Components.App.Upgrade;
 using Velopack;
+// Aliased because this project's own namespace is Bakabase.Client.App: an unqualified
+// `App` binds to that namespace rather than to the shell's Avalonia application class.
+using ShellApp = Bakabase.Shell.App;
 
 namespace Bakabase.Client.App;
 
@@ -54,7 +57,7 @@ class Program
     // exactly what makes this build the client flavour.
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure(() =>
-                new global::Bakabase.App((guiAdapter, systemService) =>
+                new ShellApp((guiAdapter, systemService) =>
                     new ClientShellHost(new ClientHost(guiAdapter, systemService))))
             .UsePlatformDetect()
             .LogToTrace();

@@ -13,10 +13,11 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <AssemblyName>Bakabase.Shell</AssemblyName>
         <!--
-          XAML and AssetLoader resolve resources by assembly name, so everything
-          under Assets/ and Styles/ is addressed as avares://Bakabase.Shell/...
+          XAML and AssetLoader resolve resources by assembly name, not by this, so
+          everything under Assets/ and Styles/ stays addressed as
+          avares://Bakabase.Shell/... either way.
         -->
-        <RootNamespace>Bakabase</RootNamespace>
+        <RootNamespace>Bakabase.Shell</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

@@ -263,7 +263,7 @@ S1–S3 是 App 可用的前置条件（M0），S4–S6 可后置。
 ### 7.1 位置与结构
 
 ```
-src/apps/mobile/                  # 与 apps/Bakabase 并列，monorepo 内
+src/apps/mobile/                  # 与 apps/Bakabase.App 并列，monorepo 内
   app/                            # Flutter 应用本体
     lib/
       features/                   # discovery / library / search / detail / player / settings

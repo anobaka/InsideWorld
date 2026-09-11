@@ -1,5 +1,5 @@
-using Bakabase.Components;
-using Bakabase.Client.Components;
+using Bakabase.Shell.Components;
+using Bakabase.Client.Remoting.Components;
 using Microsoft.Extensions.Hosting;
 
 namespace Bakabase.Client.App;

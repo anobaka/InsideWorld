@@ -4,9 +4,9 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
-using Bakabase.Resources;
+using Bakabase.Shell.Resources;
 
-namespace Bakabase.Windows;
+namespace Bakabase.Shell.Windows;
 
 /// <summary>
 /// One line in the shutdown window's "what is still running" list.

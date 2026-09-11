@@ -4,7 +4,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using Bakabase.Infrastructures.Components.App.Relocation;
-using Bakabase.Windows;
+using Bakabase.Shell.Windows;
 
 namespace Bakabase.Demos.Demos;
 

@@ -51,7 +51,7 @@ jobs:
       # seconds, not minutes.
       - name: Build the app entry points
         run: |
-          dotnet build src/apps/Bakabase/Bakabase.csproj
+          dotnet build src/apps/Bakabase.App/Bakabase.App.csproj
           dotnet build src/apps/Bakabase.Client.App/Bakabase.Client.App.csproj
 
       - name: Run tests

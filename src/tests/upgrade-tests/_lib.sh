@@ -40,7 +40,7 @@ publish_app() {
   mkdir -p "$out"
 
   # Bakabase reads its assembly version via Nerdbank.GitVersioning. We override at publish-time.
-  dotnet publish "$REPO_ROOT/src/apps/Bakabase/Bakabase.csproj" \
+  dotnet publish "$REPO_ROOT/src/apps/Bakabase.App/Bakabase.App.csproj" \
     -p:RuntimeMode="$mode" \
     -p:Version="$version" \
     -p:AssemblyVersion="$(echo "$version" | cut -d- -f1)" \

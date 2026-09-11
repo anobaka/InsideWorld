@@ -7,9 +7,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Bakabase.Abstractions.Models.Domain.Constants;
-using Bakabase.Client.Abstractions;
-using Bakabase.Client.Abstractions.Models;
-using Bakabase.Client.Components.Connection;
+using Bakabase.Client.Remoting.Abstractions;
+using Bakabase.Client.Remoting.Abstractions.Models;
+using Bakabase.Client.Remoting.Components.Connection;
 using Bakabase.Modules.RemoteAccess.Abstractions.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

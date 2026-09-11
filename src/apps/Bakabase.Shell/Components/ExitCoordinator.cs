@@ -10,13 +10,13 @@ using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Abstractions.Models.View;
 using Bakabase.Infrastructures.Components.Configurations.App;
 using Bakabase.Infrastructures.Components.Gui;
-using Bakabase.Resources;
-using Bakabase.Windows;
+using Bakabase.Shell.Resources;
+using Bakabase.Shell.Windows;
 using Bootstrap.Components.Configuration.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Bakabase.Components;
+namespace Bakabase.Shell.Components;
 
 public enum ExitTrigger
 {

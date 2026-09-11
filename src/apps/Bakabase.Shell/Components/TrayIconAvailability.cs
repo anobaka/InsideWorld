@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using Avalonia.Controls;
 
-namespace Bakabase.Components;
+namespace Bakabase.Shell.Components;
 
 /// <summary>
 /// Answers "is there actually a notification area to minimize into?".

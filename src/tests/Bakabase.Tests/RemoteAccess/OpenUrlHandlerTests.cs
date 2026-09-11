@@ -1,4 +1,4 @@
-using Bakabase.Client.Components.UserMachine;
+using Bakabase.Client.Remoting.Components.UserMachine;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Bakabase.Tests.RemoteAccess;

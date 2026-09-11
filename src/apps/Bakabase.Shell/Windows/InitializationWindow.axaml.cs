@@ -2,7 +2,7 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace Bakabase.Windows;
+namespace Bakabase.Shell.Windows;
 
 /// <summary>
 /// Boot-time splash. Shown by <see cref="Components.AvaloniaGuiAdapter"/> while the host

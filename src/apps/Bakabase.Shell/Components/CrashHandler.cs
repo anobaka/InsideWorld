@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Bakabase.Components;
+namespace Bakabase.Shell.Components;
 
 /// <summary>
 /// Last-resort reporting for exceptions that nothing else catches.

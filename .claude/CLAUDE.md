@@ -6,8 +6,10 @@ Local media manager for organizing files of any type.
 
 - **Bakabase/** - Main application
   - `src/web/` - React frontend (TypeScript)
-  - `src/apps/Bakabase/` - C# all-in-one desktop entry point (process entry + packaging inputs)
-  - `src/apps/Bakabase.Shell/` - C# Avalonia shell shared by desktop flavours (windows, tray, exit coordination, embedded browser). Talks to a host only through `IShellHost`; must not reference `Bakabase.Service`
+  - `src/apps/Bakabase.App/` - C# all-in-one desktop entry point (process entry + packaging inputs). Ships as `Bakabase.exe`
+  - `src/apps/Bakabase.Client.App/` - C# thin-client entry point. Ships as `Bakabase.Client.exe`
+  - `src/apps/Bakabase.Shell/` - C# Avalonia shell shared by desktop flavours (windows, tray, exit coordination, embedded browser). Talks to a host only through `IShellHost`; must not reference `Bakabase.Service` or `Bakabase.Client.Remoting`
+  - `src/apps/Bakabase.Client.Remoting/` - C# thin-client wiring for a server on **another machine**: forwarding, signing, pairing, discovery, path mapping, user-machine handlers. Nothing here has a job once the server is in-process, which is why the all-in-one does not reference it
   - `src/apps/Bakabase.Service/` - C# HTTP API layer
   - `src/apps/Bakabase.Cli/` - C# offline build-time tool (SDK/constants generation). Reserve for dev-time codegen only.
   - `src/abstractions/` - C# interfaces & shared types
@@ -20,10 +22,17 @@ Local media manager for organizing files of any type.
 ## Module Dependencies
 
 ```
-Bakabase (all-in-one entry) → Bakabase.Shell  → abstractions
-                            ↘ Bakabase.Service → modules → abstractions
-                                               ↘ abstractions ↗
+Bakabase.App (all-in-one entry) → Bakabase.Shell            → abstractions
+                                ↘ Bakabase.Service          → modules → abstractions
+                                                            ↘ abstractions ↗
+
+Bakabase.Client.App (client entry) → Bakabase.Shell         → abstractions
+                                   ↘ Bakabase.Client.Remoting → modules → abstractions
 ```
+
+The two entries share the shell and differ only in which host they put behind it.
+Neither host project references the other, and the shell references neither — the
+flavour is a link-time fact, not a runtime switch.
 
 Updating is handled by Velopack; there is no updater project in this repo.
 
@@ -36,7 +45,7 @@ cd Bakabase/src/web && yarn run gen-sdk  # Regenerate API SDK (offline, no runni
 
 # Backend
 dotnet build                                    # Build solution
-dotnet run --project Bakabase/src/apps/Bakabase  # Run desktop app
+dotnet run --project Bakabase/src/apps/Bakabase.App  # Run desktop app (all-in-one)
 
 # Database Migration
 # - ALWAYS generate via the command below; never hand-write or hand-edit a migration file.

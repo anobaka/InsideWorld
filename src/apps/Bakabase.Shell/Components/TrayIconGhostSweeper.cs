@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Bakabase.Components;
+namespace Bakabase.Shell.Components;
 
 /// <summary>
 /// Removes "ghost" tray icons — entries the Windows notification area still paints for a

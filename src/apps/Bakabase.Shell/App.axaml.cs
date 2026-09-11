@@ -6,15 +6,15 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
-using Bakabase.Components;
+using Bakabase.Shell.Components;
 using Bakabase.Infrastructures.Components.App;
 using Bakabase.Infrastructures.Components.App.Relocation;
 using Bakabase.Infrastructures.Components.Configurations.App;
 using Bakabase.Infrastructures.Components.Gui;
 using Bakabase.Infrastructures.Components.SystemService;
-using Bakabase.Windows;
+using Bakabase.Shell.Windows;
 
-namespace Bakabase;
+namespace Bakabase.Shell;
 
 public partial class App : Application
 {

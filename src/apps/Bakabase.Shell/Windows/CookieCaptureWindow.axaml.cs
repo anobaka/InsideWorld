@@ -1,9 +1,9 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Bakabase.Controls;
+using Bakabase.Shell.Controls;
 
-namespace Bakabase.Windows;
+namespace Bakabase.Shell.Windows;
 
 /// <summary>
 /// Plain UI shell: WebView surface, address bar, status line, Confirm/Cancel buttons.

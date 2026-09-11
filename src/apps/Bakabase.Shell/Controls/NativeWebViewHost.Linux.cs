@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Avalonia.Platform;
 using Bakabase.Infrastructures.Components.Gui;
 
-namespace Bakabase.Controls;
+namespace Bakabase.Shell.Controls;
 
 public partial class NativeWebViewHost
 {

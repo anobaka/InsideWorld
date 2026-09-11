@@ -1,5 +1,5 @@
 using System;
-using Bakabase.Client.Components.Updating;
+using Bakabase.Client.Remoting.Components.Updating;
 using Bakabase.Service.Components;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
