@@ -51,6 +51,11 @@ const AppInfo: React.FC<AppInfoProps> = ({ appInfo, applyPatches, query }) => {
   const appUpdaterState = useAppUpdaterStateStore((state) => state);
   const appOptions = useAppOptionsStore((state) => state.data);
 
+  // The version an update moves the user off, so the changelog can show the whole span
+  // rather than only the newest release. Velopack decides against the install manifest;
+  // runningVersion only differs on a dev build, where it is still better than no bound.
+  const updateFrom = newVersion?.installedVersion ?? newVersion?.runningVersion;
+
   const checkNewAppVersion = () => {
     BApi.updater.getNewAppVersion().then((a) => {
       setNewVersion(a.data);
@@ -162,7 +167,7 @@ const AppInfo: React.FC<AppInfoProps> = ({ appInfo, applyPatches, query }) => {
                   {newVersion.version}
                 </Chip>
                 <Divider orientation="vertical" />
-                <ChangelogButton version={newVersion.version} />
+                <ChangelogButton from={updateFrom} version={newVersion.version} />
                 <Divider orientation="vertical" />
                 <Button
                   color="success"
@@ -213,7 +218,7 @@ const AppInfo: React.FC<AppInfoProps> = ({ appInfo, applyPatches, query }) => {
               size="sm"
               value={appUpdaterState.percentage}
             />
-            <ChangelogButton version={newVersion?.version} />
+            <ChangelogButton from={updateFrom} version={newVersion?.version} />
           </div>
         );
       case UpdaterStatus.PendingRestart:
@@ -228,7 +233,7 @@ const AppInfo: React.FC<AppInfoProps> = ({ appInfo, applyPatches, query }) => {
             >
               {t("configuration.appInfo.restartToUpdate")}
             </Button>
-            <ChangelogButton version={newVersion?.version} />
+            <ChangelogButton from={updateFrom} version={newVersion?.version} />
           </div>
         );
       case UpdaterStatus.Failed:
@@ -246,7 +251,9 @@ const AppInfo: React.FC<AppInfoProps> = ({ appInfo, applyPatches, query }) => {
             >
               {t("configuration.appInfo.clickToRetry")}
             </Button>
-            {newVersion?.version && <ChangelogButton version={newVersion.version} />}
+            {newVersion?.version && (
+              <ChangelogButton from={updateFrom} version={newVersion.version} />
+            )}
           </div>
         );
       default:

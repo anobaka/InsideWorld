@@ -59,7 +59,9 @@ const WhatsNewGate = () => {
         const changelog = await BApi.changelog.getChangelog({ version });
 
         if (changelog.data) {
-          showChangelog(version);
+          // lastSeen is this reader's true previous version, so the modal can show
+          // every release they skipped — several, if they were behind more than one.
+          showChangelog(version, { from: lastSeen });
         }
       })
       .catch(() => {});

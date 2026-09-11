@@ -294,7 +294,18 @@ const AppUpdateBanner: React.FC<Props> = ({ collapsed }) => {
       onDismiss={() => appUpdaterState.dismissFailure()}
       onRestart={() => BApi.updater.restartAndUpdateApp()}
       onRetry={() => BApi.updater.startUpdatingApp()}
-      onShowChangelog={newVersion?.version ? () => showChangelog(newVersion.version) : undefined}
+      onShowChangelog={
+        newVersion?.version
+          ? () =>
+              showChangelog(newVersion.version, {
+                // Velopack decides updates against the install manifest, so
+                // installedVersion is what this update actually moves the user off;
+                // runningVersion only differs on a dev build, where it is still a
+                // better lower bound than none.
+                from: newVersion.installedVersion ?? newVersion.runningVersion,
+              })
+          : undefined
+      }
     />
   );
 };

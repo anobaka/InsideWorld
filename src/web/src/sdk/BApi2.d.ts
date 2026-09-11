@@ -1092,6 +1092,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/changelog/range": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetChangelogRange"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/changelog/content": {
         parameters: {
             query?: never;
@@ -10522,6 +10538,14 @@ export interface components {
             releases: components["schemas"]["Bakabase.Service.Models.View.ChangelogReleaseViewModel"][];
             releasesUrl?: string;
         };
+        "Bakabase.Service.Models.View.ChangelogRangeViewModel": {
+            from: string;
+            to: string;
+            releases: components["schemas"]["Bakabase.Service.Models.View.ChangelogReleaseViewModel"][];
+            /** Format: int32 */
+            hiddenPrereleaseCount: number;
+            releasesUrl?: string;
+        };
         "Bakabase.Service.Models.View.ChangelogReleaseViewModel": {
             version: string;
             tag?: string;
@@ -12031,6 +12055,12 @@ export interface components {
             code: number;
             message?: string;
             data?: components["schemas"]["Bakabase.Service.Models.View.ChangelogIndexViewModel"];
+        };
+        "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.ChangelogRangeViewModel]": {
+            /** Format: int32 */
+            code: number;
+            message?: string;
+            data?: components["schemas"]["Bakabase.Service.Models.View.ChangelogRangeViewModel"];
         };
         "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.ChangelogViewModel]": {
             /** Format: int32 */
@@ -15007,6 +15037,31 @@ export interface operations {
                     "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.ChangelogIndexViewModel]"];
                     "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.ChangelogIndexViewModel]"];
                     "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.ChangelogIndexViewModel]"];
+                };
+            };
+        };
+    };
+    GetChangelogRange: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.ChangelogRangeViewModel]"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.ChangelogRangeViewModel]"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.ChangelogRangeViewModel]"];
                 };
             };
         };
