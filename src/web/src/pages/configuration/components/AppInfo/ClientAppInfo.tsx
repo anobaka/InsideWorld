@@ -10,15 +10,13 @@ import type {
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import Markdown from "react-markdown";
 import { CheckCircleOutlined, FolderOpenOutlined, InfoCircleOutlined } from "@ant-design/icons";
 
 import { clientApi } from "@/core/clientApi";
 import { UpdaterStatus, RemoteDevicePlatform } from "@/sdk/constants";
-import { Button, Chip, Divider, Modal, Progress, Snippet, Tooltip } from "@/components/bakaui";
-import ExternalLink from "@/components/ExternalLink";
+import { Button, Chip, Divider, Progress, Snippet, Tooltip } from "@/components/bakaui";
+import { ChangelogButton } from "@/components/Changelog";
 import SettingsSection from "@/pages/configuration/components/SettingsSection";
-import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
 import { useIsPureClient } from "@/stores/remoteAccess";
 
 /** How often the client's update progress is re-read while it is downloading. */
@@ -35,7 +33,6 @@ const PROGRESS_INTERVAL = 1500;
  */
 const ClientAppInfo: React.FC<{ query?: string }> = ({ query }) => {
   const { t } = useTranslation();
-  const { createPortal } = useBakabaseContext();
   const isPureClient = useIsPureClient();
 
   const [status, setStatus] = useState<ClientStatus>();
@@ -182,33 +179,11 @@ const ClientAppInfo: React.FC<{ query?: string }> = ({ query }) => {
         <Chip radius="sm" variant="light">
           {newVersion.version}
         </Chip>
-        {newVersion.changelog && (
-          <>
-            <Divider orientation="vertical" />
-            <Button
-              color="secondary"
-              size="sm"
-              variant="light"
-              onPress={() =>
-                createPortal(Modal, {
-                  size: "xl",
-                  title: newVersion.version,
-                  defaultVisible: true,
-                  children: (
-                    <Markdown
-                      components={{ a: (props) => <ExternalLink {...props} target="_blank" /> }}
-                    >
-                      {newVersion.changelog}
-                    </Markdown>
-                  ),
-                  footer: { actions: ["cancel"] },
-                })
-              }
-            >
-              {t<string>("configuration.appInfo.changelog")}
-            </Button>
-          </>
-        )}
+        <Divider orientation="vertical" />
+        {/* The same affordance the server's section uses, and the same notes: both
+            products are cut from this repository at the same version numbers. The span
+            is this client's own, from what it runs now to what it would install. */}
+        <ChangelogButton from={status?.clientVersion} version={newVersion.version} />
         <Divider orientation="vertical" />
         <Button color="success" size="sm" variant="light" onPress={startUpdating}>
           {t<string>("configuration.appInfo.clickToAutoUpdate")}
