@@ -28,6 +28,27 @@ namespace Bakabase.Service.Controllers
         }
 
         /// <summary>
+        /// Every release crossed by one update — from the version the caller has
+        /// (exclusive) to the version it is about to install (inclusive), newest first.
+        /// <para>
+        /// Null data when the span cannot be resolved: an unreadable bound, an unreachable
+        /// archive, or a lower bound that is not lower. Callers fall back to the target
+        /// version's notes alone — a failure here never widens into the whole history.
+        /// </para>
+        /// </summary>
+        /// <param name="from">Bare version the caller currently has, exclusive.</param>
+        /// <param name="to">Bare version being installed, inclusive.</param>
+        [HttpGet("range")]
+        [SwaggerOperation(OperationId = "GetChangelogRange")]
+        [RemoteAccessible]
+        public async Task<SingletonResponse<ChangelogRangeViewModel>> GetRange([FromQuery] string from,
+            [FromQuery] string to)
+        {
+            return new SingletonResponse<ChangelogRangeViewModel>(
+                await changelogService.GetRangeAsync(from, to, HttpContext.RequestAborted));
+        }
+
+        /// <summary>
         /// One release's notes. Null data when that version has no published notes —
         /// a local build, or a release older than the archive.
         /// </summary>

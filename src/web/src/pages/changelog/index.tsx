@@ -5,8 +5,8 @@ import type { BakabaseServiceModelsViewChangelogIndexViewModel } from "@/sdk/Api
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Chip, Spinner, Switch } from "@/components/bakaui";
-import { ChangelogViewer, RELEASES_URL } from "@/components/Changelog";
+import { Spinner, Switch } from "@/components/bakaui";
+import { ChangelogBrowser, RELEASES_URL } from "@/components/Changelog";
 import ExternalLink from "@/components/ExternalLink";
 import BApi from "@/sdk/BApi";
 
@@ -88,50 +88,14 @@ const ChangelogPage = () => {
         </div>
       </div>
 
-      <div className="flex gap-3 flex-1 min-h-0">
-        <div className="w-[240px] shrink-0 overflow-y-auto rounded-md border border-default-200">
-          {releases.map((r) => {
-            const isSelected = r.version === selected;
-
-            return (
-              <button
-                key={r.version}
-                className={`flex w-full flex-col items-start gap-1 border-b border-default-100 px-3 py-2 text-left last:border-b-0 ${
-                  isSelected ? "bg-default-100" : "hover:bg-default-50"
-                }`}
-                type="button"
-                onClick={() => setSelected(r.version)}
-              >
-                <div className="flex items-center gap-1 flex-wrap">
-                  <span className="text-sm font-medium break-all">{r.version}</span>
-                  {r.version === currentVersion && (
-                    <Chip color="success" radius="sm" size="sm" variant="flat">
-                      {t<string>("changelog.current")}
-                    </Chip>
-                  )}
-                  {r.prerelease && (
-                    <Chip color="warning" radius="sm" size="sm" variant="flat">
-                      {t<string>("changelog.preRelease")}
-                    </Chip>
-                  )}
-                </div>
-                {r.publishedAt && (
-                  <span className="text-xs text-foreground-400">
-                    {new Date(r.publishedAt).toLocaleDateString()}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-          {releases.length === 0 && (
-            <div className="p-3 text-sm text-foreground-500">{t<string>("changelog.empty")}</div>
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0 overflow-y-auto rounded-md border border-default-200 p-4">
-          <ChangelogViewer version={selected} />
-        </div>
-      </div>
+      {/* The rail and notes pane are shared with the update modal so the two surfaces
+          cannot drift; filtering and selection stay here. */}
+      <ChangelogBrowser
+        currentVersion={currentVersion}
+        releases={releases}
+        selected={selected}
+        onSelect={setSelected}
+      />
     </div>
   );
 };

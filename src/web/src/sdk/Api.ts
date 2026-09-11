@@ -4873,6 +4873,15 @@ export interface BakabaseServiceModelsViewChangelogIndexViewModel {
   releasesUrl?: string;
 }
 
+export interface BakabaseServiceModelsViewChangelogRangeViewModel {
+  from: string;
+  to: string;
+  releases: BakabaseServiceModelsViewChangelogReleaseViewModel[];
+  /** @format int32 */
+  hiddenPrereleaseCount: number;
+  releasesUrl?: string;
+}
+
 export interface BakabaseServiceModelsViewChangelogReleaseViewModel {
   version: string;
   tag?: string;
@@ -6624,6 +6633,13 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceM
   code: number;
   message?: string;
   data?: BakabaseServiceModelsViewChangelogIndexViewModel;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewChangelogRangeViewModel {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseServiceModelsViewChangelogRangeViewModel;
 }
 
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewChangelogViewModel {
@@ -10210,6 +10226,57 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     getChangelogReleasesUrl: () => {
       const baseUrl = this.baseUrl || "";
       let path = `/changelog/releases`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Changelog
+     * @name GetChangelogRange
+     * @request GET:/changelog/range
+     */
+    getChangelogRange: (
+      query?: {
+        from?: string;
+        to?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewChangelogRangeViewModel,
+        any
+      >({
+        path: `/changelog/range`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getChangelogRange
+     * @name getChangelogRangeUrl
+     */
+    getChangelogRangeUrl: (query?: {
+        from?: string;
+        to?: string;
+      }) => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/changelog/range`;
+      
+      // Build query string
+      if (query) {
+        // Object.entries rather than indexing by key: the query object is a typed
+        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
+        const queryString = Object.entries(query)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+
+        return baseUrl + path + (queryString ? `?${queryString}` : "");
+      }
       
       return baseUrl + path;
     },
