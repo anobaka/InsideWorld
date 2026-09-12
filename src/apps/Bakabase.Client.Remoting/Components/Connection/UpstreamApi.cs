@@ -90,12 +90,6 @@ public sealed record UpstreamPlaylistSnapshot(BatchPlayPlaylistSnapshot? Snapsho
 
 public sealed class UpstreamApi(HttpClient http, IUpstreamTarget target) : IUpstreamApi
 {
-    private static readonly JsonSerializerOptions Json = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        Converters = {new JsonStringEnumConverter()}
-    };
-
     public async Task<UpstreamResource?> GetResourceAsync(int id, CancellationToken ct = default)
     {
         // /resource/keys rather than a per-id route, because it is the one the server
@@ -200,7 +194,7 @@ public sealed class UpstreamApi(HttpClient http, IUpstreamTarget target) : IUpst
             }
 
             return (await JsonSerializer.DeserializeAsync<Envelope<T>>(
-                await response.Content.ReadAsStreamAsync(ct), Json, ct))?.Data;
+                await response.Content.ReadAsStreamAsync(ct), ServerJson.Options, ct))?.Data;
         }
         catch (Exception e) when (e is HttpRequestException or JsonException or TaskCanceledException &&
                                   !ct.IsCancellationRequested)
@@ -236,7 +230,7 @@ public sealed class UpstreamApi(HttpClient http, IUpstreamTarget target) : IUpst
             }
 
             return await JsonSerializer.DeserializeAsync<Envelope<T>>(
-                await response.Content.ReadAsStreamAsync(ct), Json, ct);
+                await response.Content.ReadAsStreamAsync(ct), ServerJson.Options, ct);
         }
         catch (Exception e) when (e is HttpRequestException or JsonException or TaskCanceledException &&
                                   !ct.IsCancellationRequested)

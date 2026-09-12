@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -61,11 +62,26 @@ public class ClientConnectionTests
     private static HttpResponseMessage Json(string body, HttpStatusCode status = HttpStatusCode.OK) =>
         new(status) {Content = new StringContent(body, Encoding.UTF8, "application/json")};
 
+    /// <summary>
+    /// Shaped like what a Bakabase server actually puts on the wire, not like what is
+    /// convenient to write here.
+    /// </summary>
+    /// <remarks>
+    /// Two details are load-bearing, and both used to be wrong in a way that let the whole
+    /// handshake pass its tests while failing against every real server. <c>mode</c> is a
+    /// <b>number</b>: the server serializes enums as integers. <c>serverTime</c> is
+    /// <c>yyyy-MM-dd HH:mm:ss.fff</c> in UTC with no marker saying so — Newtonsoft's
+    /// configured format — and not the ISO 8601 this helper used to invent.
+    /// <see cref="A_real_servers_answer_is_understood"/> pins the shape against a verbatim
+    /// capture so a future edit here cannot quietly drift away from it again.
+    /// </remarks>
     private static string ServerInfo(int protocolVersion = 1, RemoteAccessMode mode = RemoteAccessMode.Enabled,
-        string? serverTime = null) =>
+        DateTime? serverTime = null) =>
         "{\"code\":0,\"data\":{\"id\":\"server-1\",\"name\":\"Desk\",\"appVersion\":\"1.2.3\"," +
-        $"\"protocolVersion\":{protocolVersion},\"mode\":\"{mode}\",\"pairingSupported\":true" +
-        (serverTime == null ? "" : $",\"serverTime\":\"{serverTime}\"") +
+        $"\"protocolVersion\":{protocolVersion},\"mode\":{(int) mode},\"pairingSupported\":true" +
+        (serverTime == null
+            ? ""
+            : $",\"serverTime\":\"{serverTime.Value.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)}\"") +
         "}}";
 
     private static string PairingFailureBody(PairingFailure failure) =>
@@ -175,6 +191,40 @@ public class ClientConnectionTests
     }
 
     [TestMethod]
+    public async Task A_real_servers_answer_is_understood()
+    {
+        // Captured verbatim from 2.4.0-beta.242 answering GET /remote-access/server-info
+        // on loopback. Not reformatted, not tidied: every other test here builds its own
+        // JSON, and for a while all of them agreed with each other and none of them
+        // agreed with the server.
+        //
+        // What that cost: serverTime is "yyyy-MM-dd HH:mm:ss.fff", the format Newtonsoft
+        // is configured with on the server side, and System.Text.Json reads only ISO 8601.
+        // It threw on every real handshake, the throw was caught as "something answered,
+        // but it is not a Bakabase server", and the client could not reach any server at
+        // all. Note "mode":2 as well — enums go out as numbers.
+        const string captured =
+            "{\"data\":{\"id\":\"a0e15595186046fbb2f5c27643c8007a\",\"name\":\"ANOBAKA-HOME\"," +
+            "\"appVersion\":\"2.4.0-beta.242\",\"protocolVersion\":1,\"mode\":2," +
+            "\"pairingSupported\":true,\"serverTime\":\"2026-09-12 09:22:29.278\"}," +
+            "\"code\":0,\"message\":null}";
+
+        _handler.Respond = _ => Json(captured);
+
+        var result = await _connector.HandshakeAsync("192.168.1.5:34567");
+
+        Assert.AreEqual(ServerHandshakeOutcome.Ok, result.Outcome, result.Detail);
+        Assert.AreEqual("a0e15595186046fbb2f5c27643c8007a", result.Server!.Id);
+        Assert.AreEqual("ANOBAKA-HOME", result.Server.Name);
+        Assert.AreEqual(RemoteAccessMode.Unrestricted, result.Server.Mode);
+        Assert.IsTrue(result.Server.PairingSupported);
+
+        // Read as UTC, because that is what the server stamped and then forgot to say.
+        Assert.AreEqual(new DateTime(2026, 9, 12, 9, 22, 29, 278, DateTimeKind.Utc),
+            result.Server.ServerTime!.Value.ToUniversalTime());
+    }
+
+    [TestMethod]
     public async Task A_version_mismatch_says_which_side_has_to_move()
     {
         // "Incompatible" would leave the user guessing which thing to update.
@@ -192,7 +242,7 @@ public class ClientConnectionTests
     {
         // Without this a machine with a wrong clock has every later request refused as
         // expired, which looks exactly like a broken pairing.
-        _handler.Respond = _ => Json(ServerInfo(serverTime: "2026-01-01T12:07:00Z"));
+        _handler.Respond = _ => Json(ServerInfo(serverTime: _now.AddMinutes(7)));
 
         await _connector.HandshakeAsync("192.168.1.5:34567");
 

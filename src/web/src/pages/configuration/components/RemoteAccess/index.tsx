@@ -17,6 +17,7 @@ import { RemoteAccessMode, RemoteDevicePlatform } from "@/sdk/constants";
 import { Button, Chip, Input, Modal, Select, Snippet, Switch } from "@/components/bakaui";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
 import SettingsSection from "@/pages/configuration/components/SettingsSection";
+import { millisecondsUntil, minutesUntil } from "@/core/serverTime";
 import { useIsPureClient, useRemoteAccessStore } from "@/stores/remoteAccess";
 
 interface RemoteAccessProps {
@@ -101,9 +102,12 @@ const RemoteAccess: React.FC<RemoteAccessProps> = ({ query }) => {
     return () => clearInterval(timer);
   }, [hasLiveState, load]);
 
-  // Drop the digits the moment they stop working, so nobody types a dead code.
+  // Drop the digits the moment they stop working, so nobody types a dead code. Read
+  // through parseServerTime: the server's timestamps carry no zone, and taking them as
+  // local time made a code look expired the instant it was issued — the page cleared it
+  // before anyone could read it.
   useEffect(() => {
-    if (issuedCode && new Date(issuedCode.expiresAt).getTime() <= now) {
+    if (issuedCode && millisecondsUntil(issuedCode.expiresAt, now) <= 0) {
       setIssuedCode(undefined);
     }
   }, [issuedCode, now]);
@@ -191,13 +195,7 @@ const RemoteAccess: React.FC<RemoteAccessProps> = ({ query }) => {
     });
   };
 
-  const minutesLeft = (isoTime?: string | null) => {
-    if (!isoTime) {
-      return 0;
-    }
-
-    return Math.max(0, Math.ceil((new Date(isoTime).getTime() - now) / 60000));
-  };
+  const minutesLeft = (serverTime?: string | null) => minutesUntil(serverTime, now);
 
   const items: SettingItem[] = [
     {
