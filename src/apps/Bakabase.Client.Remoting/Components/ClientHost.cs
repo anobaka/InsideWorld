@@ -78,6 +78,19 @@ public class ClientHost(IGuiAdapter guiAdapter, ISystemService systemService)
             ? AppService.DefaultAppDataDirectory
             : EffectiveAppDataResolver.Resolve(AppService.DefaultAppDataDirectory).DataDir;
 
+    /// <summary>
+    /// There is no log database here, so the startup step that migrates one must not run.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="ClientStartup"/> composes its own services rather than deriving from
+    /// <c>AppStartup</c>, so nothing registers <c>LogDbContext</c> — deliberately: this
+    /// process keeps no database at all, and <see cref="Diagnostics.ClientLogReader"/>
+    /// reads the client's log back out of the Serilog file instead. Left at the inherited
+    /// default, the migration step resolved a context nobody registered and took the whole
+    /// launch down with it.
+    /// </remarks>
+    protected override bool HasLogDatabase => false;
+
     protected override string DisplayName => "Bakabase Client";
 
     protected override IHostBuilder CreateHostBuilder(params string[] args) =>
