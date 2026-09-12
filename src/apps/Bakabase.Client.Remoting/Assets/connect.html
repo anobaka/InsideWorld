@@ -367,7 +367,10 @@
     note($('pairing-note'), 'Asking…');
 
     post('/pair/request', { address: pendingAddress }).then(function (result) {
-      if (!result || result.outcome !== Pairing.AwaitingApproval) {
+      // The request id, not the outcome. A filed request is the only thing that can be
+      // polled for, so its presence is what decides — and reading the outcome instead is
+      // how this came to treat a filed request as a completed pairing.
+      if (!result || !result.requestId) {
         handlePairing(result);
         return;
       }

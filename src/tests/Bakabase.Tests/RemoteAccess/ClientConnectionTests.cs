@@ -378,6 +378,12 @@ public class ClientConnectionTests
 
         Assert.IsTrue(result.Succeeded);
         Assert.AreEqual("req-1", result.Ticket!.RequestId);
+
+        // And it says it is waiting, which is the state it is actually in. Reported as
+        // Paired, the connect page read it as "you are in", left for the library with no
+        // credentials, and never started polling — so an approval given at the server
+        // was never collected, however long the user sat there.
+        Assert.AreEqual(ClientPairingOutcome.AwaitingApproval, result.Outcome);
     }
 
     [TestMethod]
