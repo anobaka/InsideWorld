@@ -16,7 +16,18 @@ public sealed class AppServiceClientDataDirectory(AppService appService) : IClie
 {
     public const string DirectoryName = "client";
 
-    public string Path => System.IO.Path.Combine(appService.AppDataDirectory, DirectoryName);
+    /// <summary>
+    /// The client's directory under an already-resolved application data root.
+    /// </summary>
+    /// <remarks>
+    /// Static so the one caller that runs before DI — the host choosing its loopback port —
+    /// lands in the same place as everything that comes after it, without repeating the
+    /// subdirectory name.
+    /// </remarks>
+    public static string Resolve(string appDataDirectory) =>
+        System.IO.Path.Combine(appDataDirectory, DirectoryName);
+
+    public string Path => Resolve(appService.AppDataDirectory);
 
     public string Ensure() => appService.RequestAppDataDirectory(DirectoryName);
 }

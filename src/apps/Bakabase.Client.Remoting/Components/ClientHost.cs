@@ -43,10 +43,40 @@ public class ClientHost(IGuiAdapter guiAdapter, ISystemService systemService)
     /// and its cache to the origin, port included, so a client that moved would look to
     /// the user like it had forgotten their settings.
     /// </summary>
-    protected override IReadOnlyList<int>? OverrideListeningPorts() =>
-        _port ??= [LoopbackPortAllocator.Allocate()];
+    protected override IReadOnlyList<int>? OverrideListeningPorts() => _port ??= [ResolvePort()];
 
     private IReadOnlyList<int>? _port;
+
+    /// <summary>
+    /// The preferred port, or whatever this install settled on last time, and then the
+    /// first free port at or after it.
+    /// </summary>
+    private static int ResolvePort()
+    {
+        var memory = new LoopbackPortMemory(AppServiceClientDataDirectory.Resolve(EffectiveAppDataDirectory()));
+        var port = LoopbackPortAllocator.Allocate(memory.Read() ?? LoopbackPortAllocator.PreferredPort);
+
+        memory.Write(port);
+
+        return port;
+    }
+
+    /// <summary>
+    /// The same directory <see cref="AppService.AppDataDirectory"/> resolves, worked out
+    /// without it.
+    /// </summary>
+    /// <remarks>
+    /// The port is chosen while the host is still being built, so there is no container to
+    /// take an <see cref="AppService"/> from — it has a constructor that wants a logger.
+    /// The rule is two lines and both halves are public statics, and <see cref="AppHost"/>
+    /// itself resolves the same thing inline a few lines earlier for the options files. If
+    /// this ever drifts from the real rule the cost is one forgotten port, not a wrong
+    /// data directory: nothing else is read from here.
+    /// </remarks>
+    private static string EffectiveAppDataDirectory() =>
+        AppService.IsEnvironmentDataDirOverride
+            ? AppService.DefaultAppDataDirectory
+            : EffectiveAppDataResolver.Resolve(AppService.DefaultAppDataDirectory).DataDir;
 
     protected override string DisplayName => "Bakabase Client";
 
