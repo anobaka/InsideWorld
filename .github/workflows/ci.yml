@@ -45,14 +45,25 @@ jobs:
           restore-keys: |
             nuget-${{ runner.os }}-
 
+      # The two entry projects are not referenced by any test project, so nothing
+      # else here compiles them — a break in either would first show up during a
+      # deploy, which is the worst place to find out. They are small; this is
+      # seconds, not minutes.
+      - name: Build the app entry points
+        run: |
+          dotnet build src/apps/Bakabase.App/Bakabase.App.csproj
+          dotnet build src/apps/Bakabase.Client.App/Bakabase.Client.App.csproj
+
       - name: Run tests
         run: |
           # One `dotnet test` per project so a single failure does not mask
           # the rest. Live-network ThirdParty tests are [Ignore]d and skipped.
           projects=(
             "src/tests/Bakabase.Tests/Bakabase.Tests.csproj"
+            "src/tests/Bakabase.Modules.Alias.Tests/Bakabase.Modules.Alias.Tests.csproj"
             "src/tests/Bakabase.Modules.BulkModification.Tests/Bakabase.Modules.BulkModification.Tests.csproj"
             "src/tests/Bakabase.Modules.Comparison.Tests/Bakabase.Modules.Comparison.Tests.csproj"
+            "src/tests/Bakabase.Modules.Enhancer.Tests/Bakabase.Modules.Enhancer.Tests.csproj"
             "src/tests/Bakabase.Modules.HealthScore.Tests/Bakabase.Modules.HealthScore.Tests.csproj"
             "src/tests/Bakabase.Modules.Player.Tests/Bakabase.Modules.Player.Tests.csproj"
             "src/tests/Bakabase.Modules.Property.Tests/Bakabase.Modules.Property.Tests.csproj"

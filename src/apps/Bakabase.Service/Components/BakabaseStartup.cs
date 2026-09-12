@@ -14,7 +14,6 @@ using Sentry;
 using Sentry.Extensions.Logging;
 using Bakabase.InsideWorld.Business.Components;
 using Bakabase.InsideWorld.Business.Components.Compression;
-using Bakabase.InsideWorld.Business.Components.CookieCapture;
 using Bakabase.InsideWorld.Business.Components.Configurations;
 using Bakabase.InsideWorld.Business.Components.Dependency.Abstractions;
 using Bakabase.InsideWorld.Business.Components.Dependency.Implementations.FfMpeg;
@@ -43,6 +42,7 @@ using Bakabase.Modules.ThirdParty.ThirdParties.SoulPlus;
 using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Modules.RemoteAccess.Abstractions.Components;
 using Bakabase.Modules.RemoteAccess.Extensions;
+using Bakabase.Service.Components;
 using Bakabase.Service.Components.RemoteAccess;
 using Bakabase.Service.Components.Tasks;
 using Bakabase.Service.Extensions;
@@ -56,6 +56,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -113,6 +114,7 @@ namespace Bakabase.Service.Components
                     : RemoteAccessMode.Disabled,
                 AppService.CoreVersion.ToString());
             services.AddSingleton<IListeningAddressProvider, AppContextListeningAddressProvider>();
+            services.AddSingleton<IRemoteAccessDataDirectory, AppServiceRemoteAccessDataDirectory>();
 
             // Configured rather than passed to AddMvc because the base AppStartup owns
             // that call; MvcOptions configuration is order-independent.
@@ -121,6 +123,16 @@ namespace Bakabase.Service.Components
                 o.Filters.Add<RemoteAccessAuthorizationFilter>();
                 o.Filters.Add<RemoteAccessPathGuardFilter>();
             });
+
+            // Same reasoning for the hub filter: AppStartup owns AddSignalR, and
+            // HubOptions configuration composes rather than replaces.
+            services.AddSingleton<RemoteConnectionRegistry>();
+            services.AddSingleton<RemoteAccessHubFilter>();
+            services.Configure<HubOptions>(o => o.AddFilter<RemoteAccessHubFilter>());
+
+            // Idle unless the server is locked out of itself, which on a desktop
+            // install it never is.
+            services.AddHostedService<FirstDevicePairingCodeAnnouncer>();
 
             services.AddSingleton<ThirdPartyHttpRequestLogger>();
 
@@ -142,6 +154,7 @@ namespace Bakabase.Service.Components
             services.TryAddSingleton<BangumiCookieCaptureFlow>();
             services.TryAddSingleton<SoulPlusCookieCaptureFlow>();
             services.RegisterAllRegisteredTypeAs<ICookieCaptureFlow>();
+            services.AddTransient<ICookieCaptureLocalizer, BakabaseCookieCaptureLocalizer>();
             services.AddTransient<CookieCaptureOrchestrator>();
 
             services.TryAddSingleton<FfMpegService>();
@@ -167,7 +180,7 @@ namespace Bakabase.Service.Components
             services.AddBTask<BTaskEventHandler>();
             services.AddTransient(sp =>
                 sp.GetService<Bakabase.Infrastructures.Components.Gui.IGuiAdapter>()
-                    as Bakabase.Abstractions.Components.Gui.ITrayIconController);
+                    as Bakabase.Infrastructures.Components.Gui.ITrayIconController);
             services.AddSingleton<DynamicTaskRegistry>();
             services.AddSingleton<IPrepareCacheTrigger, PrepareCacheTrigger>();
 

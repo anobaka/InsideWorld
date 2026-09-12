@@ -2,6 +2,7 @@ using Bakabase.Abstractions.Models.Domain;
 using Bakabase.Modules.Player.Abstractions.Models.Domain;
 using Bakabase.Modules.Player.Abstractions.Models.Domain.Constants;
 using Bakabase.Modules.Player.Abstractions.Models.Input;
+using Bakabase.Modules.Player.Components;
 using Bakabase.Modules.Player.Services;
 using Bakabase.Modules.Player.Tests.Helpers;
 using FluentAssertions;
@@ -52,8 +53,8 @@ public class BatchPlayServiceTests
     }
 
     private BatchPlayService CreateService() => new(
-        _resourceService,
-        _profileService,
+        new ResourceBatchPlaySource(_resourceService, _profileService),
+        new LocalBatchPlayFileResolver(),
         new PlayerDiscoveryService(_locator, NullLogger<PlayerDiscoveryService>.Instance),
         _playlistSource,
         _launcher,

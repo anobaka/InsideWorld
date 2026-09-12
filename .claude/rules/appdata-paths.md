@@ -6,7 +6,8 @@ paths:
   - "**/legacy/**"
   - "**/modules/**"
   - "**/Bakabase.Service/**"
-  - "**/apps/Bakabase/**"
+  - "**/apps/Bakabase.App/**"
+  - "**/apps/Bakabase.Shell/**"
 ---
 
 # AppData Path Rules
@@ -14,7 +15,7 @@ paths:
 ## The invariant
 
 User data — DB, configs, covers, caches, anything written at runtime — must
-live at `IAppService.AppDataDirectory`. **Never** under the application's
+live at `AppService.AppDataDirectory`. **Never** under the application's
 install directory.
 
 Why: on Windows the installer is Velopack, which:
@@ -33,7 +34,7 @@ respectively, both already outside any install tree.
 
 ## Do
 
-- Read user-data paths from `IAppService.AppDataDirectory` (or the
+- Read user-data paths from `AppService.AppDataDirectory` (or the
   resolver / `AppDataPaths` helpers it composes).
 - Persist relative paths in the database. `IAppDataPathRelocator` rebases
   them at read time so the user can move their data dir without breaking

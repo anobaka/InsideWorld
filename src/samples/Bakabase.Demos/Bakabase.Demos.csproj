@@ -23,7 +23,7 @@
             the demos always use the actual production code (axaml + .cs). Bakabase.csproj
             outputs Bakabase.dll alongside the exe; the dll is what we link against here.
         -->
-        <ProjectReference Include="..\..\apps\Bakabase\Bakabase.csproj" />
+        <ProjectReference Include="..\..\apps\Bakabase.App\Bakabase.App.csproj" />
     </ItemGroup>
 
 </Project>

@@ -83,6 +83,14 @@ public class RemoteAccessService(
         logger.LogInformation("Remote live transcode set to {Allow}", allow);
     }
 
+    public bool GetRequirePairing() => optionsManager.Value.RequirePairing;
+
+    public async Task SetRequirePairingAsync(bool require)
+    {
+        await optionsManager.SaveAsync(o => o.RequirePairing = require);
+        logger.LogInformation("Remote access pairing requirement set to {Require}", require);
+    }
+
     public async Task<RemoteAccessServerDescriptor> GetServerDescriptorAsync()
     {
         var id = await GetOrCreateServerIdAsync();

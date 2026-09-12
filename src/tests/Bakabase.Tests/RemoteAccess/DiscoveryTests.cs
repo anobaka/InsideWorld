@@ -16,6 +16,69 @@ public class DiscoveryProtocolTests
     private static readonly RemoteAccessServerDescriptor Descriptor =
         new("abc123", "My-PC", 34567, "2.4.0-beta", 1);
 
+    // ---- reading a reply back ----
+
+    [TestMethod]
+    public void ProbeResponse_RoundTrips()
+    {
+        // The two halves are used by different programs — a server writes, a client
+        // reads — so the only thing holding them together is that they live in one file
+        // and this test runs both.
+        var parsed = DiscoveryProtocol.TryParseProbeResponse(
+            DiscoveryProtocol.BuildProbeResponse(Descriptor));
+
+        Assert.AreEqual(Descriptor, parsed);
+    }
+
+    [TestMethod]
+    public void TxtEntries_RoundTrip()
+    {
+        Assert.AreEqual(Descriptor,
+            DiscoveryProtocol.TryParseTxtEntries(DiscoveryProtocol.BuildTxtEntries(Descriptor)));
+    }
+
+    [TestMethod]
+    public void Anything_that_is_not_ours_parses_to_null_rather_than_throwing()
+    {
+        // Everything here arrived from a broadcast, so the wire is whatever else is on
+        // the network. A throw would take down the scan over one stray datagram.
+        Assert.IsNull(DiscoveryProtocol.TryParseProbeResponse(Array.Empty<byte>()));
+        Assert.IsNull(DiscoveryProtocol.TryParseProbeResponse(Encoding.UTF8.GetBytes("hello")));
+        Assert.IsNull(DiscoveryProtocol.TryParseProbeResponse(
+            Encoding.UTF8.GetBytes("BAKABASE_HERE_V1 not-json")));
+        Assert.IsNull(DiscoveryProtocol.TryParseProbeResponse(
+            Encoding.UTF8.GetBytes("BAKABASE_HERE_V1 [1,2,3]")));
+        Assert.IsNull(DiscoveryProtocol.TryParseProbeResponse(new byte[] {0xff, 0xfe, 0xfd}));
+    }
+
+    [TestMethod]
+    public void A_reply_without_an_id_or_a_port_is_not_a_server()
+    {
+        // An id is what tells two servers apart and what a paired device is paired to;
+        // a port is what makes the address usable. Neither can be guessed.
+        Assert.IsNull(DiscoveryProtocol.TryParseProbeResponse(
+            Encoding.UTF8.GetBytes("BAKABASE_HERE_V1 {\"name\":\"My-PC\",\"port\":34567}")));
+        Assert.IsNull(DiscoveryProtocol.TryParseProbeResponse(
+            Encoding.UTF8.GetBytes("BAKABASE_HERE_V1 {\"id\":\"abc\",\"name\":\"My-PC\"}")));
+        Assert.IsNull(DiscoveryProtocol.TryParseProbeResponse(
+            Encoding.UTF8.GetBytes("BAKABASE_HERE_V1 {\"id\":\"abc\",\"port\":0}")));
+        Assert.IsNull(DiscoveryProtocol.TryParseProbeResponse(
+            Encoding.UTF8.GetBytes("BAKABASE_HERE_V1 {\"id\":\"abc\",\"port\":70000}")));
+    }
+
+    [TestMethod]
+    public void A_reply_missing_only_cosmetics_is_still_a_server()
+    {
+        // Hiding a reachable server because it did not report a version would be a worse
+        // failure than showing it under its own id.
+        var parsed = DiscoveryProtocol.TryParseProbeResponse(
+            Encoding.UTF8.GetBytes("BAKABASE_HERE_V1 {\"id\":\"abc\",\"port\":34567}"));
+
+        Assert.IsNotNull(parsed);
+        Assert.AreEqual("abc", parsed!.Name);
+        Assert.AreEqual(string.Empty, parsed.AppVersion);
+    }
+
     [TestMethod]
     public void ProbeRequest_MatchesExactly_IgnoringWhitespace()
     {

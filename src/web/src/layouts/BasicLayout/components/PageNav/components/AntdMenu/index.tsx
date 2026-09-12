@@ -3,7 +3,7 @@
 import type { MenuProps } from "antd";
 import type { IMenuItem } from "./menuConfig";
 
-import React, { useRef } from "react";
+import React, { useMemo, useRef } from "react";
 import { Menu } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -13,6 +13,7 @@ import { asideMenuConfig } from "./menuConfig";
 
 import BetaChip from "@/components/Chips/BetaChip";
 import DeprecatedChip from "@/components/Chips/DeprecatedChip";
+import { useIsPureClient } from "@/stores/remoteAccess";
 
 type MenuItem = Required<MenuProps>["items"][number];
 
@@ -24,6 +25,7 @@ const Index: React.FC<IProps> = ({ collapsed }: IProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const isPureClient = useIsPureClient();
   // console.log(pathname);
 
   const onClick: MenuProps["onClick"] = (e) => {
@@ -65,10 +67,18 @@ const Index: React.FC<IProps> = ({ collapsed }: IProps) => {
     );
   }
 
-  const items: MenuProps["items"] = asideMenuConfig.map(convertItem);
+  // Filtered here rather than where the config is built: whether this is the thin
+  // client is answered by the context call, which has not happened when that module
+  // loads.
+  const visibleMenuConfig = useMemo(
+    () => asideMenuConfig.filter((m) => !m.pureClientOnly || isPureClient),
+    [isPureClient],
+  );
+
+  const items: MenuProps["items"] = visibleMenuConfig.map(convertItem);
 
   const findSelectedKey = (): string => {
-    for (const m of asideMenuConfig) {
+    for (const m of visibleMenuConfig) {
       if (m.path === pathname) {
         return m.path;
       }
@@ -83,7 +93,9 @@ const Index: React.FC<IProps> = ({ collapsed }: IProps) => {
   };
 
   const defaultOpenKeysRef = useRef(
-    asideMenuConfig.filter((m) => m.children?.some((c) => c.path === pathname)).map((m) => m.path!),
+    visibleMenuConfig
+      .filter((m) => m.children?.some((c) => c.path === pathname))
+      .map((m) => m.path!),
   );
   const defaultSelectedKeysRef = useRef([findSelectedKey()]);
 

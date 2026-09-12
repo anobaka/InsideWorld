@@ -35,8 +35,6 @@ import {
   useSteamOptionsStore,
 } from "@/stores/options";
 import BApi from "@/sdk/BApi";
-import { RuntimeMode } from "@/sdk/constants";
-import { useAppContextStore } from "@/stores/appContext";
 import BetaChip from "@/components/Chips/BetaChip";
 import {
   ExHentaiConfig,
@@ -46,6 +44,7 @@ import {
   SimpleThirdPartyConfig,
 } from "@/components/ThirdPartyConfig";
 import { notifyCookieCaptureDismissal } from "@/components/ThirdPartyConfig/notifyCookieCaptureDismissal";
+import { useCookieCaptureAvailable } from "@/stores/remoteAccess";
 
 const ThirdParty = ({
   applyPatches = () => {},
@@ -88,8 +87,13 @@ const ThirdParty = ({
   const [cookieValidationResults, setCookieValidationResults] = useState<{
     [key: string]: "succeed" | "failed";
   }>({});
-  const runtimeMode = useAppContextStore((s) => s.runtimeMode);
-  const isDesktopApp = runtimeMode !== RuntimeMode.Docker;
+  // Whether a sign-in capture window can open *here*. The server answers it —
+  // it needs a desktop and it needs to be this person's — which also covers the
+  // thin client, whose capture window belongs to its own process. The old test
+  // (runtime mode is not Docker) described the server's machine, so a browser on
+  // another device was offered a button that opened a window on someone else's
+  // screen.
+  const isDesktopApp = useCookieCaptureAvailable();
   const [capturingCookies, setCapturingCookies] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {

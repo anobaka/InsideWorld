@@ -4,6 +4,7 @@ using Bootstrap.Components.Miscellaneous.ResponseBuilders;
 using Bootstrap.Models.ResponseModels;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
+using Bakabase.Modules.RemoteAccess.Abstractions.Components;
 
 namespace Bakabase.Service.Controllers;
 
@@ -18,6 +19,7 @@ public class TampermonkeyController(TampermonkeyService service) : ControllerBas
         return BaseResponseBuilder.Ok;
     }
 
+    [RunsOnUserMachine(Reason = "Installing the userscript opens the browser on your machine.")]
     [HttpGet("install")]
     [SwaggerOperation(OperationId = "InstallTampermonkeyScript")]
     public async Task<BaseResponse> Install()

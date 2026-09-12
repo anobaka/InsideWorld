@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
-using Bakabase.Windows;
+using Bakabase.Shell.Windows;
 
 namespace Bakabase.Demos.Demos;
 

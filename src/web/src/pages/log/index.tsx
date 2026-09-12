@@ -1,231 +1,51 @@
 "use client";
 
-import type { DateValue, RangeValue } from "@heroui/react";
-
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableColumn,
-  TableRow,
-  Pagination,
-  Input,
-  Button,
-  Select,
-  SelectItem,
-  DateRangePicker,
-  TableCell,
-} from "@heroui/react";
 
-import BApi from "@/sdk/BApi";
-import { LogLevel } from "@/sdk/constants";
-import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
-import { Modal } from "@/components/bakaui";
-import FilePathValue from "@/components/FilePathValue";
+import ClientLog from "./ClientLog";
+import ServerLog from "./ServerLog";
 
+import { Tab, Tabs } from "@/components/bakaui";
+import { useIsPureClient, useRemoteAccessStore } from "@/stores/remoteAccess";
+
+type LogSource = "server" | "client";
+
+/**
+ * The log page, which in a thin client is two logs.
+ *
+ * Only one of them is ever the answer to a given question, and which one is not obvious
+ * from the symptom: a library that will not scan is the server's, a player that will not
+ * start is the client's, and "nothing happens when I click this" could be either. So both
+ * are here, named for the machine they came from rather than for what they contain.
+ */
 export default function LogPage() {
   const { t } = useTranslation();
-  const [logs, setLogs] = useState<any[]>([]);
-  const [form, setForm] = useState({
-    pageIndex: 1,
-    pageSize: 100,
-    startDt: undefined as string | undefined,
-    endDt: undefined as string | undefined,
-    level: undefined as LogLevel | undefined,
-    logger: undefined as string | undefined,
-    event: undefined as string | undefined,
-    message: undefined as string | undefined,
-  });
-  const [pageable, setPageable] = useState({
-    pageIndex: 1,
-    totalCount: 0,
-  });
-  const [dateRange, setDateRange] = useState<RangeValue<DateValue> | null>(null);
-  const [expandedMsg, setExpandedMsg] = useState<string | null>(null);
-  const [logPath, setLogPath] = useState<string>();
-  const { createPortal } = useBakabaseContext();
+  const isPureClient = useIsPureClient();
+  const serverReachable = useRemoteAccessStore((state) => state.serverReachable);
+  const [chosen, setChosen] = useState<LogSource>();
 
-  useEffect(() => {
-    BApi.app.getAppInfo().then((a) => setLogPath(a.data?.logPath ?? undefined));
-  }, []);
+  // Until the user picks, show whichever side can actually answer. A client that has lost
+  // its server cannot fetch the server's log at all, and opening on an empty table with a
+  // network error is a worse first screen than the log that explains the disconnection.
+  const source: LogSource = chosen ?? (serverReachable ? "server" : "client");
 
-  useEffect(() => {
-    search();
-    // eslint-disable-next-line
-  }, [form.pageIndex, form.pageSize, form.startDt, form.endDt, form.level, form.logger, form.event, form.message]);
-
-  const search = async () => {
-    const d = await BApi.log.searchLogs(form);
-
-    setLogs(d.data || []);
-    setPageable({
-      pageIndex: d.pageIndex,
-      totalCount: d.totalCount,
-    });
-  };
-
-  const patchForm = (patches: Partial<typeof form>) => {
-    setPageable((prev) => ({ ...prev, pageIndex: 1 }));
-    setForm((prev) => ({ ...prev, ...patches, pageIndex: 1 }));
-  };
-
-  const handleDateRangeChange = (range: RangeValue<DateValue> | null) => {
-    setDateRange(range);
-    patchForm({
-      startDt: range?.start
-        ? range.start.toDate().toISOString().slice(0, 19).replace("T", " ")
-        : undefined,
-      endDt: range?.end
-        ? range.end.toDate().toISOString().slice(0, 19).replace("T", " ")
-        : undefined,
-    });
-  };
+  if (!isPureClient) {
+    return (
+      <div className="p-4">
+        <ServerLog />
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4">
-      {/* This page only lists what the app recorded into its database. The raw
-          per-run log files hold more (startup, crashes, third-party output), so
-          point at them rather than leaving the user to hunt for the directory. */}
-      {logPath && (
-        <div className="mb-4 rounded-medium border border-default-200 dark:border-default-100 px-3 py-2">
-          <FilePathValue description={t<string>("log.tip.rawLogDirectory")} path={logPath} />
-        </div>
-      )}
-      <div className="flex flex-wrap gap-4 items-center mb-4">
-        <div className="flex items-center gap-1 min-w-[260px]">
-          <span className="font-medium mr-2 min-w-[60px]">{t<string>("log.filter.time")}</span>
-          <DateRangePicker className="flex-1" value={dateRange} onChange={handleDateRangeChange} />
-        </div>
-        <div className="flex items-center gap-1 min-w-[100px]">
-          <span className="font-medium mr-2 min-w-[60px]">{t<string>("log.filter.level")}</span>
-          <Select
-            className="min-w-[100px]"
-            placeholder={t<string>("log.filter.all")}
-            selectedKeys={form.level !== undefined ? new Set([String(form.level)]) : new Set()}
-            onSelectionChange={(keys) => {
-              const key = Array.from(keys)[0];
+    <div className="flex flex-col gap-3 p-4">
+      <Tabs selectedKey={source} size="sm" onSelectionChange={(key) => setChosen(key as LogSource)}>
+        <Tab key="server" title={t<string>("log.source.server")} />
+        <Tab key="client" title={t<string>("log.source.client")} />
+      </Tabs>
 
-              patchForm({ level: key ? Number(key) : undefined });
-            }}
-          >
-            {Object.keys(LogLevel)
-              .filter((k) => !isNaN(Number(k)))
-              .map((k) => (
-                <SelectItem key={k}>{LogLevel[Number(k)]}</SelectItem>
-              ))}
-          </Select>
-        </div>
-        <div className="flex items-center gap-1 min-w-[120px]">
-          <span className="font-medium mr-2 min-w-[60px]">{t<string>("log.filter.logger")}</span>
-          <Input
-            className="min-w-[120px]"
-            placeholder={t<string>("log.filter.logger")}
-            size="sm"
-            value={form.logger}
-            onChange={(e) => patchForm({ logger: e.target.value })}
-          />
-        </div>
-        <div className="flex items-center gap-1 min-w-[120px]">
-          <span className="font-medium mr-2 min-w-[60px]">{t<string>("log.filter.event")}</span>
-          <Input
-            className="min-w-[120px]"
-            placeholder={t<string>("log.filter.event")}
-            size="sm"
-            value={form.event}
-            onChange={(e) => patchForm({ event: e.target.value })}
-          />
-        </div>
-        <div className="flex items-center gap-1 min-w-[120px]">
-          <span className="font-medium mr-2 min-w-[60px]">{t<string>("log.filter.message")}</span>
-          <Input
-            className="min-w-[120px]"
-            placeholder={t<string>("log.filter.message")}
-            size="sm"
-            value={form.message}
-            onChange={(e) => patchForm({ message: e.target.value })}
-          />
-        </div>
-        <div className="flex items-center gap-1 ml-auto">
-          <Button
-            size="sm"
-            type="button"
-            onClick={() => BApi.log.clearAllLog().then(() => setLogs([]))}
-          >
-            {t<string>("log.action.clearAll")}
-          </Button>
-        </div>
-      </div>
-      <Table removeWrapper aria-label="logs" className="mb-4" selectionMode="none" size="sm">
-        <TableHeader>
-          <TableColumn>{t<string>("log.filter.time")}</TableColumn>
-          <TableColumn>{t<string>("log.filter.level")}</TableColumn>
-          <TableColumn>{t<string>("log.filter.logger")}</TableColumn>
-          <TableColumn>{t<string>("log.filter.event")}</TableColumn>
-          <TableColumn>{t<string>("log.filter.message")}</TableColumn>
-        </TableHeader>
-        <TableBody items={logs}>
-          {(item) => (
-            <TableRow key={item.id || item.dateTime + item.logger + item.event}>
-              <TableCell>{item.dateTime ? item.dateTime.slice(5, 16) : "-"}</TableCell>
-              <TableCell>
-                <span
-                  className={
-                    item.level === LogLevel.Error ||
-                    item.level === LogLevel.Critical ||
-                    item.level === LogLevel.Warning
-                      ? "text-red-600"
-                      : "text-blue-600"
-                  }
-                >
-                  {item.level === LogLevel.Information ? "Info" : LogLevel[item.level]}
-                </span>
-              </TableCell>
-              <TableCell>{item.logger}</TableCell>
-              <TableCell>{item.event}</TableCell>
-              <TableCell className="max-w-[300px] truncate">
-                {item.message && item.message.length > 60 ? (
-                  <pre className="inline">
-                    {item.message.slice(0, 60)}...
-                    <Button
-                      color="primary"
-                      size="sm"
-                      variant="light"
-                      onPress={() =>
-                        createPortal(Modal, {
-                          size: "xl",
-                          title: t("log.label.log"),
-                          defaultVisible: true,
-                          children: (
-                            <pre className="whitespace-pre-wrap break-all">{item.message}</pre>
-                          ),
-                        })
-                      }
-                    >
-                      {t<string>("log.action.expand")}
-                    </Button>
-                  </pre>
-                ) : (
-                  <pre className="inline">{item.message}</pre>
-                )}
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-      <div className="flex justify-center">
-        <Pagination
-          page={pageable.pageIndex}
-          total={pageable.totalCount}
-          onChange={(page) => setForm((prev) => ({ ...prev, pageIndex: page }))}
-        />
-      </div>
-      {expandedMsg && (
-        <Modal title={t<string>("log.label.fullMessage")} onClose={() => setExpandedMsg(null)}>
-          <pre className="whitespace-pre-wrap break-all">{expandedMsg}</pre>
-        </Modal>
-      )}
+      {source === "server" ? <ServerLog /> : <ClientLog />}
     </div>
   );
 }

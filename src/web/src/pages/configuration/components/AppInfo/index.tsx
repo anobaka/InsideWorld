@@ -21,6 +21,7 @@ import { Popover, Divider, Icon, Progress, Snippet, Tooltip } from "@/components
 import { UpdaterStatus, DataPathSource } from "@/sdk/constants";
 import ExternalLink from "@/components/ExternalLink";
 import { useAppUpdaterStateStore } from "@/stores/appUpdaterState";
+import { useIsPureClient } from "@/stores/remoteAccess";
 import { useAppOptionsStore } from "@/stores/options";
 import { Button, Chip, Switch } from "@/components/bakaui";
 import { ChangelogButton } from "@/components/Changelog";
@@ -50,6 +51,10 @@ const AppInfo: React.FC<AppInfoProps> = ({ appInfo, applyPatches, query }) => {
     useState<BakabaseInfrastructuresComponentsAppUpgradeAbstractionsAppVersionInfo>();
   const appUpdaterState = useAppUpdaterStateStore((state) => state);
   const appOptions = useAppOptionsStore((state) => state.data);
+  // Every value in this section is forwarded, so in a thin client it describes the
+  // machine holding the library — including the update button, which updates that
+  // machine. Saying whose information this is costs a word and prevents the mistake.
+  const isPureClient = useIsPureClient();
 
   // The version an update moves the user off, so the changelog can show the whole span
   // rather than only the newest release. Velopack decides against the install manifest;
@@ -445,7 +450,7 @@ const AppInfo: React.FC<AppInfoProps> = ({ appInfo, applyPatches, query }) => {
       items={buildAppInfoDataSource()}
       keywords={["about", "app", "version", "关于", "应用"]}
       query={query}
-      title={t("configuration.appInfo.title")}
+      title={t(isPureClient ? "configuration.appInfo.title.server" : "configuration.appInfo.title")}
     />
   );
 };

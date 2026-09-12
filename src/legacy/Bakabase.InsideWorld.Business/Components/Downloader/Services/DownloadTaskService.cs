@@ -44,15 +44,13 @@ namespace Bakabase.InsideWorld.Business.Components.Downloader.Services
             GetRequiredService<IHubContext<WebGuiHub, IWebGuiClient>>();
 
         private BakabaseLocalizer _localizer;
-        private readonly IGuiAdapter _guiAdapter;
         private readonly IWorkflowEventBus _workflowBus;
 
         public DownloadTaskService(IServiceProvider serviceProvider, BakabaseLocalizer localizer,
-            IGuiAdapter guiAdapter, IWorkflowEventBus workflowBus) : base(
+            IWorkflowEventBus workflowBus) : base(
             serviceProvider)
         {
             _localizer = localizer;
-            _guiAdapter = guiAdapter;
             _workflowBus = workflowBus;
         }
 

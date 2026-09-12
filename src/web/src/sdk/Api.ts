@@ -1,5 +1,6 @@
 import { buildLogger, extractErrorMessage } from "@/components/utils.tsx";
 import { toast } from "@/components/bakaui";
+import { reportClientFailure } from "@/core/clientFailures";
 
 const log = buildLogger("BApi");
 /* eslint-disable */
@@ -155,6 +156,12 @@ export type BakabaseAbstractionsModelsDomainConstantsAppNotificationBehavior = 0
  * @format int32
  */
 export type BakabaseAbstractionsModelsDomainConstantsAppNotificationSeverity = 0 | 1 | 2 | 3;
+
+/**
+ * [0: AllInOne, 1: RemoteBrowser, 2: PureClient]
+ * @format int32
+ */
+export type BakabaseAbstractionsModelsDomainConstantsClientMode = 0 | 1 | 2;
 
 /**
  * [1: Manual, 2: FileSystem, 3: Steam, 4: DLsite, 5: ExHentai]
@@ -427,6 +434,12 @@ export interface BakabaseAbstractionsModelsDomainCustomPropertyValue {
   bizValue?: any;
 }
 
+export interface BakabaseAbstractionsModelsDomainDLsiteWorkLaunchTarget {
+  file: string;
+  isExecutable: boolean;
+  useLocaleEmulator: boolean;
+}
+
 export interface BakabaseAbstractionsModelsDomainEnhancerFullOptions {
   /** @format int32 */
   enhancerId: number;
@@ -629,6 +642,14 @@ export interface BakabaseAbstractionsModelsDomainPlayableItem {
   origin: BakabaseAbstractionsModelsDomainConstantsDataOrigin;
   key: string;
   displayName?: string;
+}
+
+export interface BakabaseAbstractionsModelsDomainPlayableItemPick {
+  /** @format int32 */
+  resourceId: number;
+  /** [1: Manual, 2: FileSystem, 3: Steam, 4: DLsite, 5: ExHentai] */
+  origin: BakabaseAbstractionsModelsDomainConstantsDataOrigin;
+  key: string;
 }
 
 export interface BakabaseAbstractionsModelsDomainProperty {
@@ -937,6 +958,16 @@ export interface BakabaseAbstractionsModelsInputExtensionGroupPutInputModel {
   name: string;
   /** @uniqueItems true */
   extensions: string[];
+}
+
+export interface BakabaseAbstractionsModelsInputMarkResourcePlayed {
+  /** @format int32 */
+  resourceId: number;
+  item?: string;
+}
+
+export interface BakabaseAbstractionsModelsInputMarkResourcesPlayedInputModel {
+  items: BakabaseAbstractionsModelsInputMarkResourcePlayed[];
 }
 
 export interface BakabaseAbstractionsModelsInputMediaLibraryTemplateAddInputModel {
@@ -3779,6 +3810,28 @@ export interface BakabaseModulesNotificationAbstractionsModelsViewNotificationVi
   readAt?: string;
 }
 
+export interface BakabaseModulesPlayerAbstractionsComponentsBatchPlayPlaylistEntry {
+  path: string;
+  /** @format int32 */
+  resourceId?: number;
+}
+
+export interface BakabaseModulesPlayerAbstractionsComponentsBatchPlayPlaylistSnapshot {
+  name: string;
+  entries: BakabaseModulesPlayerAbstractionsComponentsBatchPlayPlaylistEntry[];
+}
+
+export interface BakabaseModulesPlayerAbstractionsComponentsBatchPlayResourceFiles {
+  /** @format int32 */
+  resourceId: number;
+  files: string[];
+}
+
+export interface BakabaseModulesPlayerAbstractionsComponentsBatchPlayResourceSnapshot {
+  resources: BakabaseModulesPlayerAbstractionsComponentsBatchPlayResourceFiles[];
+  configuredPlayers: BakabaseAbstractionsModelsDomainMediaLibraryPlayer[];
+}
+
 export interface BakabaseModulesPlayerAbstractionsModelsDomainBatchPlayCandidate {
   key: string;
   /** [1: ProfilePlayer, 2: KnownPlayer] */
@@ -4061,6 +4114,24 @@ export interface BakabaseModulesPropertyModelsViewPropertyViewModel {
   order: number;
 }
 
+/**
+ * [0: None, 1: CodeRejected, 2: RequestRejected, 3: NotYetApproved, 4: TooManyAttempts]
+ * @format int32
+ */
+export type BakabaseModulesRemoteAccessAbstractionsModelsPairingFailure = 0 | 1 | 2 | 3 | 4;
+
+/**
+ * [0: Unknown, 1: Windows, 2: MacOS, 3: Linux, 4: Android, 5: IOS]
+ * @format int32
+ */
+export type BakabaseModulesRemoteAccessAbstractionsModelsRemoteDevicePlatform =
+  | 0
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5;
+
 export interface BakabaseModulesSearchModelsDbResourceSearchDbModel {
   group?: BakabaseModulesSearchModelsDbResourceSearchFilterGroupDbModel;
   orders?: BakabaseAbstractionsModelsInputResourceSearchOrderInputModel[];
@@ -4171,6 +4242,12 @@ export interface BakabaseModulesSubscriptionAbstractionsModelsViewSubscriptionVi
   /** @format int32 */
   intervalMinutes?: number;
   targetSummary?: string;
+}
+
+export interface BakabaseModulesThirdPartyAbstractionsHttpCookieCookieCaptureResult {
+  cookie: string;
+  userAgent?: string;
+  tlsPreset?: string;
 }
 
 export interface BakabaseModulesThirdPartyHelpersTlsPresetInfo {
@@ -4406,12 +4483,6 @@ export interface BakabaseServiceControllersChatControllerUpdateTitleRequest {
   title: string;
 }
 
-export interface BakabaseServiceControllersCookieCaptureResult {
-  cookie: string;
-  userAgent?: string;
-  tlsPreset?: string;
-}
-
 export interface BakabaseServiceControllersDiscoverySubscribeRequest {
   /** @format int32 */
   resourceId: number;
@@ -4606,6 +4677,10 @@ export interface BakabaseServiceModelsInputProxyTestInputModel {
   customSites?: string[];
 }
 
+export interface BakabaseServiceModelsInputRemoteAccessDeviceNameInputModel {
+  name?: string;
+}
+
 export interface BakabaseServiceModelsInputRemoteAccessLiveTranscodeInputModel {
   allow: boolean;
 }
@@ -4613,6 +4688,27 @@ export interface BakabaseServiceModelsInputRemoteAccessLiveTranscodeInputModel {
 export interface BakabaseServiceModelsInputRemoteAccessModeInputModel {
   /** [0: Disabled, 1: Enabled, 2: Unrestricted] */
   mode?: BakabaseAbstractionsModelsDomainConstantsRemoteAccessMode;
+}
+
+export interface BakabaseServiceModelsInputRemoteAccessPairClaimInputModel {
+  requestId?: string;
+}
+
+export interface BakabaseServiceModelsInputRemoteAccessPairRequestInputModel {
+  deviceName?: string;
+  /** [0: Unknown, 1: Windows, 2: MacOS, 3: Linux, 4: Android, 5: IOS] */
+  platform: BakabaseModulesRemoteAccessAbstractionsModelsRemoteDevicePlatform;
+}
+
+export interface BakabaseServiceModelsInputRemoteAccessPairWithCodeInputModel {
+  code?: string;
+  deviceName?: string;
+  /** [0: Unknown, 1: Windows, 2: MacOS, 3: Linux, 4: Android, 5: IOS] */
+  platform: BakabaseModulesRemoteAccessAbstractionsModelsRemoteDevicePlatform;
+}
+
+export interface BakabaseServiceModelsInputRemoteAccessRequirePairingInputModel {
+  require: boolean;
 }
 
 export interface BakabaseServiceModelsInputResourceCoverSaveInputModel {
@@ -5125,6 +5221,73 @@ export interface BakabaseServiceModelsViewRemoteAccessClientContextViewModel {
   isLocal: boolean;
   /** [0: Disabled, 1: Enabled, 2: Unrestricted] */
   mode: BakabaseAbstractionsModelsDomainConstantsRemoteAccessMode;
+  paired: boolean;
+  deviceId?: string;
+  deviceName?: string;
+  /** [0: AllInOne, 1: RemoteBrowser, 2: PureClient] */
+  clientMode: BakabaseAbstractionsModelsDomainConstantsClientMode;
+  serverReachable: boolean;
+  clientVersion?: string;
+  serverId?: string;
+  serverName?: string;
+  cookieCaptureAvailable: boolean;
+}
+
+export interface BakabaseServiceModelsViewRemoteAccessDeviceViewModel {
+  id: string;
+  name: string;
+  /** [0: Unknown, 1: Windows, 2: MacOS, 3: Linux, 4: Android, 5: IOS] */
+  platform: BakabaseModulesRemoteAccessAbstractionsModelsRemoteDevicePlatform;
+  /** @format date-time */
+  createdAt: string;
+  /** @format date-time */
+  lastSeenAt?: string;
+  approvedByDeviceId?: string;
+}
+
+export interface BakabaseServiceModelsViewRemoteAccessIssuedPairingCodeViewModel {
+  code: string;
+  /** @format date-time */
+  expiresAt: string;
+}
+
+export interface BakabaseServiceModelsViewRemoteAccessPairingCodeViewModel {
+  /** @format date-time */
+  expiresAt: string;
+  /** @format int32 */
+  remainingAttempts: number;
+}
+
+export interface BakabaseServiceModelsViewRemoteAccessPairingCredentialsViewModel {
+  deviceId: string;
+  key: string;
+  serverId: string;
+}
+
+export interface BakabaseServiceModelsViewRemoteAccessPairingRequestAcceptedViewModel {
+  requestId?: string;
+  /** @format date-time */
+  expiresAt: string;
+  /** [0: None, 1: CodeRejected, 2: RequestRejected, 3: NotYetApproved, 4: TooManyAttempts] */
+  failure: BakabaseModulesRemoteAccessAbstractionsModelsPairingFailure;
+}
+
+export interface BakabaseServiceModelsViewRemoteAccessPairingResultViewModel {
+  credentials?: BakabaseServiceModelsViewRemoteAccessPairingCredentialsViewModel;
+  /** [0: None, 1: CodeRejected, 2: RequestRejected, 3: NotYetApproved, 4: TooManyAttempts] */
+  failure: BakabaseModulesRemoteAccessAbstractionsModelsPairingFailure;
+}
+
+export interface BakabaseServiceModelsViewRemoteAccessPendingRequestViewModel {
+  id: string;
+  deviceName: string;
+  /** [0: Unknown, 1: Windows, 2: MacOS, 3: Linux, 4: Android, 5: IOS] */
+  platform: BakabaseModulesRemoteAccessAbstractionsModelsRemoteDevicePlatform;
+  remoteAddress?: string;
+  /** @format date-time */
+  requestedAt: string;
+  /** @format date-time */
+  expiresAt: string;
 }
 
 export interface BakabaseServiceModelsViewRemoteAccessServerInfoViewModel {
@@ -5135,6 +5298,9 @@ export interface BakabaseServiceModelsViewRemoteAccessServerInfoViewModel {
   protocolVersion: number;
   /** [0: Disabled, 1: Enabled, 2: Unrestricted] */
   mode: BakabaseAbstractionsModelsDomainConstantsRemoteAccessMode;
+  pairingSupported: boolean;
+  /** @format date-time */
+  serverTime: string;
 }
 
 export interface BakabaseServiceModelsViewRemoteAccessSettingsViewModel {
@@ -5142,6 +5308,10 @@ export interface BakabaseServiceModelsViewRemoteAccessSettingsViewModel {
   mode: BakabaseAbstractionsModelsDomainConstantsRemoteAccessMode;
   addresses: BakabaseServiceModelsViewRemoteAccessAddressViewModel[];
   allowLiveTranscode: boolean;
+  requirePairing: boolean;
+  devices: BakabaseServiceModelsViewRemoteAccessDeviceViewModel[];
+  pendingRequests: BakabaseServiceModelsViewRemoteAccessPendingRequestViewModel[];
+  pairingCode?: BakabaseServiceModelsViewRemoteAccessPairingCodeViewModel;
 }
 
 export interface BakabaseServiceModelsViewResourceAncestorViewModel {
@@ -5757,6 +5927,20 @@ export interface BootstrapModelsResponseModelsListResponse1BakabaseServiceModels
   data?: BakabaseServiceModelsViewProxyTestResultViewModel[];
 }
 
+export interface BootstrapModelsResponseModelsListResponse1BakabaseServiceModelsViewRemoteAccessDeviceViewModel {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseServiceModelsViewRemoteAccessDeviceViewModel[];
+}
+
+export interface BootstrapModelsResponseModelsListResponse1BakabaseServiceModelsViewRemoteAccessPendingRequestViewModel {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseServiceModelsViewRemoteAccessPendingRequestViewModel[];
+}
+
 export interface BootstrapModelsResponseModelsListResponse1BakabaseServiceModelsViewResourceEnhancements {
   /** @format int32 */
   code: number;
@@ -6005,6 +6189,13 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstract
   data: BakabaseAbstractionsModelsDomainConstantsInitializationContentType;
 }
 
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainDLsiteWorkLaunchTarget {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseAbstractionsModelsDomainDLsiteWorkLaunchTarget;
+}
+
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainExtensionGroup {
   /** @format int32 */
   code: number;
@@ -6047,6 +6238,13 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstract
   data?: BakabaseAbstractionsModelsDomainPathMark;
 }
 
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainPlayableItemPick {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseAbstractionsModelsDomainPlayableItemPick;
+}
+
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainPropertyValueScopePreference {
   /** @format int32 */
   code: number;
@@ -6059,6 +6257,13 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstract
   code: number;
   message?: string;
   data?: BakabaseAbstractionsModelsDomainResourceFileSystemCache;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainResourceProfilePlayerOptions {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseAbstractionsModelsDomainResourceProfilePlayerOptions;
 }
 
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainTextEntryValue {
@@ -6516,6 +6721,20 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesH
   data?: BakabaseModulesHealthScoreModelsViewHealthScoreProfileViewModel;
 }
 
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesPlayerAbstractionsComponentsBatchPlayPlaylistSnapshot {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseModulesPlayerAbstractionsComponentsBatchPlayPlaylistSnapshot;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesPlayerAbstractionsComponentsBatchPlayResourceSnapshot {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseModulesPlayerAbstractionsComponentsBatchPlayResourceSnapshot;
+}
+
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesPlayerAbstractionsModelsDomainBatchPlayResult {
   /** @format int32 */
   code: number;
@@ -6572,6 +6791,13 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesS
   data?: BakabaseModulesSubscriptionAbstractionsModelsViewSubscriptionViewModel;
 }
 
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesThirdPartyAbstractionsHttpCookieCookieCaptureResult {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseModulesThirdPartyAbstractionsHttpCookieCookieCaptureResult;
+}
+
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesWorkflowAbstractionsModelsViewWorkflowDefinitionViewModel {
   /** @format int32 */
   code: number;
@@ -6591,13 +6817,6 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceC
   code: number;
   message?: string;
   data?: BakabaseServiceControllersAppDataPathControllerValidateResponse;
-}
-
-export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceControllersCookieCaptureResult {
-  /** @format int32 */
-  code: number;
-  message?: string;
-  data?: BakabaseServiceControllersCookieCaptureResult;
 }
 
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceControllersMediaLibraryStatistics {
@@ -6689,6 +6908,27 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceM
   code: number;
   message?: string;
   data?: BakabaseServiceModelsViewRemoteAccessClientContextViewModel;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewRemoteAccessIssuedPairingCodeViewModel {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseServiceModelsViewRemoteAccessIssuedPairingCodeViewModel;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewRemoteAccessPairingRequestAcceptedViewModel {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseServiceModelsViewRemoteAccessPairingRequestAcceptedViewModel;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewRemoteAccessPairingResultViewModel {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseServiceModelsViewRemoteAccessPairingResultViewModel;
 }
 
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewRemoteAccessServerInfoViewModel {
@@ -7747,7 +7987,7 @@ export class HttpClient<SecurityDataType = unknown> {
 
       
       if (!response.ok) {
-        this.processResponseError(data, fullRequestParams);
+        this.processResponseError(data, fullRequestParams, response);
         throw data;
       }
       return this.processResponseData(data.data as BaseResponse, fullRequestParams);
@@ -7757,7 +7997,36 @@ export class HttpClient<SecurityDataType = unknown> {
     });
   };
 
-  protected processResponseError = (error: any, params: FullRequestParams) => {
+  /**
+   * Marks an error as already reported.
+   *
+   * `throw data` above is caught by the `.catch` chained onto the same promise, so
+   * every HTTP-level failure reached this twice and raised two identical toasts. The
+   * throw still has to happen — callers rely on it — so the error carries a note
+   * instead.
+   */
+  protected static readonly reportedMarker = "__bakabaseErrorReported";
+
+  protected processResponseError = (error: any, params: FullRequestParams, response?: Response) => {
+    if (error && typeof error === "object") {
+      if ((error as any)[HttpClient.reportedMarker]) {
+        return;
+      }
+      try {
+        Object.defineProperty(error, HttpClient.reportedMarker, { value: true, enumerable: false });
+      } catch {
+        // Frozen or a primitive wrapper. Reporting twice beats not reporting.
+      }
+    }
+
+    // A refusal from the thin client's own forwarding layer rather than from the
+    // server: no local path mapping, an action this build cannot run yet, and so on.
+    // Recognised in one place because any endpoint that touches a path can return it,
+    // and "GET /tool/open failed" describes none of them.
+    if (reportClientFailure(response, error)) {
+      return;
+    }
+
     const title = `${params.method} ${params.path} failed`;
     const description = extractErrorMessage(error);
 
@@ -8945,6 +9214,21 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       this.request<BootstrapModelsResponseModelsBaseResponse, any>({
         path: `/aigc/artifacts/${id}`,
         method: "DELETE",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Aigc
+     * @name GetAigcArtifactPath
+     * @request GET:/aigc/artifacts/{id}/path
+     */
+    getAigcArtifactPath: (id: number, params: RequestParams = {}) =>
+      this.request<BootstrapModelsResponseModelsSingletonResponse1SystemString, any>({
+        path: `/aigc/artifacts/${id}/path`,
+        method: "GET",
         format: "json",
         ...params,
       }),
@@ -11926,6 +12210,24 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * No description
      *
      * @tags DLsiteWork
+     * @name GetDLsiteWorkLaunchTarget
+     * @request GET:/dlsite-work/{workId}/launch-target
+     */
+    getDLsiteWorkLaunchTarget: (workId: string, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainDLsiteWorkLaunchTarget,
+        any
+      >({
+        path: `/dlsite-work/${workId}/launch-target`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags DLsiteWork
      * @name GetDLsiteWorkPlayableFiles
      * @request GET:/dlsite-work/{workId}/playable-files
      */
@@ -13469,6 +13771,24 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * No description
      *
      * @tags Resource
+     * @name GetResourceEffectivePlayerOptions
+     * @request GET:/resource/{id}/effective-player-options
+     */
+    getResourceEffectivePlayerOptions: (id: number, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainResourceProfilePlayerOptions,
+        any
+      >({
+        path: `/resource/${id}/effective-player-options`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
      * @name PlayRandomResource
      * @request GET:/resource/play/random
      */
@@ -13487,6 +13807,35 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     playRandomResourceUrl: () => {
       const baseUrl = this.baseUrl || "";
       let path = `/resource/play/random`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name PickRandomPlayableItem
+     * @request GET:/resource/play/random/candidate
+     */
+    pickRandomPlayableItem: (params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainPlayableItemPick,
+        any
+      >({
+        path: `/resource/play/random/candidate`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for pickRandomPlayableItem
+     * @name pickRandomPlayableItemUrl
+     */
+    pickRandomPlayableItemUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/play/random/candidate`;
       
       return baseUrl + path;
     },
@@ -13681,6 +14030,37 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         format: "json",
         ...params,
       }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name MarkResourcesAsPlayed
+     * @request POST:/resource/played-at/bulk
+     */
+    markResourcesAsPlayed: (
+      data: BakabaseAbstractionsModelsInputMarkResourcesPlayedInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/played-at/bulk`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for markResourcesAsPlayed
+     * @name markResourcesAsPlayedUrl
+     */
+    markResourcesAsPlayedUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/played-at/bulk`;
+      
+      return baseUrl + path;
+    },
 
     /**
      * No description
@@ -20334,6 +20714,58 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * No description
      *
      * @tags Player
+     * @name GetBatchPlayResourceSnapshot
+     * @request POST:/player/batch-play/resource-snapshot
+     */
+    getBatchPlayResourceSnapshot: (
+      data: BakabaseModulesPlayerAbstractionsModelsInputBatchPlayCandidatesInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesPlayerAbstractionsComponentsBatchPlayResourceSnapshot,
+        any
+      >({
+        path: `/player/batch-play/resource-snapshot`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getBatchPlayResourceSnapshot
+     * @name getBatchPlayResourceSnapshotUrl
+     */
+    getBatchPlayResourceSnapshotUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/player/batch-play/resource-snapshot`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Player
+     * @name GetBatchPlayPlaylistSnapshot
+     * @request GET:/player/playlist/{playlistId}/batch-play/snapshot
+     */
+    getBatchPlayPlaylistSnapshot: (playlistId: number, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesPlayerAbstractionsComponentsBatchPlayPlaylistSnapshot,
+        any
+      >({
+        path: `/player/playlist/${playlistId}/batch-play/snapshot`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Player
      * @name GetBatchPlayCandidates
      * @request POST:/player/batch-play/candidates
      */
@@ -21228,6 +21660,292 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       
       return baseUrl + path;
     },
+
+    /**
+     * No description
+     *
+     * @tags RemoteAccess
+     * @name SetRemoteAccessRequirePairing
+     * @request PUT:/remote-access/require-pairing
+     */
+    setRemoteAccessRequirePairing: (
+      data: BakabaseServiceModelsInputRemoteAccessRequirePairingInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/remote-access/require-pairing`,
+        method: "PUT",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for setRemoteAccessRequirePairing
+     * @name setRemoteAccessRequirePairingUrl
+     */
+    setRemoteAccessRequirePairingUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/remote-access/require-pairing`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags RemoteAccess
+     * @name PairRemoteDeviceWithCode
+     * @request POST:/remote-access/pair/code
+     */
+    pairRemoteDeviceWithCode: (
+      data: BakabaseServiceModelsInputRemoteAccessPairWithCodeInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewRemoteAccessPairingResultViewModel,
+        any
+      >({
+        path: `/remote-access/pair/code`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for pairRemoteDeviceWithCode
+     * @name pairRemoteDeviceWithCodeUrl
+     */
+    pairRemoteDeviceWithCodeUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/remote-access/pair/code`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags RemoteAccess
+     * @name RequestRemoteDevicePairing
+     * @request POST:/remote-access/pair/request
+     */
+    requestRemoteDevicePairing: (
+      data: BakabaseServiceModelsInputRemoteAccessPairRequestInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewRemoteAccessPairingRequestAcceptedViewModel,
+        any
+      >({
+        path: `/remote-access/pair/request`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for requestRemoteDevicePairing
+     * @name requestRemoteDevicePairingUrl
+     */
+    requestRemoteDevicePairingUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/remote-access/pair/request`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags RemoteAccess
+     * @name ClaimRemoteDevicePairing
+     * @request POST:/remote-access/pair/claim
+     */
+    claimRemoteDevicePairing: (
+      data: BakabaseServiceModelsInputRemoteAccessPairClaimInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewRemoteAccessPairingResultViewModel,
+        any
+      >({
+        path: `/remote-access/pair/claim`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for claimRemoteDevicePairing
+     * @name claimRemoteDevicePairingUrl
+     */
+    claimRemoteDevicePairingUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/remote-access/pair/claim`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags RemoteAccess
+     * @name IssueRemoteAccessPairingCode
+     * @request POST:/remote-access/pairing/code
+     */
+    issueRemoteAccessPairingCode: (params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewRemoteAccessIssuedPairingCodeViewModel,
+        any
+      >({
+        path: `/remote-access/pairing/code`,
+        method: "POST",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for issueRemoteAccessPairingCode
+     * @name issueRemoteAccessPairingCodeUrl
+     */
+    issueRemoteAccessPairingCodeUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/remote-access/pairing/code`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags RemoteAccess
+     * @name ApproveRemoteDevicePairingRequest
+     * @request POST:/remote-access/pairing/requests/{id}/approve
+     */
+    approveRemoteDevicePairingRequest: (id: string, params: RequestParams = {}) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/remote-access/pairing/requests/${id}/approve`,
+        method: "POST",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags RemoteAccess
+     * @name RejectRemoteDevicePairingRequest
+     * @request POST:/remote-access/pairing/requests/{id}/reject
+     */
+    rejectRemoteDevicePairingRequest: (id: string, params: RequestParams = {}) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/remote-access/pairing/requests/${id}/reject`,
+        method: "POST",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags RemoteAccess
+     * @name GetRemoteAccessDevices
+     * @request GET:/remote-access/devices
+     */
+    getRemoteAccessDevices: (params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseServiceModelsViewRemoteAccessDeviceViewModel,
+        any
+      >({
+        path: `/remote-access/devices`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getRemoteAccessDevices
+     * @name getRemoteAccessDevicesUrl
+     */
+    getRemoteAccessDevicesUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/remote-access/devices`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags RemoteAccess
+     * @name GetRemoteAccessPairingRequests
+     * @request GET:/remote-access/pairing/requests
+     */
+    getRemoteAccessPairingRequests: (params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseServiceModelsViewRemoteAccessPendingRequestViewModel,
+        any
+      >({
+        path: `/remote-access/pairing/requests`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getRemoteAccessPairingRequests
+     * @name getRemoteAccessPairingRequestsUrl
+     */
+    getRemoteAccessPairingRequestsUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/remote-access/pairing/requests`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags RemoteAccess
+     * @name RevokeRemoteAccessDevice
+     * @request DELETE:/remote-access/devices/{id}
+     */
+    revokeRemoteAccessDevice: (id: string, params: RequestParams = {}) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/remote-access/devices/${id}`,
+        method: "DELETE",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags RemoteAccess
+     * @name RenameRemoteAccessDevice
+     * @request PUT:/remote-access/devices/{id}/name
+     */
+    renameRemoteAccessDevice: (
+      id: string,
+      data: BakabaseServiceModelsInputRemoteAccessDeviceNameInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/remote-access/devices/${id}/name`,
+        method: "PUT",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
   };
   resourceMove = {
     /**
@@ -22428,7 +23146,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       params: RequestParams = {},
     ) =>
       this.request<
-        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceControllersCookieCaptureResult,
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesThirdPartyAbstractionsHttpCookieCookieCaptureResult,
         any
       >({
         path: `/tool/cookie-capture`,

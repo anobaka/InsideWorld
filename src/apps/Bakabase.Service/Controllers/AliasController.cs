@@ -19,7 +19,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace Bakabase.Service.Controllers
 {
     [Route("~/alias")]
-    public class AliasController(IAliasService aliasService, IGuiAdapter guiAdapter) : Controller
+    public class AliasController(IAliasService aliasService) : Controller
     {
         [SwaggerOperation(OperationId = "SearchAliasGroups")]
         [HttpGet]

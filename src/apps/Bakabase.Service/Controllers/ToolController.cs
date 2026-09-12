@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -16,7 +17,6 @@ using Bakabase.Abstractions.Services;
 using Bakabase.Infrastructures.Components.App;
 using Bakabase.Infrastructures.Components.Gui;
 using Bakabase.InsideWorld.Business.Components.Compression;
-using Bakabase.InsideWorld.Business.Components.CookieCapture;
 using Bakabase.InsideWorld.Models.Constants;
 using Bakabase.InsideWorld.Models.Constants.AdditionalItems;
 using Bakabase.Modules.ThirdParty.Abstractions.Http.Cookie;
@@ -27,17 +27,24 @@ using Bootstrap.Models.ResponseModels;
 using Microsoft.AspNetCore.Mvc;
 using MimeKit;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using Bakabase.Service.Components.RemoteAccess;
 using Swashbuckle.AspNetCore.Annotations;
 using Image = SixLabors.ImageSharp.Image;
+using Bakabase.Modules.RemoteAccess.Abstractions.Components;
+using Bakabase.Modules.RemoteAccess.Components.Pairing;
 
 namespace Bakabase.Service.Controllers
 {
     [Route("~/tool")]
     public class ToolController(IResourceService resourceService, CompressedFileService compressedFileService) : Controller
     {
+        [RunsOnUserMachine(Reason = "Opening a file or folder happens on the machine you are sitting at.")]
         [HttpGet("open")]
         [SwaggerOperation(OperationId = "OpenFileOrDirectory")]
         public BaseResponse Open(string path, bool openInDirectory)
@@ -46,6 +53,7 @@ namespace Bakabase.Service.Controllers
             return BaseResponseBuilder.Ok;
         }
 
+        [RunsOnUserMachine(Reason = "The sign-in window has to open on the machine you are sitting at.")]
         [HttpPost("cookie-capture")]
         [SwaggerOperation(OperationId = "CaptureCookie")]
         public async Task<SingletonResponse<CookieCaptureResult>> CaptureCookie(
@@ -61,9 +69,9 @@ namespace Bakabase.Service.Controllers
                     $"Cookie capture is not supported for target: {target}");
             }
 
-            var cookie = await orchestrator.CaptureAsync(flow);
+            var captured = await orchestrator.CaptureAsync(flow);
 
-            if (cookie == null)
+            if (captured == null)
             {
                 // Success + no data avoids HTTP 400 / global error toast; message explains cancel or unsupported environment.
                 return new SingletonResponse<CookieCaptureResult>(null)
@@ -73,15 +81,8 @@ namespace Bakabase.Service.Controllers
                 };
             }
 
-            var webViewUserAgent = GetWebViewUserAgent();
-            var tlsPreset = TlsPresetHelper.InferPresetFromUserAgent(webViewUserAgent);
 
-            return new SingletonResponse<CookieCaptureResult>(new CookieCaptureResult
-            {
-                Cookie = cookie,
-                UserAgent = webViewUserAgent,
-                TlsPreset = tlsPreset,
-            });
+            return new SingletonResponse<CookieCaptureResult>(captured);
         }
 
         [HttpGet("tls-presets")]
@@ -118,7 +119,13 @@ namespace Bakabase.Service.Controllers
 
         [HttpGet("thumbnail")]
         [SwaggerOperation(OperationId = "GetThumbnail")]
-        [ResponseCache(VaryByQueryKeys = [nameof(path), nameof(w), nameof(h)], Duration = 30 * 60)]
+        // The token is part of the cache key even though the action ignores it. A signed
+        // URL carries no Authorization header, so unlike a header-signed request it does
+        // read and write this cache — and without varying on the token, a thumbnail a
+        // paired device pulled would afterwards be served to an anonymous caller asking
+        // for the same path.
+        [ResponseCache(VaryByQueryKeys = [nameof(path), nameof(w), nameof(h), SignedMediaUrl.QueryKey],
+            Duration = 30 * 60)]
         [RemoteAccessible(PathParameters = [nameof(path)])]
         public async Task<IActionResult> GetThumbnail(string path, int? w, int? h)
         {
@@ -156,35 +163,31 @@ namespace Bakabase.Service.Controllers
                 var ext = Path.GetExtension(path);
                 if (InternalOptions.ImageExtensions.Contains(ext))
                 {
-                    if (!w.HasValue && !h.HasValue)
+                    var contentType = MimeTypes.GetMimeType(ext);
+
+                    // No size asked for, or a format we never re-encode: hand back the
+                    // bytes on disk untouched.
+                    if ((!w.HasValue && !h.HasValue) || !ResizableImageExtensions.Contains(ext))
                     {
-                        var contentType = MimeTypes.GetMimeType(ext);
                         return File(System.IO.File.OpenRead(path), contentType);
                     }
 
-                    var img = await Image.LoadAsync<Argb32>(path);
-
-                    var scale = 1m;
-                    if (w > 0 && img.Width > w)
+                    // The header alone says whether a resize is needed. When it isn't,
+                    // streaming the original beats decoding and re-encoding it.
+                    var info = await Image.IdentifyAsync(path, HttpContext.RequestAborted);
+                    var scale = GetDownscaleFactor(info.Width, info.Height, w, h);
+                    if (scale >= 1)
                     {
-                        scale = Math.Min(scale, (decimal) w / img.Width);
+                        return File(System.IO.File.OpenRead(path), contentType);
                     }
 
-                    if (h > 0 && img.Height > h)
-                    {
-                        scale = Math.Min(scale, (decimal) h / img.Height);
-                    }
+                    using var img = await Image.LoadAsync(path, HttpContext.RequestAborted);
+                    img.Mutate(x => x.Resize((int) (img.Width * scale), (int) (img.Height * scale)));
 
                     var ms = new MemoryStream();
-
-                    if (scale < 1)
-                    {
-                        img.Mutate(x => x.Resize((int) (img.Width * scale), (int) (img.Height * scale)));
-                    }
-
-                    await img.SaveAsPngAsync(ms, HttpContext.RequestAborted);
+                    await img.SaveAsync(ms, GetThumbnailEncoder(ext), HttpContext.RequestAborted);
                     ms.Seek(0, SeekOrigin.Begin);
-                    return File(ms, MimeTypes.GetMimeType(".png"));
+                    return File(ms, contentType);
                 }
 
             }
@@ -200,6 +203,48 @@ namespace Bakabase.Service.Controllers
 
             return NotFound();
         }
+
+        /// <summary>
+        /// Formats we are willing to decode and re-encode when a caller asks for a
+        /// smaller thumbnail. The rest of <see cref="InternalOptions.ImageExtensions"/>
+        /// is streamed untouched: .svg and .ico cannot be decoded here at all, and
+        /// .gif / .bmp / .tiff would either lose animation or come back larger than
+        /// they went in.
+        /// </summary>
+        private static readonly ImmutableHashSet<string> ResizableImageExtensions =
+            ImmutableHashSet.Create(StringComparer.OrdinalIgnoreCase, ".jpg", ".jpeg", ".png", ".webp");
+
+        /// <summary>
+        /// 1 means "already small enough" — the caller should stream the original
+        /// rather than pay for a decode and re-encode.
+        /// </summary>
+        private static decimal GetDownscaleFactor(int width, int height, int? w, int? h)
+        {
+            var scale = 1m;
+            if (w > 0 && width > w)
+            {
+                scale = Math.Min(scale, (decimal) w / width);
+            }
+
+            if (h > 0 && height > h)
+            {
+                scale = Math.Min(scale, (decimal) h / height);
+            }
+
+            return scale;
+        }
+
+        /// <summary>
+        /// Keeps the source format so the response stays the content type the caller
+        /// asked for. Re-encoding everything to PNG (which this endpoint used to do)
+        /// makes photographic covers several times larger than the file on disk.
+        /// </summary>
+        private static IImageEncoder GetThumbnailEncoder(string ext) => ext.ToLowerInvariant() switch
+        {
+            ".png" => new PngEncoder(),
+            ".webp" => new WebpEncoder(),
+            _ => new JpegEncoder {Quality = 85}
+        };
 
         private async Task<IActionResult> GetThumbnailFromCompressedFile(string compressedFilePath, string entryPath, int? w, int? h)
         {
@@ -229,37 +274,40 @@ namespace Bakabase.Service.Controllers
                 return NotFound();
             }
 
+            var contentType = MimeTypes.GetMimeType(ext);
+
+            // Same rule as the on-disk path: only decode when a resize is actually
+            // needed and the format is one we re-encode; otherwise pass the extracted
+            // bytes straight through.
+            if ((!w.HasValue && !h.HasValue) || !ResizableImageExtensions.Contains(ext))
+            {
+                extractedStream.Seek(0, SeekOrigin.Begin);
+                return File(extractedStream, contentType);
+            }
+
             try
             {
-                // Load the image from the extracted stream
-                var img = await Image.LoadAsync<Argb32>(extractedStream, HttpContext.RequestAborted);
-
-                // Calculate scale if dimensions are specified
-                var scale = 1m;
-                if (w > 0 && img.Width > w)
+                var info = await Image.IdentifyAsync(extractedStream, HttpContext.RequestAborted);
+                var scale = GetDownscaleFactor(info.Width, info.Height, w, h);
+                extractedStream.Seek(0, SeekOrigin.Begin);
+                if (scale >= 1)
                 {
-                    scale = Math.Min(scale, (decimal) w / img.Width);
+                    return File(extractedStream, contentType);
                 }
 
-                if (h > 0 && img.Height > h)
-                {
-                    scale = Math.Min(scale, (decimal) h / img.Height);
-                }
+                using var img = await Image.LoadAsync(extractedStream, HttpContext.RequestAborted);
+                img.Mutate(x => x.Resize((int) (img.Width * scale), (int) (img.Height * scale)));
 
                 var outputMs = new MemoryStream();
-
-                if (scale < 1)
-                {
-                    img.Mutate(x => x.Resize((int) (img.Width * scale), (int) (img.Height * scale)));
-                }
-
-                await img.SaveAsPngAsync(outputMs, HttpContext.RequestAborted);
+                await img.SaveAsync(outputMs, GetThumbnailEncoder(ext), HttpContext.RequestAborted);
                 outputMs.Seek(0, SeekOrigin.Begin);
-                return File(outputMs, MimeTypes.GetMimeType(".png"));
+                await extractedStream.DisposeAsync();
+                return File(outputMs, contentType);
             }
-            finally
+            catch
             {
                 await extractedStream.DisposeAsync();
+                throw;
             }
         }
 
@@ -272,6 +320,7 @@ namespace Bakabase.Service.Controllers
             return new SingletonResponse<Dictionary<string, List<string>>>(groupValues);
         }
 
+        [RunsOnUserMachine(Reason = "Opening a file happens on the machine you are sitting at.")]
         [HttpGet("open-file")]
         [SwaggerOperation(OperationId = "OpenFile")]
         public async Task<BaseResponse> OpenFile(string path)
@@ -309,21 +358,6 @@ namespace Bakabase.Service.Controllers
         /// Returns the User-Agent string used by the embedded WebView on the current platform.
         /// This is a known constant since the WebView UA is explicitly set during initialization.
         /// </summary>
-        private static string GetWebViewUserAgent()
-        {
-            if (OperatingSystem.IsMacOS())
-                return "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
-            if (OperatingSystem.IsLinux())
-                return "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
-            // Windows (default)
-            return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
-        }
     }
 
-    public class CookieCaptureResult
-    {
-        public string Cookie { get; set; } = string.Empty;
-        public string? UserAgent { get; set; }
-        public string? TlsPreset { get; set; }
-    }
 }

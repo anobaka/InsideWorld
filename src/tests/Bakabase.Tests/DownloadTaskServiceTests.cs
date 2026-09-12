@@ -36,8 +36,7 @@ public sealed class DownloadTaskServiceTests
             sp.GetRequiredService<IStringLocalizer<Bakabase.InsideWorld.Business.SharedResource>>());
         // The downloader publishes a workflow.completed event on Complete. These tests
         // don't exercise workflow plumbing, so a no-op bus is enough.
-        _service = new DownloadTaskService(sp, localizer, sp.GetRequiredService<IGuiAdapter>(),
-            new NoopWorkflowEventBus());
+        _service = new DownloadTaskService(sp, localizer, new NoopWorkflowEventBus());
     }
 
     private sealed class NoopWorkflowEventBus : IWorkflowEventBus

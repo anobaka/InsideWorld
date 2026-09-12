@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/connection.dart';
 import 'features/connect/connect_page.dart';
+import 'features/connect/pair_page.dart';
 import 'features/library/library_page.dart';
 import 'l10n/app_localizations.dart';
 
@@ -29,9 +30,12 @@ class BakabaseApp extends ConsumerWidget {
         ),
       ),
       // The app cannot exist without a server: everything except the connect
-      // flow lives behind a successful handshake.
+      // flow lives behind a successful handshake. Pairing sits in between — the
+      // server is reachable and understood, it just will not serve a device it
+      // does not know yet.
       home: switch (connection) {
         Connected() => const LibraryPage(),
+        NeedsPairing target => PairPage(target: target),
         _ => const ConnectPage(),
       },
     );

@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+      The Avalonia shell — windows, tray, embedded browser, exit coordination —
+      shared by every desktop flavour. It deliberately does NOT reference
+      Bakabase.Service: the one thing it needs from a host is IShellHost, which
+      the entry project supplies. That keeps a client-flavour entry from
+      linking the server and its database at all.
+    -->
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <AssemblyName>Bakabase.Shell</AssemblyName>
+        <!--
+          XAML and AssetLoader resolve resources by assembly name, not by this, so
+          everything under Assets/ and Styles/ stays addressed as
+          avares://Bakabase.Shell/... either way.
+        -->
+        <RootNamespace>Bakabase.Shell</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="11.3.20" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.3.20" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.20" />
+        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3856.49" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\abstractions\Bakabase.Abstractions\Bakabase.Abstractions.csproj" />
+        <ProjectReference Include="..\..\libs\Bakabase.Infrastructures\Bakabase.Infrastructures\Bakabase.Infrastructures.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\favicon.ico" />
+        <AvaloniaResource Include="Assets\favicon.png" />
+        <AvaloniaResource Include="Assets\loading.gif" />
+        <AvaloniaResource Include="Assets\tray-running.ico" />
+    </ItemGroup>
+
+</Project>

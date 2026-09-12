@@ -319,6 +319,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resource #{id} (removed)'**
   String removedResource(int id);
+  /// No description provided for @pairTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair this device'**
+  String get pairTitle;
+
+  /// No description provided for @pairIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'This server only serves devices it knows. Read the code from Bakabase on the server, or ask someone at a paired device to approve this one.'**
+  String get pairIntro;
+
+  /// No description provided for @pairCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit code'**
+  String get pairCodeLabel;
+
+  /// No description provided for @pairSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair'**
+  String get pairSubmit;
+
+  /// No description provided for @pairAskInstead.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask for approval instead'**
+  String get pairAskInstead;
+
+  /// No description provided for @pairWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for someone to approve this device…'**
+  String get pairWaiting;
+
+  /// No description provided for @pairCodeRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'That code was wrong or has expired. Read a fresh one from the server.'**
+  String get pairCodeRejected;
+
+  /// No description provided for @pairRequestRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The request was turned down, or waited too long.'**
+  String get pairRequestRejected;
+
+  /// No description provided for @pairTooManyAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'The server is not taking more attempts from here for now. Try again in a few minutes.'**
+  String get pairTooManyAttempts;
+
+  /// No description provided for @pairUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'The server stopped answering.'**
+  String get pairUnreachable;
+
+  /// No description provided for @pairUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This server is too old to pair with.'**
+  String get pairUnsupported;
+
+  /// No description provided for @pairDeviceNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Device name'**
+  String get pairDeviceNameLabel;
+
+  /// No description provided for @denialUnauthenticated.
+  ///
+  /// In en, this message translates to:
+  /// **'This device is not paired with that server.'**
+  String get denialUnauthenticated;
+
+  /// No description provided for @denialSignatureExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone\'s clock is off, so the server rejected the request. Fix the date and time, then try again.'**
+  String get denialSignatureExpired;
+
+  /// No description provided for @denialDeviceRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'This device was unpaired from that server. Pair it again.'**
+  String get denialDeviceRevoked;
+
+  /// No description provided for @denialRunsOnUserMachine.
+  ///
+  /// In en, this message translates to:
+  /// **'That happens on the machine holding the files, so it cannot run from here.'**
+  String get denialRunsOnUserMachine;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get retry;
+
+  /// No description provided for @devicesTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Devices'**
+  String get devicesTooltip;
+
+  /// No description provided for @devicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Devices'**
+  String get devicesTitle;
+
+  /// No description provided for @devicesWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to be let in'**
+  String get devicesWaiting;
+
+  /// No description provided for @devicesPaired.
+  ///
+  /// In en, this message translates to:
+  /// **'Devices with access'**
+  String get devicesPaired;
+
+  /// No description provided for @devicesNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No devices are paired with this server.'**
+  String get devicesNone;
+
+  /// No description provided for @devicesUnknownAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Address unknown'**
+  String get devicesUnknownAddress;
+
+  /// No description provided for @devicesApprove.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get devicesApprove;
+
+  /// No description provided for @devicesReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get devicesReject;
+
+  /// No description provided for @devicesThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'This device'**
+  String get devicesThisDevice;
+
+  /// No description provided for @devicesNeverSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Has not connected yet'**
+  String get devicesNeverSeen;
+
+  /// No description provided for @devicesSeenJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen just now'**
+  String get devicesSeenJustNow;
+
+  /// No description provided for @deviceRenameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get deviceRenameTitle;
+
+  /// No description provided for @deviceRevoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove access'**
+  String get deviceRevoke;
+
+  /// No description provided for @deviceRevokeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'That device will have to pair again before it can reach this server.'**
+  String get deviceRevokeBody;
+
+  /// No description provided for @deviceRevokeSelfBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the device you are using. Removing its access disconnects you from this server, and you will have to pair again to come back.'**
+  String get deviceRevokeSelfBody;
+
+  /// No description provided for @devicesSeenMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen $minutes min ago'**
+  String devicesSeenMinutesAgo(int minutes);
+
+  /// No description provided for @devicesSeenHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen $hours h ago'**
+  String devicesSeenHoursAgo(int hours);
+
+  /// No description provided for @devicesSeenDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen $days d ago'**
+  String devicesSeenDaysAgo(int days);
+
+  /// No description provided for @deviceRevokeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove $name?'**
+  String deviceRevokeTitle(String name);
+
 }
 
 class _AppLocalizationsDelegate

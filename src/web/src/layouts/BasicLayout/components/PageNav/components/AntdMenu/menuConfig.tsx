@@ -10,6 +10,7 @@ export interface IMenuItem {
   children?: IMenuItem[];
   isBeta?: boolean;
   isDeprecated?: boolean;
+  pureClientOnly?: boolean;
 }
 
 function extractMenu(config: RouteMenuItem[]): IMenuItem[] {
@@ -22,6 +23,7 @@ function extractMenu(config: RouteMenuItem[]): IMenuItem[] {
         icon: r.icon,
         isBeta: r.isBeta,
         isDeprecated: r.isDeprecated,
+        pureClientOnly: r.pureClientOnly,
       };
 
       if (r.children) item.children = extractMenu(r.children);

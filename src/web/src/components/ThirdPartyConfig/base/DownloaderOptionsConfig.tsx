@@ -11,8 +11,7 @@ import { notifyCookieCaptureDismissal } from "./notifyCookieCaptureDismissal";
 
 import BApi from "@/sdk/BApi";
 import { toast } from "@/components/bakaui";
-import { RuntimeMode } from "@/sdk/constants";
-import { useAppContextStore } from "@/stores/appContext";
+import { useCookieCaptureAvailable, useIsPureClient } from "@/stores/remoteAccess";
 
 interface DownloaderOptionsConfigProps {
   options: any;
@@ -30,8 +29,14 @@ export default function DownloaderOptionsConfig({
   hideCookie,
 }: DownloaderOptionsConfigProps) {
   const { t } = useTranslation();
-  const runtimeMode = useAppContextStore((s) => s.runtimeMode);
-  const isDesktopApp = runtimeMode !== RuntimeMode.Docker;
+  // Whether a sign-in capture window can open *here*. The server answers it —
+  // it needs a desktop and it needs to be this person's — which also covers the
+  // thin client, whose capture window belongs to its own process. The old test
+  // (runtime mode is not Docker) described the server's machine, so a browser on
+  // another device was offered a button that opened a window on someone else's
+  // screen.
+  const isDesktopApp = useCookieCaptureAvailable();
+  const isPureClient = useIsPureClient();
   const [options, setOptions] = useState<any>(externalOptions || {});
   const [validatingCookie, setValidatingCookie] = useState(false);
   const [validationResult, setValidationResult] = useState<"succeed" | "failed" | undefined>();
@@ -195,6 +200,17 @@ export default function DownloaderOptionsConfig({
           </Button>
         )}
       </div>
+      {/*
+        Worth saying before rather than after. The sign-in window opens here, so the
+        site sees this machine's address; every request that later uses the cookie is
+        made by the server, from its address. Sites that tie a session to one address
+        — and the ones people need a cookie for are exactly those — will refuse it.
+      */}
+      {!hideCookie && isPureClient && cookieCaptureTarget != null && (
+        <p className="text-xs text-warning">
+          {t<string>("thirdPartyConfig.tip.cookieCapturedHereUsedThere")}
+        </p>
+      )}
     </div>
   );
 }

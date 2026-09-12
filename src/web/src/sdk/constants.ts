@@ -1486,6 +1486,24 @@ export const BTaskStatusLabel: Record<BTaskStatus, string> = {
   [BTaskStatus.Resuming]: 'Resuming'
 };
 
+export enum ClientMode {
+  AllInOne = 0,
+  RemoteBrowser = 1,
+  PureClient = 2
+}
+
+export const clientModes = [
+  { label: 'AllInOne', value: ClientMode.AllInOne },
+  { label: 'RemoteBrowser', value: ClientMode.RemoteBrowser },
+  { label: 'PureClient', value: ClientMode.PureClient }
+] as const;
+
+export const ClientModeLabel: Record<ClientMode, string> = {
+  [ClientMode.AllInOne]: 'AllInOne',
+  [ClientMode.RemoteBrowser]: 'RemoteBrowser',
+  [ClientMode.PureClient]: 'PureClient'
+};
+
 export enum DataOrigin {
   Manual = 1,
   FileSystem = 2,
@@ -3883,6 +3901,120 @@ export const NullValueBehaviorLabel: Record<NullValueBehavior, string> = {
   [NullValueBehavior.Pass]: 'Pass'
 };
 
+export enum DeviceAuthOutcome {
+  Anonymous = 0,
+  Authenticated = 1,
+  UnknownDevice = 2,
+  BadSignature = 3,
+  Expired = 4,
+  Replayed = 5
+}
+
+export const deviceAuthOutcomes = [
+  { label: 'Anonymous', value: DeviceAuthOutcome.Anonymous },
+  { label: 'Authenticated', value: DeviceAuthOutcome.Authenticated },
+  { label: 'UnknownDevice', value: DeviceAuthOutcome.UnknownDevice },
+  { label: 'BadSignature', value: DeviceAuthOutcome.BadSignature },
+  { label: 'Expired', value: DeviceAuthOutcome.Expired },
+  { label: 'Replayed', value: DeviceAuthOutcome.Replayed }
+] as const;
+
+export const DeviceAuthOutcomeLabel: Record<DeviceAuthOutcome, string> = {
+  [DeviceAuthOutcome.Anonymous]: 'Anonymous',
+  [DeviceAuthOutcome.Authenticated]: 'Authenticated',
+  [DeviceAuthOutcome.UnknownDevice]: 'UnknownDevice',
+  [DeviceAuthOutcome.BadSignature]: 'BadSignature',
+  [DeviceAuthOutcome.Expired]: 'Expired',
+  [DeviceAuthOutcome.Replayed]: 'Replayed'
+};
+
+export enum PairingFailure {
+  None = 0,
+  CodeRejected = 1,
+  RequestRejected = 2,
+  NotYetApproved = 3,
+  TooManyAttempts = 4
+}
+
+export const pairingFailures = [
+  { label: 'None', value: PairingFailure.None },
+  { label: 'CodeRejected', value: PairingFailure.CodeRejected },
+  { label: 'RequestRejected', value: PairingFailure.RequestRejected },
+  { label: 'NotYetApproved', value: PairingFailure.NotYetApproved },
+  { label: 'TooManyAttempts', value: PairingFailure.TooManyAttempts }
+] as const;
+
+export const PairingFailureLabel: Record<PairingFailure, string> = {
+  [PairingFailure.None]: 'None',
+  [PairingFailure.CodeRejected]: 'CodeRejected',
+  [PairingFailure.RequestRejected]: 'RequestRejected',
+  [PairingFailure.NotYetApproved]: 'NotYetApproved',
+  [PairingFailure.TooManyAttempts]: 'TooManyAttempts'
+};
+
+export enum RemoteAccessDenialReason {
+  None = 0,
+  Disabled = 1,
+  HostOnly = 2,
+  PathNotServable = 3,
+  TranscodeDisabled = 4,
+  RunsOnUserMachine = 5,
+  Unauthenticated = 6,
+  SignatureExpired = 7,
+  DeviceRevoked = 8
+}
+
+export const remoteAccessDenialReasons = [
+  { label: 'None', value: RemoteAccessDenialReason.None },
+  { label: 'Disabled', value: RemoteAccessDenialReason.Disabled },
+  { label: 'HostOnly', value: RemoteAccessDenialReason.HostOnly },
+  { label: 'PathNotServable', value: RemoteAccessDenialReason.PathNotServable },
+  { label: 'TranscodeDisabled', value: RemoteAccessDenialReason.TranscodeDisabled },
+  { label: 'RunsOnUserMachine', value: RemoteAccessDenialReason.RunsOnUserMachine },
+  { label: 'Unauthenticated', value: RemoteAccessDenialReason.Unauthenticated },
+  { label: 'SignatureExpired', value: RemoteAccessDenialReason.SignatureExpired },
+  { label: 'DeviceRevoked', value: RemoteAccessDenialReason.DeviceRevoked }
+] as const;
+
+export const RemoteAccessDenialReasonLabel: Record<RemoteAccessDenialReason, string> = {
+  [RemoteAccessDenialReason.None]: 'None',
+  [RemoteAccessDenialReason.Disabled]: 'Disabled',
+  [RemoteAccessDenialReason.HostOnly]: 'HostOnly',
+  [RemoteAccessDenialReason.PathNotServable]: 'PathNotServable',
+  [RemoteAccessDenialReason.TranscodeDisabled]: 'TranscodeDisabled',
+  [RemoteAccessDenialReason.RunsOnUserMachine]: 'RunsOnUserMachine',
+  [RemoteAccessDenialReason.Unauthenticated]: 'Unauthenticated',
+  [RemoteAccessDenialReason.SignatureExpired]: 'SignatureExpired',
+  [RemoteAccessDenialReason.DeviceRevoked]: 'DeviceRevoked'
+};
+
+export enum RemoteDevicePlatform {
+  Unknown = 0,
+  Windows = 1,
+  MacOS = 2,
+  Linux = 3,
+  Android = 4,
+  IOS = 5
+}
+
+export const remoteDevicePlatforms = [
+  { label: 'Unknown', value: RemoteDevicePlatform.Unknown },
+  { label: 'Windows', value: RemoteDevicePlatform.Windows },
+  { label: 'MacOS', value: RemoteDevicePlatform.MacOS },
+  { label: 'Linux', value: RemoteDevicePlatform.Linux },
+  { label: 'Android', value: RemoteDevicePlatform.Android },
+  { label: 'IOS', value: RemoteDevicePlatform.IOS }
+] as const;
+
+export const RemoteDevicePlatformLabel: Record<RemoteDevicePlatform, string> = {
+  [RemoteDevicePlatform.Unknown]: 'Unknown',
+  [RemoteDevicePlatform.Windows]: 'Windows',
+  [RemoteDevicePlatform.MacOS]: 'MacOS',
+  [RemoteDevicePlatform.Linux]: 'Linux',
+  [RemoteDevicePlatform.Android]: 'Android',
+  [RemoteDevicePlatform.IOS]: 'IOS'
+};
+
 export enum FileOperationType {
   Rename = 1,
   Move = 2,
@@ -4549,30 +4681,6 @@ export const DataCardMatchModeLabel: Record<DataCardMatchMode, string> = {
   [DataCardMatchMode.All]: 'All'
 };
 
-export enum RemoteAccessDenialReason {
-  None = 0,
-  Disabled = 1,
-  HostOnly = 2,
-  PathNotServable = 3,
-  TranscodeDisabled = 4
-}
-
-export const remoteAccessDenialReasons = [
-  { label: 'None', value: RemoteAccessDenialReason.None },
-  { label: 'Disabled', value: RemoteAccessDenialReason.Disabled },
-  { label: 'HostOnly', value: RemoteAccessDenialReason.HostOnly },
-  { label: 'PathNotServable', value: RemoteAccessDenialReason.PathNotServable },
-  { label: 'TranscodeDisabled', value: RemoteAccessDenialReason.TranscodeDisabled }
-] as const;
-
-export const RemoteAccessDenialReasonLabel: Record<RemoteAccessDenialReason, string> = {
-  [RemoteAccessDenialReason.None]: 'None',
-  [RemoteAccessDenialReason.Disabled]: 'Disabled',
-  [RemoteAccessDenialReason.HostOnly]: 'HostOnly',
-  [RemoteAccessDenialReason.PathNotServable]: 'PathNotServable',
-  [RemoteAccessDenialReason.TranscodeDisabled]: 'TranscodeDisabled'
-};
-
 export enum ResourceMatcherLeafKind {
   Property = 1,
   File = 2
@@ -5054,6 +5162,90 @@ export const CompressedFileDetectionResultStatusLabel: Record<CompressedFileDete
   [CompressedFileDetectionResultStatus.Inprogress]: 'Inprogress',
   [CompressedFileDetectionResultStatus.Complete]: 'Complete',
   [CompressedFileDetectionResultStatus.Error]: 'Error'
+};
+
+export enum ClientPairingOutcome {
+  Paired = 0,
+  Unreachable = 1,
+  CodeRejected = 2,
+  AwaitingApproval = 3,
+  RequestRejected = 4,
+  TooManyAttempts = 5,
+  PairingUnsupported = 6
+}
+
+export const clientPairingOutcomes = [
+  { label: 'Paired', value: ClientPairingOutcome.Paired },
+  { label: 'Unreachable', value: ClientPairingOutcome.Unreachable },
+  { label: 'CodeRejected', value: ClientPairingOutcome.CodeRejected },
+  { label: 'AwaitingApproval', value: ClientPairingOutcome.AwaitingApproval },
+  { label: 'RequestRejected', value: ClientPairingOutcome.RequestRejected },
+  { label: 'TooManyAttempts', value: ClientPairingOutcome.TooManyAttempts },
+  { label: 'PairingUnsupported', value: ClientPairingOutcome.PairingUnsupported }
+] as const;
+
+export const ClientPairingOutcomeLabel: Record<ClientPairingOutcome, string> = {
+  [ClientPairingOutcome.Paired]: 'Paired',
+  [ClientPairingOutcome.Unreachable]: 'Unreachable',
+  [ClientPairingOutcome.CodeRejected]: 'CodeRejected',
+  [ClientPairingOutcome.AwaitingApproval]: 'AwaitingApproval',
+  [ClientPairingOutcome.RequestRejected]: 'RequestRejected',
+  [ClientPairingOutcome.TooManyAttempts]: 'TooManyAttempts',
+  [ClientPairingOutcome.PairingUnsupported]: 'PairingUnsupported'
+};
+
+export enum ServerHandshakeOutcome {
+  Ok = 0,
+  Unreachable = 1,
+  NotBakabase = 2,
+  ClientTooOld = 3,
+  ServerTooOld = 4,
+  RemoteAccessDisabled = 5
+}
+
+export const serverHandshakeOutcomes = [
+  { label: 'Ok', value: ServerHandshakeOutcome.Ok },
+  { label: 'Unreachable', value: ServerHandshakeOutcome.Unreachable },
+  { label: 'NotBakabase', value: ServerHandshakeOutcome.NotBakabase },
+  { label: 'ClientTooOld', value: ServerHandshakeOutcome.ClientTooOld },
+  { label: 'ServerTooOld', value: ServerHandshakeOutcome.ServerTooOld },
+  { label: 'RemoteAccessDisabled', value: ServerHandshakeOutcome.RemoteAccessDisabled }
+] as const;
+
+export const ServerHandshakeOutcomeLabel: Record<ServerHandshakeOutcome, string> = {
+  [ServerHandshakeOutcome.Ok]: 'Ok',
+  [ServerHandshakeOutcome.Unreachable]: 'Unreachable',
+  [ServerHandshakeOutcome.NotBakabase]: 'NotBakabase',
+  [ServerHandshakeOutcome.ClientTooOld]: 'ClientTooOld',
+  [ServerHandshakeOutcome.ServerTooOld]: 'ServerTooOld',
+  [ServerHandshakeOutcome.RemoteAccessDisabled]: 'RemoteAccessDisabled'
+};
+
+export enum ClientForwardingFailure {
+  None = 0,
+  NotConnected = 1,
+  ServerUnreachable = 2,
+  ForeignCaller = 3,
+  NeedsNewerClient = 4,
+  PathNotMapped = 5
+}
+
+export const clientForwardingFailures = [
+  { label: 'None', value: ClientForwardingFailure.None },
+  { label: 'NotConnected', value: ClientForwardingFailure.NotConnected },
+  { label: 'ServerUnreachable', value: ClientForwardingFailure.ServerUnreachable },
+  { label: 'ForeignCaller', value: ClientForwardingFailure.ForeignCaller },
+  { label: 'NeedsNewerClient', value: ClientForwardingFailure.NeedsNewerClient },
+  { label: 'PathNotMapped', value: ClientForwardingFailure.PathNotMapped }
+] as const;
+
+export const ClientForwardingFailureLabel: Record<ClientForwardingFailure, string> = {
+  [ClientForwardingFailure.None]: 'None',
+  [ClientForwardingFailure.NotConnected]: 'NotConnected',
+  [ClientForwardingFailure.ServerUnreachable]: 'ServerUnreachable',
+  [ClientForwardingFailure.ForeignCaller]: 'ForeignCaller',
+  [ClientForwardingFailure.NeedsNewerClient]: 'NeedsNewerClient',
+  [ClientForwardingFailure.PathNotMapped]: 'PathNotMapped'
 };
 
 export const ExtensionMediaTypes: Record<string, MediaType> = {

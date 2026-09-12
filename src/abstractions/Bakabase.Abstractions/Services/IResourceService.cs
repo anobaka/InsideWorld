@@ -171,6 +171,18 @@ public interface IResourceService
     Task<BaseResponse> PlayRandomResource();
 
     /// <summary>
+    /// Picks a random resource with something playable, without playing it.
+    /// </summary>
+    /// <remarks>
+    /// The half of random play that only the server can do — it holds the resources, the
+    /// playable-file cache and the live probe. A thin client asks for a pick and then
+    /// starts the player itself, so both flavours share one definition of "random"
+    /// instead of the client inventing a weaker one over whatever it has mapped.
+    /// </remarks>
+    /// <returns>Null when nothing playable was found.</returns>
+    Task<PlayableItemPick?> PickRandomPlayableItem();
+
+    /// <summary>
     /// Gets the hierarchy context for a resource, including ancestors and children count.
     /// </summary>
     /// <param name="resourceId">The resource ID</param>

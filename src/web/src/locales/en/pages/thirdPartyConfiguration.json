@@ -56,5 +56,6 @@
   "thirdPartyConfig.field.maxRetries.description": "Maximum number of retry attempts for failed requests.",
   "thirdPartyConfig.field.requestTimeout.description": "Maximum time to wait for a response before timing out.",
   "thirdPartyConfig.field.namingConvention.label": "Naming Convention",
-  "thirdPartyConfig.field.namingConvention.description": "Define how downloaded files and folders should be named. Use available variables below."
+  "thirdPartyConfig.field.namingConvention.description": "Define how downloaded files and folders should be named. Use available variables below.",
+  "thirdPartyConfig.tip.cookieCapturedHereUsedThere": "The sign-in window opens on this machine, so the site sees this machine's address. The requests that use the cookie afterwards are made by the server, from its address — a site that ties a session to one address will refuse them."
 }

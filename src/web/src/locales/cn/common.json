@@ -411,6 +411,9 @@
   "common.unit.months": "个月",
   "common.unit.years": "年",
   "menu.mobileApp": "移动 App",
+  "menu.client": "本客户端",
+  "menu.client.connection": "服务端连接",
+  "menu.client.pathMapping": "路径映射",
   "mobileApp.title": "移动 App",
   "mobileApp.loading": "加载中…",
   "mobileApp.unavailable": "暂时获取不到下载链接——主机可能离线，或尚未发布过移动端版本。链接来自 CI 生成的清单，会自动重试。",
@@ -424,5 +427,14 @@
   "mobileApp.sidestoreSource": "SideStore 源",
   "mobileApp.sidestoreSourceLink": "source.json",
   "mobileApp.unsignedIpa": "未签名 IPA（在 SideStore 中用 + 导入安装）",
-  "mobileApp.iosLimits": "免费 Apple ID 最多可侧载 3 个应用、签名 7 天有效；SideStore 会在同一 Wi-Fi 下自动续签。"
+  "mobileApp.iosLimits": "免费 Apple ID 最多可侧载 3 个应用、签名 7 天有效；SideStore 会在同一 Wi-Fi 下自动续签。",
+  "client.failure.pathNotMapped": "这个文件夹不在本机上",
+  "client.failure.addMapping": "去设置",
+  "client.failure.needsNewerClient": "当前客户端还不支持该操作",
+  "client.failure.notConnected": "尚未连接服务端",
+  "client.failure.serverUnreachable": "服务端没有响应",
+  "client.failure.refused": "被本客户端拒绝",
+  "clientVersion.clientBehind": "本客户端（{{client}}）比服务端（{{server}}）旧。服务端新增的功能在这里可能用不了，更新客户端即可。",
+  "clientVersion.serverBehind": "服务端（{{server}}）比本客户端（{{client}}）旧。这里的部分功能可能需要更新服务端才能使用。",
+  "clientVersion.differ": "本客户端（{{client}}）与服务端（{{server}}）版本不一致。"
 }

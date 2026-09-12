@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Bakabase.Modules.Player.Abstractions.Components;
 using Bakabase.Modules.Player.Abstractions.Models.Domain;
 using Bakabase.Modules.Player.Abstractions.Models.Input;
 using Bakabase.Modules.Player.Abstractions.Services;
@@ -8,13 +9,55 @@ using Bootstrap.Components.Miscellaneous.ResponseBuilders;
 using Bootstrap.Models.ResponseModels;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
+using Bakabase.Modules.RemoteAccess.Abstractions.Components;
+using Bakabase.Service.Components.RemoteAccess;
 
 namespace Bakabase.Service.Controllers
 {
     [Route("~/player")]
-    public class PlayerController(IBatchPlayService batchPlayService) : Controller
+    public class PlayerController(
+        IBatchPlayService batchPlayService,
+        IBatchPlayResourceSource batchPlayResourceSource,
+        IBatchPlayPlaylistSource batchPlayPlaylistSource) : Controller
     {
+        /// <summary>
+        /// What a selection of resources holds: the playable files of each, and the
+        /// players their profiles configure.
+        /// </summary>
+        /// <remarks>
+        /// Read by the thin client, which runs the same batch-play orchestration against
+        /// its own installed players and its own filesystem. It is deliberately data
+        /// only — nothing here starts, opens or writes anything.
+        /// </remarks>
+        [SwaggerOperation(OperationId = "GetBatchPlayResourceSnapshot")]
+        [HttpPost("batch-play/resource-snapshot")]
+        [RemoteAccessible]
+        public async Task<SingletonResponse<BatchPlayResourceSnapshot>> GetBatchPlayResourceSnapshot(
+            [FromBody] BatchPlayCandidatesInputModel model)
+        {
+            return new SingletonResponse<BatchPlayResourceSnapshot>(
+                await batchPlayResourceSource.GetSnapshotAsync(model.ResourceIds, HttpContext.RequestAborted));
+        }
+
+        /// <summary>
+        /// A playlist resolved to the files it would play, in order.
+        /// </summary>
+        /// <remarks>
+        /// The client's half of playlist batch play. Resource items are already resolved
+        /// to their playable files here, so a playlist behaves the same whether it is
+        /// played by the server or by a client.
+        /// </remarks>
+        [SwaggerOperation(OperationId = "GetBatchPlayPlaylistSnapshot")]
+        [HttpGet("playlist/{playlistId:int}/batch-play/snapshot")]
+        [RemoteAccessible]
+        public async Task<SingletonResponse<BatchPlayPlaylistSnapshot?>> GetBatchPlayPlaylistSnapshot(int playlistId)
+        {
+            return new SingletonResponse<BatchPlayPlaylistSnapshot?>(
+                await batchPlayPlaylistSource.GetSnapshotAsync(playlistId, HttpContext.RequestAborted));
+        }
+
         [SwaggerOperation(OperationId = "GetBatchPlayCandidates")]
+        [RunsOnUserMachine(Reason = "The candidates depend on which players are installed on your machine.")]
         [HttpPost("batch-play/candidates")]
         public async Task<ListResponse<BatchPlayCandidate>> GetBatchPlayCandidates(
             [FromBody] BatchPlayCandidatesInputModel model)
@@ -25,6 +68,7 @@ namespace Bakabase.Service.Controllers
         }
 
         [SwaggerOperation(OperationId = "BatchPlayResources")]
+        [RunsOnUserMachine(Reason = "A player starts on the machine you are sitting at.")]
         [HttpPost("batch-play")]
         public async Task<SingletonResponse<BatchPlayResult>> BatchPlay([FromBody] BatchPlayInputModel model)
         {
@@ -42,6 +86,7 @@ namespace Bakabase.Service.Controllers
         }
 
         [SwaggerOperation(OperationId = "GetPlaylistBatchPlayCandidates")]
+        [RunsOnUserMachine(Reason = "The candidates depend on which players are installed on your machine.")]
         [HttpGet("playlist/{playlistId:int}/batch-play/candidates")]
         public async Task<ListResponse<BatchPlayCandidate>> GetPlaylistBatchPlayCandidates(int playlistId)
         {
@@ -58,6 +103,7 @@ namespace Bakabase.Service.Controllers
         }
 
         [SwaggerOperation(OperationId = "BatchPlayPlaylist")]
+        [RunsOnUserMachine(Reason = "A player starts on the machine you are sitting at.")]
         [HttpPost("playlist/{playlistId:int}/batch-play")]
         public async Task<SingletonResponse<BatchPlayResult>> BatchPlayPlaylist(int playlistId,
             [FromBody] PlaylistBatchPlayInputModel model)

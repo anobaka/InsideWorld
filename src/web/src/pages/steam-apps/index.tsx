@@ -34,6 +34,7 @@ import { useSteamOptionsStore } from "@/stores/options";
 import { SteamConfig } from "@/components/ThirdPartyConfig";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
 import { useBTasksStore } from "@/stores/bTasks";
+import { useIsPureClient } from "@/stores/remoteAccess";
 import { BTaskStatus } from "@/sdk/constants";
 
 export interface SteamApp {
@@ -58,6 +59,7 @@ const SYNC_TASK_ID = "SyncSteam";
 const PAGE_SIZE_OPTIONS = [20, 50];
 
 export default function SteamAppsPage() {
+  const isPureClient = useIsPureClient();
   const { t } = useTranslation();
   const [apps, setApps] = useState<SteamApp[]>([]);
   const [loading, setLoading] = useState(true);
@@ -157,7 +159,16 @@ export default function SteamAppsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{t("resourceSource.steam.title")}</h1>
-          <p className="text-default-500 mt-1">{t("resourceSource.steam.description")}</p>
+          {/* Whose Steam. The scan reads the Steam installed beside the library, so
+              from a client it is not the games on this computer — a distinction worth
+              one word before somebody wonders why their own library is missing. */}
+          <p className="text-default-500 mt-1">
+            {t(
+              isPureClient
+                ? "resourceSource.steam.description.server"
+                : "resourceSource.steam.description",
+            )}
+          </p>
         </div>
         <div className="flex gap-2 items-center">
           {isSyncing ? (

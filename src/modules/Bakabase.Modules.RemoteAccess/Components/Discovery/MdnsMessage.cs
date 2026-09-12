@@ -4,9 +4,9 @@ using System.Text;
 namespace Bakabase.Modules.RemoteAccess.Components.Discovery;
 
 /// <summary>
-/// The subset of DNS wire format that answering "who serves
-/// <c>_bakabase._tcp.local</c>?" needs — response building and question
-/// parsing, nothing else. A full DNS library would be overkill for one service
+/// The subset of DNS wire format that both halves of "who serves
+/// <c>_bakabase._tcp.local</c>?" need — building and parsing a query, and the
+/// same for a response. A full DNS library would be overkill for one service
 /// type, and this way the packet bytes are unit-testable.
 /// </summary>
 public static class MdnsMessage
@@ -133,6 +133,172 @@ public static class MdnsMessage
         }
 
         return questions.Count > 0;
+    }
+
+    /// <summary>
+    /// One answer, with its payload already decoded.
+    /// </summary>
+    /// <remarks>
+    /// Decoded during the parse rather than handed back as bytes, because a name
+    /// inside SRV or PTR data may be a compression pointer into the rest of the
+    /// datagram — so it can only be read while the whole packet is still in hand.
+    /// </remarks>
+    /// <param name="Ttl">Zero means the record is being withdrawn: a server saying goodbye.</param>
+    /// <param name="Target">The name a PTR or SRV points at. Null for other types.</param>
+    /// <param name="Port">SRV's port. Zero for other types.</param>
+    /// <param name="Txt">TXT's strings, in order. Empty for other types.</param>
+    /// <param name="Address">An A record's address. Null for other types.</param>
+    public record ParsedRecord(string Name, ushort Type, uint Ttl, string? Target = null, ushort Port = 0,
+        IReadOnlyList<string>? Txt = null, IPAddress? Address = null)
+    {
+        public IReadOnlyList<string> Txt { get; init; } = Txt ?? [];
+    }
+
+    /// <summary>A query for one name and type, with the transaction id mDNS always leaves at zero.</summary>
+    public static byte[] BuildQuery(string name, ushort type)
+    {
+        var bytes = new List<byte>(64)
+        {
+            0, 0, // ID
+            0, 0, // flags: a plain query
+            0, 1, // QDCOUNT
+            0, 0, // ANCOUNT
+            0, 0, // NSCOUNT
+            0, 0, // ARCOUNT
+        };
+
+        WriteName(bytes, name);
+        WriteUInt16(bytes, type);
+        // Class IN, with the unicast-response bit left clear: the responders here
+        // multicast their answers, and every other listener on the network benefits
+        // from seeing them.
+        WriteUInt16(bytes, ClassIn);
+
+        return bytes.ToArray();
+    }
+
+    /// <summary>
+    /// Reads the answers out of a response. False for anything that is not one —
+    /// including queries, which arrive on the same socket.
+    /// </summary>
+    /// <remarks>
+    /// Everything on this socket came from whatever else is on the network, so
+    /// nothing here throws: a packet that does not parse is one more thing that is
+    /// not us. Additional and authority sections are read too, because responders
+    /// routinely put the SRV/TXT/A a browser needs there rather than in answers.
+    /// </remarks>
+    public static bool TryParseResponse(ReadOnlySpan<byte> data, out List<ParsedRecord> records)
+    {
+        records = [];
+
+        if (data.Length < 12)
+        {
+            return false;
+        }
+
+        var flags = (data[2] << 8) | data[3];
+
+        if ((flags & 0x8000) == 0) // QR=0: a query, not a response
+        {
+            return false;
+        }
+
+        var questionCount = (data[4] << 8) | data[5];
+        var recordCount = ((data[6] << 8) | data[7]) + ((data[8] << 8) | data[9]) +
+                          ((data[10] << 8) | data[11]);
+        var offset = 12;
+
+        for (var i = 0; i < questionCount; i++)
+        {
+            if (!TryReadName(data, ref offset, out _) || offset + 4 > data.Length)
+            {
+                return false;
+            }
+
+            offset += 4; // type + class
+        }
+
+        for (var i = 0; i < recordCount; i++)
+        {
+            if (!TryReadName(data, ref offset, out var name) || offset + 10 > data.Length)
+            {
+                // A truncated tail still leaves whatever was read before it usable.
+                break;
+            }
+
+            var type = (ushort) ((data[offset] << 8) | data[offset + 1]);
+            var ttl = (uint) ((data[offset + 4] << 24) | (data[offset + 5] << 16) |
+                              (data[offset + 6] << 8) | data[offset + 7]);
+            var length = (data[offset + 8] << 8) | data[offset + 9];
+
+            offset += 10;
+
+            if (offset + length > data.Length)
+            {
+                break;
+            }
+
+            records.Add(ReadRecord(data, name, type, ttl, offset, length));
+            offset += length;
+        }
+
+        return records.Count > 0;
+    }
+
+    private static ParsedRecord ReadRecord(ReadOnlySpan<byte> data, string name, ushort type, uint ttl, int offset,
+        int length)
+    {
+        switch (type)
+        {
+            case TypePtr:
+            {
+                var position = offset;
+
+                return new ParsedRecord(name, type, ttl,
+                    TryReadName(data, ref position, out var target) ? target : null);
+            }
+            case TypeSrv when length >= 7:
+            {
+                var position = offset + 6;
+                var port = (ushort) ((data[offset + 4] << 8) | data[offset + 5]);
+
+                return new ParsedRecord(name, type, ttl,
+                    TryReadName(data, ref position, out var target) ? target : null, port);
+            }
+            case TypeTxt:
+                return new ParsedRecord(name, type, ttl, Txt: ReadTxt(data.Slice(offset, length)));
+            case TypeA when length == 4:
+                return new ParsedRecord(name, type, ttl, Address: new IPAddress(data.Slice(offset, 4).ToArray()));
+            default:
+                return new ParsedRecord(name, type, ttl);
+        }
+    }
+
+    private static List<string> ReadTxt(ReadOnlySpan<byte> rdata)
+    {
+        var entries = new List<string>();
+        var position = 0;
+
+        while (position < rdata.Length)
+        {
+            int length = rdata[position];
+
+            if (length == 0)
+            {
+                position++;
+                continue;
+            }
+
+            if (position + 1 + length > rdata.Length)
+            {
+                break;
+            }
+
+            entries.Add(Encoding.UTF8.GetString(rdata.Slice(position + 1, length)));
+            position += 1 + length;
+        }
+
+        return entries;
     }
 
     /// <summary>Case- and trailing-dot-insensitive, as DNS names are.</summary>

@@ -24,10 +24,9 @@ import { DataOrigin, DataStatus, ResourceDataType } from "@/sdk/constants";
 import { useUiOptionsStore } from "@/stores/options";
 import { usePlayableItemResolution } from "@/hooks/usePlayableItemResolution";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
-import { useIsRemoteClient } from "@/stores/remoteAccess";
+import { useUserSideActionsRunHere } from "@/stores/remoteAccess";
 import { useResourceBrowserPlayer } from "@/hooks/useResourceBrowserPlayer";
 import PlayOnThisDevice from "@/components/Resource/components/PlayOnThisDevice";
-import envConfig from "@/config/env";
 
 // Play control status for UI rendering
 export type PlayControlStatus = "idle" | "loading" | "ready" | "not-found";
@@ -123,14 +122,17 @@ const splitIntoDirs = (paths: string[], prefix: string): Directory[] => {
 
 const DefaultVisibleFileCount = 5;
 
-/** Call the PlayItem API endpoint. */
-const playItemApi = async (resourceId: number, origin: DataOrigin, key: string) => {
-  const endpoint = envConfig.apiEndpoint || "";
-  const url = `${endpoint}/resource/${resourceId}/play-item?origin=${origin}&key=${encodeURIComponent(key)}`;
-  const rsp = await fetch(url);
-
-  return rsp.json();
-};
+/**
+ * Ask whichever machine is meant to play this to play it.
+ *
+ * Through the SDK rather than a bare fetch, because the answer is no longer
+ * always the server's: the thin client intercepts this endpoint, and its
+ * refusals — the library is not mapped on this machine, this client build
+ * cannot do it yet — arrive as ordinary error responses. A raw fetch swallowed
+ * them into an opaque failure.
+ */
+const playItemApi = async (resourceId: number, origin: DataOrigin, key: string) =>
+  await BApi.resource.playResourceItem(resourceId, { origin, key });
 
 export type PlayControlRef = {
   triggerDiscovery: () => void;
@@ -143,7 +145,7 @@ const PlayControl = forwardRef<PlayControlRef, Props>(function PlayControl(
   const { t } = useTranslation();
   const { createPortal } = useBakabaseContext();
   const uiOptionsStore = useUiOptionsStore();
-  const isRemoteClient = useIsRemoteClient();
+  const userSideActionsRunHere = useUserSideActionsRunHere();
   const openInBrowserPlayer = useResourceBrowserPlayer();
   const resourceUiOptions = uiOptionsStore.data?.resource;
 
@@ -241,11 +243,13 @@ const PlayControl = forwardRef<PlayControlRef, Props>(function PlayControl(
 
   // Play a PlayableItem via unified PlayItem API (all sources go through resolvers)
   const playItem = async (item: PlayableItem) => {
-    // On another device the API would launch a player on the host's desktop and
-    // report success to someone who cannot see it. Local files stream into the
-    // page instead; the other origins (Steam, ExHentai, …) have nothing to show
-    // remotely and say so rather than pretending.
-    if (isRemoteClient) {
+    // The question is where a player would start, not where the files are. In
+    // the app and in the thin client it starts here, so the call goes through;
+    // in a plain browser pointed at a server it would start on the host's
+    // desktop and report success to someone who cannot see it. Local files
+    // stream into the page instead; the other origins (Steam, ExHentai, …) have
+    // nothing to show remotely and say so rather than pretending.
+    if (!userSideActionsRunHere) {
       if (item.origin === DataOrigin.FileSystem) {
         // Browser playback is one option among several: for anything the browser
         // cannot demux, handing the file to a native player on this device is
@@ -317,9 +321,10 @@ const PlayControl = forwardRef<PlayControlRef, Props>(function PlayControl(
 
   /** Open the resource's folder */
   const handleOpenFolder = useCallback(() => {
-    // Opening a folder happens in the host's file manager, so from another device
+    // Opening a folder happens in a file manager, and only the app and the thin
+    // client have one that belongs to the person clicking. From a plain browser
     // it would pop a window on someone else's screen.
-    if (isRemoteClient) {
+    if (!userSideActionsRunHere) {
       toast.error(t<string>("resource.play.hostOnly"));
 
       return;
@@ -329,7 +334,7 @@ const PlayControl = forwardRef<PlayControlRef, Props>(function PlayControl(
       path: resource.path,
       openInDirectory: resource.isFile,
     });
-  }, [resource.path, resource.isFile, isRemoteClient, t]);
+  }, [resource.path, resource.isFile, userSideActionsRunHere, t]);
 
   /** Handle click when no playable files found */
   const handleNotFound = useCallback(() => {

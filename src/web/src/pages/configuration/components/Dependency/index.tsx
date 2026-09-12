@@ -11,14 +11,21 @@ import Component from "./components/Component";
 import { useDependentComponentContextsStore } from "@/stores/dependentComponentContexts";
 import { Popover, Snippet } from "@/components/bakaui";
 import SettingsSection from "@/pages/configuration/components/SettingsSection";
+import { useIsPureClient } from "@/stores/remoteAccess";
 
 interface DependencyProps {
   query?: string;
 }
 
+/// The one component a thin client uses itself rather than through the server.
+const LocaleEmulatorId = "locale-emulator-component-service";
+
 const Dependency: React.FC<DependencyProps> = ({ query }) => {
   const { t } = useTranslation();
   const componentContexts = useDependentComponentContextsStore((state) => state.contexts);
+  // These are installed by the machine that uses them. In a thin client that is the
+  // server for all but one of them, and the install button here installs there.
+  const isPureClient = useIsPureClient();
 
   const items: SettingItem[] = componentContexts.map((c, i) => ({
     id: String(c.id ?? i),
@@ -28,6 +35,16 @@ const Dependency: React.FC<DependencyProps> = ({ query }) => {
     label: (
       <div className={"flex gap-1 items-center"}>
         {c.name}
+        {/*
+          Locale Emulator is the exception, and the exception matters: launching a
+          work happens on the machine the user is sitting at, so the copy that gets
+          used is the client's own — this row, forwarded, is the server's.
+        */}
+        {isPureClient && c.id === LocaleEmulatorId && (
+          <span className="text-xs text-warning">
+            {t<string>("configuration.dependency.localeEmulatorRunsOnThisMachine")}
+          </span>
+        )}
         <Popover
           showArrow
           placement={"right"}
@@ -50,6 +67,13 @@ const Dependency: React.FC<DependencyProps> = ({ query }) => {
 
   return (
     <SettingsSection
+      header={
+        isPureClient ? (
+          <span className="text-xs text-foreground-400">
+            {t<string>("configuration.dependency.installedOnTheServer")}
+          </span>
+        ) : undefined
+      }
       items={items}
       keywords={["dependency", "component", "ffmpeg", "依赖", "组件"]}
       query={query}

@@ -132,4 +132,125 @@ class AppLocalizationsZh extends AppLocalizations {
   String removedResource(int id) {
     return '资源 #$id（已删除）';
   }
+  @override
+  String get pairTitle => '配对此设备';
+
+  @override
+  String get pairIntro => '该服务端只服务它认识的设备。在服务端的 Bakabase 里读取配对码，或者请已配对设备旁的人批准这一台。';
+
+  @override
+  String get pairCodeLabel => '6 位配对码';
+
+  @override
+  String get pairSubmit => '配对';
+
+  @override
+  String get pairAskInstead => '改为请求批准';
+
+  @override
+  String get pairWaiting => '等待有人批准此设备…';
+
+  @override
+  String get pairCodeRejected => '配对码错误或已过期，请在服务端重新获取。';
+
+  @override
+  String get pairRequestRejected => '请求被拒绝，或等待超时。';
+
+  @override
+  String get pairTooManyAttempts => '服务端暂时不再接受来自此处的尝试，请几分钟后再试。';
+
+  @override
+  String get pairUnreachable => '服务端没有响应。';
+
+  @override
+  String get pairUnsupported => '该服务端版本过旧，不支持配对。';
+
+  @override
+  String get pairDeviceNameLabel => '设备名称';
+
+  @override
+  String get denialUnauthenticated => '此设备尚未与该服务端配对。';
+
+  @override
+  String get denialSignatureExpired => '此手机的时钟不准，服务端拒绝了请求。请校正日期与时间后重试。';
+
+  @override
+  String get denialDeviceRevoked => '此设备已被该服务端解除配对，请重新配对。';
+
+  @override
+  String get denialRunsOnUserMachine => '该操作发生在存放文件的机器上，无法从这里执行。';
+
+  @override
+  String get cancel => '取消';
+
+  @override
+  String get save => '保存';
+
+  @override
+  String get retry => '重试';
+
+  @override
+  String get devicesTooltip => '设备';
+
+  @override
+  String get devicesTitle => '设备';
+
+  @override
+  String get devicesWaiting => '等待放行';
+
+  @override
+  String get devicesPaired => '已有访问权限的设备';
+
+  @override
+  String get devicesNone => '还没有设备与该服务端配对。';
+
+  @override
+  String get devicesUnknownAddress => '地址未知';
+
+  @override
+  String get devicesApprove => '批准';
+
+  @override
+  String get devicesReject => '拒绝';
+
+  @override
+  String get devicesThisDevice => '本设备';
+
+  @override
+  String get devicesNeverSeen => '还没有连接过';
+
+  @override
+  String get devicesSeenJustNow => '刚刚在线';
+
+  @override
+  String get deviceRenameTitle => '重命名';
+
+  @override
+  String get deviceRevoke => '移除访问权限';
+
+  @override
+  String get deviceRevokeBody => '该设备需要重新配对才能再访问此服务端。';
+
+  @override
+  String get deviceRevokeSelfBody => '这就是你正在使用的设备。移除它的访问权限会断开与该服务端的连接，需要重新配对才能回来。';
+
+  @override
+  String devicesSeenMinutesAgo(int minutes) {
+    return '$minutes 分钟前在线';
+  }
+
+  @override
+  String devicesSeenHoursAgo(int hours) {
+    return '$hours 小时前在线';
+  }
+
+  @override
+  String devicesSeenDaysAgo(int days) {
+    return '$days 天前在线';
+  }
+
+  @override
+  String deviceRevokeTitle(String name) {
+    return '移除 $name？';
+  }
 }

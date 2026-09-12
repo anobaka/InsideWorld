@@ -127,4 +127,22 @@
   <data name="Downloader_BilibiliFavoritesIsMissing" xml:space="preserve">
     <value>未选择哔哩哔哩收藏夹</value>
   </data>
+  <data name="CookieCapture_Confirm" xml:space="preserve">
+    <value>确认</value>
+  </data>
+  <data name="CookieCapture_Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="CookieCapture_WaitingForLogin" xml:space="preserve">
+    <value>请登录，如果已登录请点击确认</value>
+  </data>
+  <data name="CookieCapture_ExtractingCookies" xml:space="preserve">
+    <value>正在提取 Cookie...</value>
+  </data>
+  <data name="CookieCapture_Cancelled" xml:space="preserve">
+    <value>已取消导入 Cookie。需要时可重新尝试。</value>
+  </data>
+  <data name="CookieCapture_LoginTo" xml:space="preserve">
+    <value>登录 {0}</value>
+  </data>
 </root>

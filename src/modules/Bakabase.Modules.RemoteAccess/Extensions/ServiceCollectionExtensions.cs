@@ -4,6 +4,7 @@ using Bakabase.Modules.RemoteAccess.Abstractions.Models;
 using Bakabase.Modules.RemoteAccess.Abstractions.Services;
 using Bakabase.Modules.RemoteAccess.Components;
 using Bakabase.Modules.RemoteAccess.Components.Discovery;
+using Bakabase.Modules.RemoteAccess.Components.Pairing;
 using Bakabase.Modules.RemoteAccess.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -20,8 +21,9 @@ public static class ServiceCollectionExtensions
     /// </summary>
     /// <remarks>
     /// The caller must also register an
-    /// <see cref="Abstractions.Components.IListeningAddressProvider"/>; only the
-    /// application layer knows what the host is bound to.
+    /// <see cref="Abstractions.Components.IListeningAddressProvider"/> and an
+    /// <see cref="Abstractions.Components.IRemoteAccessDataDirectory"/>; only the
+    /// application layer knows what the host is bound to and where its data lives.
     /// </remarks>
     public static IServiceCollection AddRemoteAccess(this IServiceCollection services,
         RemoteAccessMode defaultMode, string appVersion)
@@ -30,6 +32,16 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton(new RemoteAccessHostInfo(appVersion));
         services.TryAddSingleton<IRemoteAccessService, RemoteAccessService>();
         services.TryAddSingleton<IMediaPathGuard, MediaPathGuard>();
+
+        // Reads nothing until something asks, and creates nothing until something is
+        // written — an install that never turns remote access on never grows the
+        // directory.
+        services.TryAddSingleton<IRemoteDeviceStore, RemoteDeviceStore>();
+        services.TryAddSingleton<NonceCache>();
+        services.TryAddSingleton<IRemoteDeviceService>(sp =>
+            new RemoteDeviceService(sp.GetRequiredService<IRemoteDeviceStore>()));
+        services.TryAddSingleton<RemoteDeviceAuthenticator>();
+        services.TryAddSingleton<PairingRequestRateLimiter>();
 
         services.AddSingleton<IServableRootProvider, MediaLibraryServableRootProvider>();
         services.AddSingleton<IServableRootProvider, PathMarkServableRootProvider>();

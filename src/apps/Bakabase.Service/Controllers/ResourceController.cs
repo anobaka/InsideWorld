@@ -41,6 +41,7 @@ using Microsoft.Extensions.Logging;
 using StackExchange.Profiling;
 using Swashbuckle.AspNetCore.Annotations;
 using Bakabase.Service.Components.RemoteAccess;
+using Bakabase.Modules.RemoteAccess.Abstractions.Components;
 
 namespace Bakabase.Service.Controllers;
 
@@ -61,7 +62,8 @@ public class ResourceController(
     IBOptionsManager<FileSystemOptions> fsOptionsManager,
     IPropertyValueScopePreferenceService scopePreferenceService,
     Bakabase.Abstractions.Components.ResourceMove.ResourceMoveGuard resourceMoveGuard,
-    Bakabase.Abstractions.Components.Localization.IBakabaseLocalizer bakabaseLocalizer)
+    Bakabase.Abstractions.Components.Localization.IBakabaseLocalizer bakabaseLocalizer,
+    IResourceProfileService resourceProfileService)
     : Controller
 {
     [HttpGet("search-operation")]
@@ -311,6 +313,7 @@ public class ResourceController(
     // 	return await _service.Patch(id, model);
     // }
 
+    [RunsOnUserMachine(Reason = "Opening a resource folder happens on the machine you are sitting at.")]
     [HttpGet("directory")]
     [SwaggerOperation(OperationId = "OpenResourceDirectory")]
     public async Task<BaseResponse> Open(int id)
@@ -520,6 +523,7 @@ public class ResourceController(
         return await service.BulkPutPropertyValue(model.ResourceIds.ToArray(), propertyValueModel);
     }
 
+    [RunsOnUserMachine(Reason = "A player starts on the machine you are sitting at.")]
     [HttpGet("{resourceId}/play")]
     [SwaggerOperation(OperationId = "PlayResourceFile")]
     public async Task<BaseResponse> Play(int resourceId, string? file)
@@ -544,6 +548,7 @@ public class ResourceController(
         return await service.PlayItem(resourceId, DataOrigin.FileSystem, file);
     }
 
+    [RunsOnUserMachine(Reason = "A player starts on the machine you are sitting at.")]
     [HttpGet("{resourceId}/play-item")]
     [SwaggerOperation(OperationId = "PlayResourceItem")]
     public async Task<BaseResponse> PlayItem(int resourceId, DataOrigin origin, string key)
@@ -560,11 +565,50 @@ public class ResourceController(
         return new ListResponse<PlayableItem>(items);
     }
 
+    /// <summary>
+    /// The players configured for this resource, after profile inheritance is resolved.
+    /// </summary>
+    /// <remarks>
+    /// Read by the thin client, which starts the player itself and so needs to know
+    /// which one the user chose. The executable paths in here belong to whichever
+    /// machine configured them, so a client matches them to a known player and
+    /// substitutes its own installation rather than trying to run them as-is.
+    /// </remarks>
+    [HttpGet("{id:int}/effective-player-options")]
+    [SwaggerOperation(OperationId = "GetResourceEffectivePlayerOptions")]
+    [RemoteAccessible]
+    public async Task<SingletonResponse<ResourceProfilePlayerOptions?>> GetEffectivePlayerOptions(int id)
+    {
+        var resource = await service.Get(id, ResourceAdditionalItem.None);
+
+        return resource == null
+            ? new SingletonResponse<ResourceProfilePlayerOptions?>(null)
+            : new SingletonResponse<ResourceProfilePlayerOptions?>(
+                await resourceProfileService.GetEffectivePlayerOptions(resource));
+    }
+
+    [RunsOnUserMachine(Reason = "A player starts on the machine you are sitting at.")]
     [HttpGet("play/random")]
     [SwaggerOperation(OperationId = "PlayRandomResource")]
     public async Task<BaseResponse> PlayRandom()
     {
         return await service.PlayRandomResource();
+    }
+
+    /// <summary>
+    /// Picks a random resource with something playable, without playing it.
+    /// </summary>
+    /// <remarks>
+    /// The picking half of random play, split out for the thin client: it starts the
+    /// player itself but cannot choose what to play, because the resources, the
+    /// playable-file cache and the live fallback probe are all here.
+    /// </remarks>
+    [HttpGet("play/random/candidate")]
+    [SwaggerOperation(OperationId = "PickRandomPlayableItem")]
+    [RemoteAccessible]
+    public async Task<SingletonResponse<PlayableItemPick?>> PickRandomPlayable()
+    {
+        return new SingletonResponse<PlayableItemPick?>(await service.PickRandomPlayableItem());
     }
 
     [HttpPost("bulk-delete")]
@@ -659,6 +703,31 @@ public class ResourceController(
     public async Task<BaseResponse> MarkAsPlayed(int id, [FromQuery] string? item)
     {
         await service.MarkPlayed(new Dictionary<int, string> {[id] = item ?? string.Empty});
+        return BaseResponseBuilder.Ok;
+    }
+
+    /// <summary>
+    /// Records that several resources were played, one file each.
+    /// </summary>
+    /// <remarks>
+    /// Batch play writes one history entry per resource, and a thin client that started
+    /// the players would otherwise make a request per resource for a selection that could
+    /// run to hundreds.
+    /// </remarks>
+    [HttpPost("played-at/bulk")]
+    [SwaggerOperation(OperationId = "MarkResourcesAsPlayed")]
+    [RemoteAccessible]
+    public async Task<BaseResponse> MarkManyAsPlayed([FromBody] MarkResourcesPlayedInputModel model)
+    {
+        var played = model.Items
+            .GroupBy(i => i.ResourceId)
+            .ToDictionary(g => g.Key, g => g.First().Item ?? string.Empty);
+
+        if (played.Count > 0)
+        {
+            await service.MarkPlayed(played);
+        }
+
         return BaseResponseBuilder.Ok;
     }
 

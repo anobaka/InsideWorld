@@ -56,6 +56,7 @@ using Microsoft.Extensions.Logging;
 using MimeKit;
 using Swashbuckle.AspNetCore.Annotations;
 using Bakabase.Abstractions.Components.Text;
+using Bakabase.Modules.RemoteAccess.Abstractions.Components;
 
 namespace Bakabase.Service.Controllers
 {
@@ -75,7 +76,6 @@ namespace Bakabase.Service.Controllers
         private readonly FfMpegService _ffMpegService;
         private readonly HardwareAccelerationService _hardwareAccelerationService;
 
-        private readonly ISystemPlayer _systemPlayer;
         private readonly IFileManager _fileManager;
         private readonly AppService _appService;
         private readonly Bakabase.Service.Services.FileSystemEntryGroupingService _groupingService;
@@ -85,7 +85,7 @@ namespace Bakabase.Service.Controllers
             IwFsWatcher fileProcessorWatcher, PasswordService passwordService, ILogger<FileController> logger,
             BakabaseLocalizer localizer, BTaskManager taskManager, IGuiAdapter guiAdapter,
             FfMpegService ffMpegService, HardwareAccelerationService hardwareAccelerationService,
-            ISystemPlayer systemPlayer, IFileManager fileManager, AppService appService,
+            IFileManager fileManager, AppService appService,
             Bakabase.Service.Services.FileSystemEntryGroupingService groupingService)
         {
             _textOps = textOps;
@@ -100,7 +100,6 @@ namespace Bakabase.Service.Controllers
             _guiAdapter = guiAdapter;
             _ffMpegService = ffMpegService;
             _hardwareAccelerationService = hardwareAccelerationService;
-            _systemPlayer = systemPlayer;
             _fileManager = fileManager;
             _appService = appService;
             _groupingService = groupingService;
@@ -856,6 +855,7 @@ namespace Bakabase.Service.Controllers
             }
         }
 
+        [RunsOnUserMachine(Reason = "The recycle bin that opens belongs to the machine you are sitting at, not to the server.")]
         [HttpGet("recycle-bin")]
         [SwaggerOperation(OperationId = "OpenRecycleBin")]
         public async Task<BaseResponse> OpenRecycleBin()
@@ -1990,6 +1990,7 @@ namespace Bakabase.Service.Controllers
             "alac"                           // Apple Lossless
         };
 
+        [RunsOnUserMachine(Reason = "File icons come from the operating system of the machine that renders them.")]
         [HttpGet("icon")]
         [SwaggerOperation(OperationId = "GetIconData")]
         public Task<SingletonResponse<string>> GetIcon(IconType type, string? path)

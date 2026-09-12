@@ -42,6 +42,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
+using Bakabase.Modules.ThirdParty.Abstractions.Http.Cookie;
+
 namespace Bakabase.Modules.ThirdParty.Extensions;
 
 public static class ThirdPartyExtensions

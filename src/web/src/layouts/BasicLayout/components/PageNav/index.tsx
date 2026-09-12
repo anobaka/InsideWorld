@@ -10,6 +10,7 @@ import AntdMenu from "./components/AntdMenu";
 import styles from "./index.module.scss";
 
 import AppUpdateBanner from "@/layouts/BasicLayout/components/AppUpdateBanner";
+import ClientVersionNotice from "@/layouts/BasicLayout/components/ClientVersionNotice";
 import { Button, Divider, Tooltip } from "@/components/bakaui";
 import { HelpCenterModal } from "@/components/HelpCenter";
 import BApi from "@/sdk/BApi";
@@ -66,6 +67,10 @@ const Navigation = () => {
       <div className={styles.menu}>
         <AntdMenu collapsed={isCollapsed} />
       </div>
+      {/* Above the update banner, and about the other program: that one offers to update
+          this client, this one says the server is not on the same version. Renders
+          nothing outside a thin client, or once the two agree. */}
+      <ClientVersionNotice collapsed={isCollapsed} />
       <AppUpdateBanner collapsed={isCollapsed} />
       <div className={"px-2"}>
         <Divider orientation={"horizontal"} />

@@ -13,8 +13,8 @@ using Microsoft.Extensions.Options;
 namespace Bakabase.Modules.Player.Services;
 
 public class BatchPlayService(
-    IResourceService resourceService,
-    IResourceProfileService resourceProfileService,
+    IBatchPlayResourceSource resourceSource,
+    IBatchPlayFileResolver fileResolver,
     IPlayerDiscoveryService discoveryService,
     IBatchPlayPlaylistSource playlistSource,
     IBatchPlayProcessLauncher launcher,
@@ -30,8 +30,8 @@ public class BatchPlayService(
 
     public async Task<List<BatchPlayCandidate>> GetCandidatesAsync(int[] resourceIds, CancellationToken ct)
     {
-        var filesByResource = await ResolvePlayableFilesAsync(resourceIds, ct);
-        var candidates = await BuildCandidatesAsync(resourceIds, ct);
+        var snapshot = await resourceSource.GetSnapshotAsync(resourceIds, ct);
+        var candidates = await BuildCandidatesAsync(snapshot, ct);
 
         // Annotate each candidate with how many of the selected resources it
         // can actually open, so the menu never advertises a player that has
@@ -39,7 +39,7 @@ public class BatchPlayService(
         return candidates.Select(c => c with
         {
             MatchedResourceCount =
-                filesByResource.Count(kv => kv.Value.Any(f => MatchesPlayer(c.SupportedExtensions, f))),
+                snapshot.Resources.Count(r => r.Files.Any(f => MatchesPlayer(c.SupportedExtensions, f))),
         }).ToList();
     }
 
@@ -50,13 +50,11 @@ public class BatchPlayService(
             throw new InvalidOperationException("No resources selected.");
         }
 
-        var candidates = await BuildCandidatesAsync(input.ResourceIds, ct);
-        var candidate = FindCandidate(candidates, input.PlayerKey);
+        var snapshot = await resourceSource.GetSnapshotAsync(input.ResourceIds, ct);
+        var candidate = FindCandidate(await BuildCandidatesAsync(snapshot, ct), input.PlayerKey);
 
-        var filesByResource = await ResolvePlayableFilesAsync(input.ResourceIds, ct);
         var (files, includedResources, skipped, missingFileCount) =
-            CollectFiles(input.ResourceIds, filesByResource, candidate.SupportedExtensions,
-                input.FileSelectionMode);
+            CollectFiles(input.ResourceIds, snapshot, candidate.SupportedExtensions, input.FileSelectionMode);
 
         if (files.Count == 0)
         {
@@ -90,7 +88,7 @@ public class BatchPlayService(
         var snapshot = await GetSnapshotOrThrowAsync(playlistId, ct);
         var resourceIds = snapshot.Entries.Where(e => e.ResourceId.HasValue)
             .Select(e => e.ResourceId!.Value).Distinct().ToArray();
-        var candidates = await BuildCandidatesAsync(resourceIds, ct);
+        var candidates = await BuildCandidatesAsync(await resourceSource.GetSnapshotAsync(resourceIds, ct), ct);
 
         return candidates.Select(c => c with
         {
@@ -103,12 +101,16 @@ public class BatchPlayService(
         var snapshot = await GetSnapshotOrThrowAsync(playlistId, ct);
         var resourceIds = snapshot.Entries.Where(e => e.ResourceId.HasValue)
             .Select(e => e.ResourceId!.Value).Distinct().ToArray();
-        var candidate = FindCandidate(await BuildCandidatesAsync(resourceIds, ct), playerKey);
+        var candidate = FindCandidate(
+            await BuildCandidatesAsync(await resourceSource.GetSnapshotAsync(resourceIds, ct), ct), playerKey);
 
         var matched = snapshot.Entries
             .Where(e => MatchesPlayer(candidate.SupportedExtensions, e.Path))
             .ToList();
-        var existing = matched.Where(e => File.Exists(e.Path)).ToList();
+        var existing = matched
+            .Select(e => (Entry: e, Resolved: fileResolver.Resolve(e.Path)))
+            .Where(e => e.Resolved != null)
+            .ToList();
         var missingFileCount = matched.Count - existing.Count;
 
         if (existing.Count == 0)
@@ -119,12 +121,13 @@ public class BatchPlayService(
 
         GuardTotalFiles(existing.Count);
 
-        var launchMethod = await LaunchAsync(candidate, existing.Select(e => e.Path).ToList(), ct);
+        var launchMethod = await LaunchAsync(candidate, existing.Select(e => e.Resolved!).ToList(), ct);
 
-        // One history entry per distinct backing resource, first included file each.
-        var includedResources = existing.Where(e => e.ResourceId.HasValue)
-            .GroupBy(e => e.ResourceId!.Value)
-            .ToDictionary(g => g.Key, g => g.First().Path);
+        // One history entry per distinct backing resource, first included file each — as
+        // the library names it, not as this machine reached it.
+        var includedResources = existing.Where(e => e.Entry.ResourceId.HasValue)
+            .GroupBy(e => e.Entry.ResourceId!.Value)
+            .ToDictionary(g => g.Key, g => g.First().Entry.Path);
         await TryMarkPlayedAsync(includedResources);
 
         return new BatchPlayResult
@@ -146,43 +149,40 @@ public class BatchPlayService(
     /// in the matching resource profiles first (they reflect an explicit
     /// per-source choice), then known players discovered on this machine.
     /// </summary>
-    private async Task<List<BatchPlayCandidate>> BuildCandidatesAsync(int[] resourceIds, CancellationToken ct)
+    private async Task<List<BatchPlayCandidate>> BuildCandidatesAsync(BatchPlayResourceSnapshot snapshot,
+        CancellationToken ct)
     {
         var candidates = new List<BatchPlayCandidate>();
         var coveredExecutables = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        var resources = await resourceService.GetByKeys(resourceIds);
-        foreach (var resource in resources)
+        foreach (var player in snapshot.ConfiguredPlayers)
         {
             ct.ThrowIfCancellationRequested();
-            var playerOptions = await resourceProfileService.GetEffectivePlayerOptions(resource);
-            foreach (var player in playerOptions?.Players ?? [])
-            {
-                if (string.IsNullOrWhiteSpace(player.ExecutablePath) ||
-                    !coveredExecutables.Add(player.ExecutablePath))
-                {
-                    continue;
-                }
 
-                var known = KnownPlayerDefinitions.MatchByExecutable(player.ExecutablePath);
-                candidates.Add(new BatchPlayCandidate
-                {
-                    Key = $"{ProfileKeyPrefix}{player.ExecutablePath.ToLowerInvariant()}",
-                    Type = BatchPlayCandidateType.ProfilePlayer,
-                    DisplayName = known?.DisplayName ??
-                                  CrossPlatformPath.GetFileNameWithoutExtension(player.ExecutablePath),
-                    ExecutablePath = player.ExecutablePath,
-                    // Unrecognized players get the playlist route by
-                    // assumption — most accept an m3u8 as their file argument.
-                    Capabilities = known?.Capabilities ?? BatchPlayCapability.PlaylistFile,
-                    CommandTemplate = player.Command,
-                    CapabilitiesAssumed = known == null,
-                    // The user's configured extension set wins over the
-                    // catalog's; an empty/missing set means "any file".
-                    SupportedExtensions = NormalizeExtensions(player.Extensions) ??
-                                          known?.SupportedExtensions,
-                });
+            if (string.IsNullOrWhiteSpace(player.ExecutablePath) ||
+                !coveredExecutables.Add(player.ExecutablePath))
+            {
+                continue;
             }
+
+            var known = KnownPlayerDefinitions.MatchByExecutable(player.ExecutablePath);
+            candidates.Add(new BatchPlayCandidate
+            {
+                Key = $"{ProfileKeyPrefix}{player.ExecutablePath.ToLowerInvariant()}",
+                Type = BatchPlayCandidateType.ProfilePlayer,
+                DisplayName = known?.DisplayName ??
+                              CrossPlatformPath.GetFileNameWithoutExtension(player.ExecutablePath),
+                ExecutablePath = player.ExecutablePath,
+                // Unrecognized players get the playlist route by
+                // assumption — most accept an m3u8 as their file argument.
+                Capabilities = known?.Capabilities ?? BatchPlayCapability.PlaylistFile,
+                CommandTemplate = player.Command,
+                CapabilitiesAssumed = known == null,
+                // The user's configured extension set wins over the
+                // catalog's; an empty/missing set means "any file".
+                SupportedExtensions = NormalizeExtensions(player.Extensions) ??
+                                      known?.SupportedExtensions,
+            });
         }
 
         foreach (var discovered in await discoveryService.GetDiscoveredPlayersAsync(ct: ct))
@@ -208,38 +208,12 @@ public class BatchPlayService(
         return candidates;
     }
 
-    /// <summary>
-    /// Resolves the FileSystem playable files of each resource, in selection
-    /// order. Cache-first; uncached resources are discovered on demand.
-    /// </summary>
-    private async Task<Dictionary<int, List<string>>> ResolvePlayableFilesAsync(int[] resourceIds,
-        CancellationToken ct)
-    {
-        var knownIds = (await resourceService.GetByKeys(resourceIds)).Select(r => r.Id).ToHashSet();
-        var result = new Dictionary<int, List<string>>();
-        foreach (var resourceId in resourceIds)
-        {
-            ct.ThrowIfCancellationRequested();
-            if (!knownIds.Contains(resourceId))
-            {
-                continue;
-            }
-
-            var items = await resourceService.DiscoverPlayableItems(resourceId, ct);
-            result[resourceId] = items
-                .Where(i => i.Origin == DataOrigin.FileSystem && !string.IsNullOrEmpty(i.Key))
-                .Select(i => i.Key)
-                .ToList();
-        }
-
-        return result;
-    }
-
-    private static (List<string> Files, Dictionary<int, string> IncludedResources,
+    private (List<string> Files, Dictionary<int, string> IncludedResources,
         List<BatchPlaySkippedResource> Skipped, int MissingFileCount)
-        CollectFiles(int[] resourceIds, Dictionary<int, List<string>> filesByResource,
+        CollectFiles(int[] resourceIds, BatchPlayResourceSnapshot snapshot,
             IReadOnlySet<string>? supportedExtensions, BatchPlayFileSelectionMode mode)
     {
+        var filesByResource = snapshot.Resources.ToDictionary(r => r.ResourceId, r => r.Files);
         var files = new List<string>();
         var includedResources = new Dictionary<int, string>();
         var skipped = new List<BatchPlaySkippedResource>();
@@ -269,7 +243,10 @@ public class BatchPlayService(
 
             // Files may have moved since they were cached; silently feeding a
             // player dead paths produces confusing in-player errors instead.
-            var existing = matching.Where(File.Exists).ToList();
+            var existing = matching
+                .Select(p => (Source: p, Resolved: fileResolver.Resolve(p)))
+                .Where(p => p.Resolved != null)
+                .ToList();
             missingFileCount += matching.Count - existing.Count;
 
             if (existing.Count == 0)
@@ -278,29 +255,31 @@ public class BatchPlayService(
                 continue;
             }
 
-            List<string> selected = mode == BatchPlayFileSelectionMode.FirstFilePerResource
-                ? [existing[0]]
+            var selected = mode == BatchPlayFileSelectionMode.FirstFilePerResource
+                ? existing[..1]
                 : existing;
 
-            files.AddRange(selected);
-            includedResources[resourceId] = selected[0];
+            files.AddRange(selected.Select(s => s.Resolved!));
+
+            // History records the file as the library names it, not as this machine
+            // reached it — the server owns that record and has never seen a local mount.
+            includedResources[resourceId] = selected[0].Source;
         }
 
         return (files, includedResources, skipped, missingFileCount);
     }
 
+    /// <param name="files">Already resolved for this machine by <see cref="IBatchPlayFileResolver"/>.</param>
     private async Task<BatchPlayLaunchMethod> LaunchAsync(BatchPlayCandidate candidate, List<string> files,
         CancellationToken ct)
     {
-        var osSafeFiles = files.Select(ToOsSafePath).ToList();
-
         string arguments;
         BatchPlayLaunchMethod method;
 
-        if (osSafeFiles.Count == 1)
+        if (files.Count == 1)
         {
             // A single file works through the plain template for any player.
-            arguments = BatchPlayArguments.BuildFromTemplate(candidate.CommandTemplate, osSafeFiles[0]);
+            arguments = BatchPlayArguments.BuildFromTemplate(candidate.CommandTemplate, files[0]);
             method = BatchPlayLaunchMethod.MultiFileArguments;
         }
         else if (candidate.Capabilities.HasFlag(BatchPlayCapability.PlaylistFile))
@@ -309,13 +288,13 @@ public class BatchPlayService(
                             Path.Combine(Path.GetTempPath(), "bakabase", "playlists");
             M3u8Playlist.SweepOldFiles(directory, options.Value.TempPlaylistRetention);
             var playlistPath = await M3u8Playlist.WriteTempFileAsync(directory,
-                osSafeFiles.Select(f => new M3u8Entry(f)), ct);
+                files.Select(f => new M3u8Entry(f)), ct);
             arguments = BatchPlayArguments.BuildFromTemplate(candidate.CommandTemplate, playlistPath);
             method = BatchPlayLaunchMethod.PlaylistFile;
         }
         else if (candidate.Capabilities.HasFlag(BatchPlayCapability.MultiFileArguments))
         {
-            arguments = BatchPlayArguments.BuildMultiFile(osSafeFiles);
+            arguments = BatchPlayArguments.BuildMultiFile(files);
             if (arguments.Length > options.Value.MaxCommandLineLength)
             {
                 throw new InvalidOperationException(
@@ -372,7 +351,7 @@ public class BatchPlayService(
 
         try
         {
-            await resourceService.MarkPlayed(includedResources);
+            await resourceSource.MarkPlayedAsync(includedResources, CancellationToken.None);
         }
         catch (Exception e)
         {
@@ -405,9 +384,4 @@ public class BatchPlayService(
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
         return set is { Count: > 0 } ? set : null;
     }
-
-    private static string ToOsSafePath(string path) =>
-        OperatingSystem.IsWindows()
-            ? path.Replace(InternalOptions.DirSeparator, InternalOptions.WindowsSpecificDirSeparator)
-            : path;
 }

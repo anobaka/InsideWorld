@@ -10,12 +10,30 @@
   "byAddress": "By address",
   "connect": "Connect",
   "couldNotConnect": "Could not connect to {url}",
-  "@couldNotConnect": {"placeholders": {"url": {"type": "String"}}},
+  "@couldNotConnect": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
   "remoteAccessDisabledHint": "Remote access is turned off. Enable it in Bakabase on the host machine (Settings → Remote access).",
   "protocolTooNew": "Server speaks protocol v{version}; this app is too old for it. Update the app.",
-  "@protocolTooNew": {"placeholders": {"version": {"type": "String"}}},
+  "@protocolTooNew": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "protocolTooOld": "Server speaks protocol v{version}; this app needs a newer server. Update Bakabase on the host.",
-  "@protocolTooOld": {"placeholders": {"version": {"type": "String"}}},
+  "@protocolTooOld": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "searchHint": "Search resources",
   "allLibraries": "All",
   "sortTooltip": "Sort",
@@ -33,14 +51,98 @@
   "copyStreamLink": "Copy stream link",
   "streamLinkCopied": "Stream link copied — paste it into a player",
   "couldNotOpenPlayer": "Could not open {name} — is it installed?",
-  "@couldNotOpenPlayer": {"placeholders": {"name": {"type": "String"}}},
+  "@couldNotOpenPlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "otherPlayer": "Other player…",
   "readPages": "Read ({count} pages)",
-  "@readPages": {"placeholders": {"count": {"type": "int"}}},
+  "@readPages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "playSection": "Play",
   "otherFiles": "Other files",
   "noPlayableFiles": "No playable files were found in this resource.",
   "playHistory": "Play history",
   "removedResource": "Resource #{id} (removed)",
-  "@removedResource": {"placeholders": {"id": {"type": "int"}}}
+  "@removedResource": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "pairTitle": "Pair this device",
+  "pairIntro": "This server only serves devices it knows. Read the code from Bakabase on the server, or ask someone at a paired device to approve this one.",
+  "pairCodeLabel": "6-digit code",
+  "pairSubmit": "Pair",
+  "pairAskInstead": "Ask for approval instead",
+  "pairWaiting": "Waiting for someone to approve this device…",
+  "pairCodeRejected": "That code was wrong or has expired. Read a fresh one from the server.",
+  "pairRequestRejected": "The request was turned down, or waited too long.",
+  "pairTooManyAttempts": "The server is not taking more attempts from here for now. Try again in a few minutes.",
+  "pairUnreachable": "The server stopped answering.",
+  "pairUnsupported": "This server is too old to pair with.",
+  "pairDeviceNameLabel": "Device name",
+  "denialUnauthenticated": "This device is not paired with that server.",
+  "denialSignatureExpired": "This phone's clock is off, so the server rejected the request. Fix the date and time, then try again.",
+  "denialDeviceRevoked": "This device was unpaired from that server. Pair it again.",
+  "denialRunsOnUserMachine": "That happens on the machine holding the files, so it cannot run from here.",
+  "cancel": "Cancel",
+  "save": "Save",
+  "retry": "Try again",
+  "devicesTooltip": "Devices",
+  "devicesTitle": "Devices",
+  "devicesWaiting": "Waiting to be let in",
+  "devicesPaired": "Devices with access",
+  "devicesNone": "No devices are paired with this server.",
+  "devicesUnknownAddress": "Address unknown",
+  "devicesApprove": "Approve",
+  "devicesReject": "Reject",
+  "devicesThisDevice": "This device",
+  "devicesNeverSeen": "Has not connected yet",
+  "devicesSeenJustNow": "Seen just now",
+  "devicesSeenMinutesAgo": "Seen {minutes} min ago",
+  "@devicesSeenMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "devicesSeenHoursAgo": "Seen {hours} h ago",
+  "@devicesSeenHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "devicesSeenDaysAgo": "Seen {days} d ago",
+  "@devicesSeenDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "deviceRenameTitle": "Rename",
+  "deviceRevoke": "Remove access",
+  "deviceRevokeTitle": "Remove {name}?",
+  "@deviceRevokeTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceRevokeBody": "That device will have to pair again before it can reach this server.",
+  "deviceRevokeSelfBody": "This is the device you are using. Removing its access disconnects you from this server, and you will have to pair again to come back."
 }

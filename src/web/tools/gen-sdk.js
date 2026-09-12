@@ -26,6 +26,7 @@ function run(cmd, args, opts = {}) {
 // ---------- Api.ts post-processing ----------
 const IMPORTS = `import { buildLogger, extractErrorMessage } from "@/components/utils.tsx";
 import { toast } from "@/components/bakaui";
+import { reportClientFailure } from "@/core/clientFailures";
 `;
 
 const LOG = `
@@ -208,7 +209,7 @@ async function buildApiTs() {
     "if (!response.ok) throw data;\n      return data.data;\n    });\n  };",
     `
       if (!response.ok) {
-        this.processResponseError(data, fullRequestParams);
+        this.processResponseError(data, fullRequestParams, response);
         throw data;
       }
       return this.processResponseData(data.data as BaseResponse, fullRequestParams);
@@ -218,7 +219,36 @@ async function buildApiTs() {
     });
   };
 
-  protected processResponseError = (error: any, params: FullRequestParams) => {
+  /**
+   * Marks an error as already reported.
+   *
+   * \`throw data\` above is caught by the \`.catch\` chained onto the same promise, so
+   * every HTTP-level failure reached this twice and raised two identical toasts. The
+   * throw still has to happen — callers rely on it — so the error carries a note
+   * instead.
+   */
+  protected static readonly reportedMarker = "__bakabaseErrorReported";
+
+  protected processResponseError = (error: any, params: FullRequestParams, response?: Response) => {
+    if (error && typeof error === "object") {
+      if ((error as any)[HttpClient.reportedMarker]) {
+        return;
+      }
+      try {
+        Object.defineProperty(error, HttpClient.reportedMarker, { value: true, enumerable: false });
+      } catch {
+        // Frozen or a primitive wrapper. Reporting twice beats not reporting.
+      }
+    }
+
+    // A refusal from the thin client's own forwarding layer rather than from the
+    // server: no local path mapping, an action this build cannot run yet, and so on.
+    // Recognised in one place because any endpoint that touches a path can return it,
+    // and "GET /tool/open failed" describes none of them.
+    if (reportClientFailure(response, error)) {
+      return;
+    }
+
     const title = ${errorTitleTpl};
     const description = extractErrorMessage(error);
 

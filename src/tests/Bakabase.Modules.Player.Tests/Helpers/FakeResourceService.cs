@@ -109,6 +109,7 @@ internal sealed class FakeResourceService : IResourceService
     public string BuildDisplayNameForResource(Resource resource, string template,
         (string Left, string Right)[] wrappers) => throw new NotImplementedException();
     public Task<BaseResponse> PlayRandomResource() => throw new NotImplementedException();
+    public Task<PlayableItemPick?> PickRandomPlayableItem() => throw new NotImplementedException();
     public Task<(List<Resource> Ancestors, int ChildrenCount)> GetHierarchyContext(int resourceId)
         => throw new NotImplementedException();
 }

@@ -1,4 +1,5 @@
 using Bakabase.Abstractions.Models.Db;
+using Bakabase.Abstractions.Models.Domain;
 using Bootstrap.Models.ResponseModels;
 
 namespace Bakabase.Abstractions.Services;
@@ -17,6 +18,16 @@ public interface IDLsiteWorkService
     Task ExtractWork(string workId, Func<int, string, Task>? onProgress = null, CancellationToken ct = default);
     Task<string> PrepareDownloadDirectory(string workId);
     Task LaunchWork(string workId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Works out what running a work would start, without starting it.
+    /// </summary>
+    /// <remarks>
+    /// Split out for the thin client, which starts the program itself but cannot pick the
+    /// file: choosing it needs the work's type, its download location and the priority
+    /// rules over what is in that folder, all of which live here.
+    /// </remarks>
+    Task<DLsiteWorkLaunchTarget> ResolveLaunchTarget(string workId, CancellationToken ct = default);
     List<string> FindPlayableFiles(string localPath, string? workType);
     Task<int> ScanFolder(string folderPath, Func<int, int, Task>? onProgress = null, CancellationToken ct = default);
     Task<int> ScanConfiguredFolders(Func<int, int, Task>? onProgress = null, CancellationToken ct = default);

@@ -13,6 +13,8 @@ class ServerInfo {
     required this.appVersion,
     required this.protocolVersion,
     this.mode,
+    this.pairingSupported = false,
+    this.serverTime,
   });
 
   final String id;
@@ -24,12 +26,48 @@ class ServerInfo {
   /// discovery payloads.
   final int? mode;
 
+  /// Whether this server understands device pairing.
+  ///
+  /// A capability flag rather than a protocol bump, on purpose: raising the protocol
+  /// version would make every already-installed app refuse to connect as "too new".
+  /// So it is absent — and therefore false — on an older server, which is the truth.
+  final bool pairingSupported;
+
+  /// The server's clock at the moment it answered, so this device can measure its
+  /// own offset and sign with a timestamp the server will accept. Absent in discovery
+  /// payloads and on servers from before pairing.
+  final DateTime? serverTime;
+
+  /// Reads the server's clock reading, which arrives as UTC without saying so.
+  ///
+  /// The server sends `DateTime.UtcNow` through a serializer configured with
+  /// `"yyyy-MM-dd HH:mm:ss.fff"` — no offset, no trailing Z. Dart's [DateTime.parse]
+  /// reads a string like that as *local* time, so on a phone in UTC+8 the measured
+  /// clock offset would come out eight hours wrong and every signature this device
+  /// produced would be rejected as expired. The C# client assumes universal for the
+  /// same string; this is the same assumption, spelled out.
+  ///
+  /// A value that does say what it is — a trailing `Z`, or an explicit `+08:00` — is
+  /// left alone, so a server that starts sending proper ISO instants keeps working.
+  static DateTime? parseServerTime(String? value) {
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+
+    final saysZone = value.endsWith('Z') ||
+        RegExp(r'[+-]\d{2}:?\d{2}$').hasMatch(value);
+
+    return DateTime.tryParse(saysZone ? value : '${value}Z')?.toUtc();
+  }
+
   static ServerInfo fromJson(Map<String, dynamic> json) => ServerInfo(
         id: json['id'] as String,
         name: json['name'] as String? ?? 'Bakabase',
         appVersion: json['appVersion'] as String? ?? '',
         protocolVersion: (json['protocolVersion'] as num?)?.toInt() ?? 0,
         mode: (json['mode'] as num?)?.toInt(),
+        pairingSupported: json['pairingSupported'] as bool? ?? false,
+        serverTime: parseServerTime(json['serverTime'] as String?),
       );
 }
 
@@ -143,4 +181,92 @@ class PlayableItem {
         key: json['key'] as String? ?? '',
         displayName: json['displayName'] as String?,
       );
+}
+
+/// A device the server has let in.
+///
+/// Carries no key: the key exists on the server only to check signatures, and is
+/// never sent anywhere, including here.
+class RemoteDevice {
+  const RemoteDevice({
+    required this.id,
+    required this.name,
+    required this.platform,
+    this.createdAt,
+    this.lastSeenAt,
+    this.approvedByDeviceId,
+  });
+
+  final String id;
+  final String name;
+
+  /// RemoteDevicePlatform: 0 unknown, 1 Windows, 2 macOS, 3 Linux, 4 Android, 5 iOS.
+  final int platform;
+
+  final DateTime? createdAt;
+
+  /// Null until the device makes its first signed request.
+  final DateTime? lastSeenAt;
+
+  /// Which device let this one in. Null for the first, which used a code.
+  final String? approvedByDeviceId;
+
+  static RemoteDevice? fromJson(Map<String, dynamic> json) {
+    final id = json['id'] as String?;
+
+    if (id == null || id.isEmpty) {
+      return null;
+    }
+
+    return RemoteDevice(
+      id: id,
+      name: json['name'] as String? ?? id,
+      platform: (json['platform'] as num?)?.toInt() ?? 0,
+      // Same timezone-less format as the server's clock reading, and read the
+      // same way — see ServerInfo.parseServerTime.
+      createdAt: ServerInfo.parseServerTime(json['createdAt'] as String?),
+      lastSeenAt: ServerInfo.parseServerTime(json['lastSeenAt'] as String?),
+      approvedByDeviceId: json['approvedByDeviceId'] as String?,
+    );
+  }
+}
+
+/// A device asking to be let in.
+class PendingPairingRequest {
+  const PendingPairingRequest({
+    required this.id,
+    required this.deviceName,
+    required this.platform,
+    this.remoteAddress,
+    this.requestedAt,
+    this.expiresAt,
+  });
+
+  final String id;
+  final String deviceName;
+  final int platform;
+
+  /// Where it came from, so whoever approves can sanity-check it against the
+  /// device they are holding.
+  final String? remoteAddress;
+
+  final DateTime? requestedAt;
+  final DateTime? expiresAt;
+
+  static PendingPairingRequest? fromJson(Map<String, dynamic> json) {
+    final id = json['id'] as String?;
+
+    if (id == null || id.isEmpty) {
+      return null;
+    }
+
+    return PendingPairingRequest(
+      id: id,
+      deviceName: json['deviceName'] as String? ?? '',
+      platform: (json['platform'] as num?)?.toInt() ?? 0,
+      remoteAddress: json['remoteAddress'] as String?,
+      requestedAt: ServerInfo.parseServerTime(json['requestedAt'] as String?),
+      expiresAt: ServerInfo.parseServerTime(json['expiresAt'] as String?),
+    );
+  }
 }

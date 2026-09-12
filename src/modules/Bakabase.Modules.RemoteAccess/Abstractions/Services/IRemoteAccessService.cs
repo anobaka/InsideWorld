@@ -36,6 +36,13 @@ public interface IRemoteAccessService
     Task SetAllowLiveTranscodeAsync(bool allow);
 
     /// <summary>
+    /// Whether an unpaired caller is refused outright. Never applies to loopback.
+    /// </summary>
+    bool GetRequirePairing();
+
+    Task SetRequirePairingAsync(bool require);
+
+    /// <summary>
     /// The payload discovery and <c>server-info</c> both serve — see
     /// <see cref="RemoteAccessServerDescriptor"/>.
     /// </summary>

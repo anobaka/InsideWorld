@@ -542,56 +542,5 @@ public class FileSystemResolver : IResourceResolver
         return items;
     }
 
-    public async Task PlayAsync(DomainResource resource, PlayableItem item, CancellationToken ct)
-    {
-        var file = item.Key;
-        var playedByCustomPlayer = false;
-
-        // Use ResourceProfile player options
-        var playerOptions = await _resourceProfileService.GetEffectivePlayerOptions(resource);
-        if (playerOptions?.Players is { Count: > 0 })
-        {
-            var fileExtension = Path.GetExtension(file);
-            var player =
-                playerOptions.Players.FirstOrDefault(p =>
-                    p.Extensions?.Contains(fileExtension, StringComparer.OrdinalIgnoreCase) == true) ??
-                playerOptions.Players.FirstOrDefault(x => x.Extensions?.Any() != true);
-            if (player != null)
-            {
-                var cmd = player.Command;
-                _ = Task.Run(async () =>
-                {
-                    var template = string.IsNullOrEmpty(cmd) ? "{0}" : cmd;
-                    var escapedFile = file.Replace("\"", "\\\"");
-                    var args = Regex.Replace(template, @"([""']?)\{(\d+)\}([""']?)", match =>
-                    {
-                        var prefix = match.Groups[1].Value;
-                        var suffix = match.Groups[3].Value;
-                        var alreadyQuoted = (prefix == "\"" && suffix == "\"") ||
-                                            (prefix == "'" && suffix == "'");
-                        return alreadyQuoted
-                            ? $"{prefix}{escapedFile}{suffix}"
-                            : $"\"{escapedFile}\"";
-                    });
-                    var process = new Process
-                    {
-                        StartInfo = new ProcessStartInfo(player.ExecutablePath, args)
-                        {
-                            UseShellExecute = false
-                        }
-                    };
-                    process.Start();
-                    await process.WaitForExitAsync();
-                });
-                playedByCustomPlayer = true;
-            }
-        }
-
-        if (!playedByCustomPlayer)
-        {
-            await _systemPlayer.Play(file);
-        }
-    }
-
     #endregion
 }

@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bakabase</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f6f7;
+    --panel: #ffffff;
+    --line: #e2e2e6;
+    --ink: #1c1c1f;
+    --muted: #6d6d76;
+    --accent: #3f6fd8;
+    --accent-ink: #ffffff;
+    --bad: #b5482f;
+    --good: #2f7a4a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17171a;
+      --panel: #202024;
+      --line: #303036;
+      --ink: #ececed;
+      --muted: #9b9ba4;
+      --accent: #6d92e4;
+      --accent-ink: #12121a;
+      --bad: #e08a72;
+      --good: #7fc39b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+    background: var(--bg);
+    color: var(--ink);
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  }
+  main { width: 100%; max-width: 560px; }
+  h1 { margin: 0 0 4px; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  .lede { margin: 0 0 24px; color: var(--muted); }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+  .panel h2 {
+    margin: 0 0 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .row { display: flex; gap: 8px; }
+  input {
+    flex: 1;
+    min-width: 0;
+    padding: 9px 11px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--bg);
+    color: inherit;
+    font: inherit;
+  }
+  input:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  button {
+    padding: 9px 16px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--panel);
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  button:disabled { opacity: 0.5; cursor: default; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 0;
+    border-top: 1px solid var(--line);
+  }
+  li:first-child { border-top: 0; }
+  .found { flex: 1; min-width: 0; }
+  .found strong { display: block; font-weight: 600; }
+  .found span { color: var(--muted); font-size: 12px; word-break: break-all; }
+  .tag {
+    font-size: 11px;
+    padding: 1px 6px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    color: var(--muted);
+  }
+  .note { margin: 10px 0 0; color: var(--muted); font-size: 13px; }
+  .note.bad { color: var(--bad); }
+  .note.good { color: var(--good); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Connect to a server</h1>
+  <p class="lede">This is the Bakabase client. Your library lives on a server; point this at it once
+    and it is remembered.</p>
+
+  <section class="panel" id="update" hidden>
+    <h2>Client update</h2>
+    <p class="note" id="update-note" style="margin-top: 0"></p>
+    <p class="row" style="margin: 10px 0 0">
+      <button class="primary" id="update-now" type="button">Update and restart</button>
+    </p>
+  </section>
+
+  <section class="panel">
+    <h2>On this network</h2>
+    <ul id="found"></ul>
+    <p class="note" id="scanning">Looking…</p>
+    <p class="note" id="none" hidden>Nothing answered. Enter the address below, or check that remote
+      access is switched on over there.</p>
+    <p class="row" style="margin: 12px 0 0"><button id="rescan" type="button">Scan again</button></p>
+  </section>
+
+  <section class="panel">
+    <h2>Address</h2>
+    <form class="row" id="address-form">
+      <input id="address" name="address" placeholder="192.168.1.5:34567" autocomplete="off"
+             spellcheck="false" aria-label="Server address">
+      <button class="primary" type="submit">Connect</button>
+    </form>
+    <p class="note" id="address-note" hidden></p>
+  </section>
+
+  <section class="panel" id="pairing" hidden>
+    <h2>Pairing</h2>
+    <p class="note" id="pairing-lede" style="margin-top: 0"></p>
+    <form class="row" id="code-form">
+      <input id="code" inputmode="numeric" maxlength="6" placeholder="6-digit code"
+             autocomplete="off" aria-label="Pairing code">
+      <button class="primary" type="submit">Pair</button>
+    </form>
+    <p class="row" style="margin: 10px 0 0">
+      <button id="request" type="button">Ask the server's owner to approve instead</button>
+    </p>
+    <p class="note" id="pairing-note" hidden></p>
+  </section>
+</main>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+
+  // The same numbers gen-sdk emits into constants.ts, because they are the same C#
+  // enums and they travel as numbers. Spelled out here rather than compared inline:
+  // a bare `outcome === 3` in a branch is how these get mixed up.
+  var Handshake = {
+    Ok: 0, Unreachable: 1, NotBakabase: 2, ClientTooOld: 3, ServerTooOld: 4,
+    RemoteAccessDisabled: 5
+  };
+  // Bakabase.Infrastructures' UpdaterStatus, which travels as a number like the rest.
+  var Updater = {
+    Idle: 1, Running: 2, PendingRestart: 3, UpToDate: 4, Failed: 5, Unavailable: 6
+  };
+  var Pairing = {
+    Paired: 0, Unreachable: 1, CodeRejected: 2, AwaitingApproval: 3, RequestRejected: 4,
+    TooManyAttempts: 5, PairingUnsupported: 6
+  };
+  var pendingAddress = '';
+  var pendingRequestId = '';
+  var waiting = null;
+
+  // Every /client endpoint answers in the {code, data} envelope the rest of the UI
+  // reads, so unwrapping happens here rather than at each call site.
+  function unwrap(response) {
+    return response.json().then(function (body) { return body && body.data; });
+  }
+
+  function post(path, body) {
+    return fetch('/client' + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body || {})
+    }).then(unwrap);
+  }
+
+  function note(el, text, kind) {
+    el.textContent = text;
+    el.className = 'note' + (kind ? ' ' + kind : '');
+    el.hidden = !text;
+  }
+
+  // A reload is deliberate: once a server is attached, everything at this origin is
+  // the server's own frontend, and the cleanest way to hand over is to stop being
+  // this page.
+  function enterApp() { window.location.href = '/'; }
+
+  // ---- discovery ----
+
+  function scan() {
+    $('rescan').disabled = true;
+    $('found').innerHTML = '';
+    $('none').hidden = true;
+    $('scanning').hidden = false;
+
+    fetch('/client/discover')
+      .then(unwrap)
+      .then(function (servers) {
+        servers = servers || [];
+        $('scanning').hidden = true;
+        $('rescan').disabled = false;
+        $('none').hidden = servers.length > 0;
+
+        servers.forEach(function (server) {
+          var li = document.createElement('li');
+          var info = document.createElement('div');
+          info.className = 'found';
+
+          var name = document.createElement('strong');
+          name.textContent = server.serverName;
+          var address = document.createElement('span');
+          address.textContent = server.baseAddress +
+            (server.appVersion ? ' · ' + server.appVersion : '');
+          info.appendChild(name);
+          info.appendChild(address);
+          li.appendChild(info);
+
+          if (server.isThisMachine) {
+            var tag = document.createElement('em');
+            tag.className = 'tag';
+            tag.textContent = 'this computer';
+            li.appendChild(tag);
+          }
+
+          var use = document.createElement('button');
+          use.type = 'button';
+          use.textContent = 'Use';
+          use.addEventListener('click', function () { connect(server.baseAddress); });
+          li.appendChild(use);
+
+          $('found').appendChild(li);
+        });
+      })
+      .catch(function () {
+        $('scanning').hidden = true;
+        $('rescan').disabled = false;
+        $('none').hidden = false;
+      });
+  }
+
+  // ---- connecting ----
+
+  function connect(address) {
+    stopWaiting();
+    $('address').value = address;
+    note($('address-note'), 'Reaching ' + address + '…');
+    $('pairing').hidden = true;
+
+    post('/connect', { address: address }).then(function (result) {
+      if (!result || result.outcome !== Handshake.Ok) {
+        note($('address-note'), describeHandshake(result), 'bad');
+        return;
+      }
+
+      pendingAddress = address;
+      note($('address-note'), 'Reached ' + (result.server ? result.server.name : address) + '.', 'good');
+
+      if (result.server && result.server.pairingSupported === false) {
+        // An older server, or one with pairing switched off: nothing to pair with,
+        // so it is either already usable or refusing everyone.
+        enterApp();
+        return;
+      }
+
+      $('pairing').hidden = false;
+      note($('pairing-lede'),
+        'Open Bakabase on ' + (result.server ? result.server.name : 'the server') +
+        ' and read the code from its settings, or ask whoever is at it to approve this device.');
+      $('code').focus();
+    }).catch(function (e) {
+      note($('address-note'), 'Could not reach it: ' + e, 'bad');
+    });
+  }
+
+  function describeHandshake(result) {
+    if (!result) { return 'Could not connect.'; }
+
+    switch (result.outcome) {
+      case Handshake.Unreachable: return 'Nothing answered at that address.';
+      case Handshake.NotBakabase: return 'Something answered, but it is not a Bakabase server.';
+      case Handshake.ClientTooOld: return 'That server is newer than this client. Update the client.';
+      case Handshake.ServerTooOld: return 'That server is too old for this client. Update the server.';
+      case Handshake.RemoteAccessDisabled:
+        return 'That server has remote access switched off. Turn it on in its settings.';
+      default: return result.detail || 'Could not connect.';
+    }
+  }
+
+  // ---- pairing ----
+
+  function handlePairing(result) {
+    if (result && result.outcome === Pairing.Paired) {
+      enterApp();
+      return true;
+    }
+
+    switch (result && result.outcome) {
+      case Pairing.CodeRejected:
+        note($('pairing-note'), 'That code was wrong or has expired. Read a fresh one from the server.', 'bad');
+        break;
+      case Pairing.AwaitingApproval:
+        note($('pairing-note'), 'Waiting for someone at the server to approve this device…');
+        return false;
+      case Pairing.RequestRejected:
+        note($('pairing-note'), 'The request was turned down, or waited too long.', 'bad');
+        break;
+      case Pairing.Unreachable:
+        note($('pairing-note'), 'The server stopped answering.', 'bad');
+        break;
+      case Pairing.TooManyAttempts:
+        note($('pairing-note'), 'The server is not taking more attempts from here for now. Try again in a few minutes.', 'bad');
+        break;
+      case Pairing.PairingUnsupported:
+        note($('pairing-note'), 'That server is too old to pair with.', 'bad');
+        break;
+      default:
+        note($('pairing-note'), (result && result.detail) || 'Could not pair.', 'bad');
+    }
+
+    stopWaiting();
+    return true;
+  }
+
+  function stopWaiting() {
+    if (waiting) { clearInterval(waiting); waiting = null; }
+  }
+
+  $('code-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    stopWaiting();
+    note($('pairing-note'), 'Pairing…');
+
+    post('/pair/code', { address: pendingAddress, code: $('code').value.trim() })
+      .then(handlePairing)
+      .catch(function (err) { note($('pairing-note'), String(err), 'bad'); });
+  });
+
+  $('request').addEventListener('click', function () {
+    stopWaiting();
+    note($('pairing-note'), 'Asking…');
+
+    post('/pair/request', { address: pendingAddress }).then(function (result) {
+      if (!result || result.outcome !== Pairing.AwaitingApproval) {
+        handlePairing(result);
+        return;
+      }
+
+      pendingRequestId = result.requestId;
+      note($('pairing-note'), 'Waiting for someone at the server to approve this device…');
+
+      // Polled rather than pushed: the approval happens on another machine, and this
+      // client has no connection to it yet — that connection is what is being asked for.
+      waiting = setInterval(function () {
+        post('/pair/claim', { address: pendingAddress, requestId: pendingRequestId })
+          .then(handlePairing)
+          .catch(function () { /* keep waiting; the server may be briefly away */ });
+      }, 2000);
+    }).catch(function (err) { note($('pairing-note'), String(err), 'bad'); });
+  });
+
+  // ---- updating this client ----
+
+  // Offered here because this is the screen a client that cannot get any further
+  // lands on: an old build meeting a newer server is refused with ClientTooOld, and
+  // being told to update without anywhere to do it is a dead end.
+  function checkForUpdate() {
+    fetch('/client/updater/new-version')
+      .then(unwrap)
+      .then(function (info) {
+        if (!info || !info.version) { return; }
+
+        $('update').hidden = false;
+        note($('update-note'),
+          'Version ' + info.version + ' is available. You are on ' +
+          (info.runningVersion || 'an older build') + '.');
+      })
+      .catch(function () { /* an update check is never worth an error on this page */ });
+  }
+
+  function pollUntilDownloaded() {
+    var waitingForDownload = setInterval(function () {
+      fetch('/client/updater/state').then(unwrap).then(function (state) {
+        if (!state) { return; }
+
+        if (state.status === Updater.PendingRestart) {
+          clearInterval(waitingForDownload);
+          note($('update-note'), 'Restarting…');
+          // Never returns on success: the process is replaced.
+          fetch('/client/updater/restart', { method: 'POST' }).catch(function () {});
+        } else if (state.status === Updater.Failed) {
+          clearInterval(waitingForDownload);
+          $('update-now').disabled = false;
+          note($('update-note'), state.error || 'The update could not be downloaded.', 'bad');
+        } else {
+          note($('update-note'), 'Downloading… ' + (state.percentage || 0) + '%');
+        }
+      }).catch(function () {});
+    }, 1000);
+  }
+
+  $('update-now').addEventListener('click', function () {
+    $('update-now').disabled = true;
+    note($('update-note'), 'Downloading…');
+
+    fetch('/client/updater/update', { method: 'POST' })
+      .then(unwrap)
+      .then(pollUntilDownloaded)
+      .catch(function (err) {
+        $('update-now').disabled = false;
+        note($('update-note'), String(err), 'bad');
+      });
+  });
+
+  // ---- address form ----
+
+  $('address-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var value = $('address').value.trim();
+    if (value) { connect(value); }
+  });
+
+  // If a server is already attached, this page is not what the user wants — the
+  // window lands here on a cold start, but a reload after connecting should not.
+  fetch('/client/status')
+    .then(unwrap)
+    .then(function (status) {
+      if (status && status.activeServerId) { enterApp(); return; }
+      scan();
+      checkForUpdate();
+    })
+    .catch(function () { scan(); checkForUpdate(); });
+
+  $('rescan').addEventListener('click', scan);
+})();
+</script>
+</body>
+</html>

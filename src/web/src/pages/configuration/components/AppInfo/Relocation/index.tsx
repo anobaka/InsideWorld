@@ -8,6 +8,7 @@ import BApi from "@/sdk/BApi";
 import { FileSystemSelectorModal } from "@/components/FileSystemSelector";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
 import { useRelocationPendingStore } from "@/stores/relocationPending";
+import { useIsPureClient } from "@/stores/remoteAccess";
 import { RelocationMode } from "@/sdk/constants";
 
 interface RelocationButtonProps {
@@ -308,6 +309,10 @@ const MergeConfirmModal: React.FC<MergeConfirmProps> = ({ onConfirm, onDestroyed
 export const RelocationRestartGate: React.FC = () => {
   const { t } = useTranslation();
   const pending = useRelocationPendingStore((s) => s.pending);
+  // The data being moved is the server's, and so is the process that restarts to
+  // finish the move. From a thin client, "restart Bakabase" would otherwise read as
+  // "restart this window", which is not what the button does.
+  const isPureClient = useIsPureClient();
   const [open, setOpen] = useState(false);
   const [restarting, setRestarting] = useState(false);
 
@@ -342,7 +347,13 @@ export const RelocationRestartGate: React.FC = () => {
       onClose={() => {}}
     >
       <div className="flex flex-col gap-4">
-        <p>{t("configuration.dataPath.restart.body")}</p>
+        <p>
+          {t(
+            isPureClient
+              ? "configuration.dataPath.restart.body.server"
+              : "configuration.dataPath.restart.body",
+          )}
+        </p>
         <Snippet hideSymbol size="sm" variant="bordered">
           {pending.target}
         </Snippet>
@@ -352,7 +363,11 @@ export const RelocationRestartGate: React.FC = () => {
           isLoading={restarting}
           onPress={triggerRestart}
         >
-          {t("configuration.dataPath.restart.button")}
+          {t(
+            isPureClient
+              ? "configuration.dataPath.restart.button.server"
+              : "configuration.dataPath.restart.button",
+          )}
         </Button>
       </div>
     </Modal>

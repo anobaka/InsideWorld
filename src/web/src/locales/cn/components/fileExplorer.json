@@ -120,5 +120,6 @@
   "fileExplorer.shortcutKey.d": "D",
   "fileExplorer.shortcutKey.g": "G",
   "fileExplorer.shortcutKey.space": "空格",
-  "fileExplorer.shortcutKey.n": "N"
+  "fileExplorer.shortcutKey.n": "N",
+  "fileExplorer.tip.pathsAreOnTheServer": "这些是服务端上的路径"
 }
