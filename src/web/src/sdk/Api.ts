@@ -4994,6 +4994,24 @@ export interface BakabaseServiceModelsViewChangelogViewModel {
   htmlUrl?: string;
 }
 
+export interface BakabaseServiceModelsViewClientAppDownloadFileViewModel {
+  name: string;
+  platform: string;
+  shape: string;
+  /** @format int64 */
+  size: number;
+  githubUrl?: string;
+  cdnUrl?: string;
+}
+
+export interface BakabaseServiceModelsViewClientAppDownloadsViewModel {
+  version: string;
+  /** @format date-time */
+  publishedAt?: string;
+  releaseUrl?: string;
+  files: BakabaseServiceModelsViewClientAppDownloadFileViewModel[];
+}
+
 export interface BakabaseServiceModelsViewComparisonPlanViewModel {
   /** @format int32 */
   id: number;
@@ -5185,6 +5203,11 @@ export interface BakabaseServiceModelsViewMobileAppDownloadsViewModel {
   releaseUrl?: string;
   sidestoreSourceUrl?: string;
   files: BakabaseServiceModelsViewMobileAppDownloadFileViewModel[];
+}
+
+export interface BakabaseServiceModelsViewOtherDeviceDownloadsViewModel {
+  mobile?: BakabaseServiceModelsViewMobileAppDownloadsViewModel;
+  desktopClient?: BakabaseServiceModelsViewClientAppDownloadsViewModel;
 }
 
 export interface BakabaseServiceModelsViewPropertyTypeForManuallySettingValueViewModel {
@@ -6896,11 +6919,11 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceM
   data?: BakabaseServiceModelsViewFileRenameEntryViewModel;
 }
 
-export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewMobileAppDownloadsViewModel {
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewOtherDeviceDownloadsViewModel {
   /** @format int32 */
   code: number;
   message?: string;
-  data?: BakabaseServiceModelsViewMobileAppDownloadsViewModel;
+  data?: BakabaseServiceModelsViewOtherDeviceDownloadsViewModel;
 }
 
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewRemoteAccessClientContextViewModel {
@@ -17856,36 +17879,6 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         ...params,
       }),
   };
-  mobileApp = {
-    /**
-     * No description
-     *
-     * @tags MobileApp
-     * @name GetMobileAppDownloads
-     * @request GET:/mobile-app/downloads
-     */
-    getMobileAppDownloads: (params: RequestParams = {}) =>
-      this.request<
-        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewMobileAppDownloadsViewModel,
-        any
-      >({
-        path: `/mobile-app/downloads`,
-        method: "GET",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for getMobileAppDownloads
-     * @name getMobileAppDownloadsUrl
-     */
-    getMobileAppDownloadsUrl: () => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/mobile-app/downloads`;
-      
-      return baseUrl + path;
-    },
-  };
   notification = {
     /**
      * No description
@@ -19853,6 +19846,36 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     patchAvSourceOptionsUrl: () => {
       const baseUrl = this.baseUrl || "";
       let path = `/options/av-sources`;
+      
+      return baseUrl + path;
+    },
+  };
+  otherDevices = {
+    /**
+     * No description
+     *
+     * @tags OtherDevices
+     * @name GetOtherDeviceDownloads
+     * @request GET:/other-devices/downloads
+     */
+    getOtherDeviceDownloads: (params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewOtherDeviceDownloadsViewModel,
+        any
+      >({
+        path: `/other-devices/downloads`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getOtherDeviceDownloads
+     * @name getOtherDeviceDownloadsUrl
+     */
+    getOtherDeviceDownloadsUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/other-devices/downloads`;
       
       return baseUrl + path;
     },

@@ -44,17 +44,33 @@ jobs:
         run: |
           ./ossutil64 cp -rf ./vpk-output/ oss://anobaka-public/app/bakabase/releases/${{ matrix.artifact }}/
 
+      # Archived under the same name the GitHub Release asset carries, so a given
+      # download has exactly one name wherever a user meets it — release page, CDN
+      # link, or the file in their downloads folder. The vpk-produced name
+      # (Bakabase-beta-Setup.exe) says nothing about version or platform and differs
+      # per channel, which is what made the CDN and GitHub halves drift apart.
+      #
+      # This is the archives/ mirror, not releases/ — the updater reads releases/,
+      # and nothing here touches it.
       - name: Archive installer and portable for this version
         run: |
           ARCHIVE_BASE="oss://anobaka-public/app/bakabase/archives/${{ inputs.version }}/${{ matrix.artifact }}"
-          GLOBS="./vpk-output/*Setup*.exe ./vpk-output/*.pkg"
-          if [[ "${{ matrix.artifact }}" == win-* ]]; then
-            GLOBS="$GLOBS ./vpk-output/*-Portable.zip"
-          fi
-          for f in $GLOBS; do
+          NAME_BASE="Bakabase-${{ inputs.version }}-${{ matrix.artifact }}"
+
+          for f in ./vpk-output/*Setup*.exe; do
             [ -f "$f" ] || continue
-            ./ossutil64 cp "$f" "${ARCHIVE_BASE}/$(basename "$f")"
+            ./ossutil64 cp "$f" "${ARCHIVE_BASE}/${NAME_BASE}-Setup.exe"
           done
+          for f in ./vpk-output/*.pkg; do
+            [ -f "$f" ] || continue
+            ./ossutil64 cp "$f" "${ARCHIVE_BASE}/${NAME_BASE}-Setup.pkg"
+          done
+          if [[ "${{ matrix.artifact }}" == win-* ]]; then
+            for f in ./vpk-output/*-Portable.zip; do
+              [ -f "$f" ] || continue
+              ./ossutil64 cp "$f" "${ARCHIVE_BASE}/${NAME_BASE}-Portable.zip"
+            done
+          fi
 
   # The thin client, under a prefix of its own.
   #
@@ -94,17 +110,26 @@ jobs:
         run: |
           ./ossutil64 cp -rf ./vpk-output/ oss://anobaka-public/app/bakabase-client/releases/${{ matrix.artifact }}/
 
+      # Same naming as the all-in-one's archive step, under the client's product name.
       - name: Archive client installer and portable for this version
         run: |
           ARCHIVE_BASE="oss://anobaka-public/app/bakabase-client/archives/${{ inputs.version }}/${{ matrix.artifact }}"
-          GLOBS="./vpk-output/*Setup*.exe ./vpk-output/*.pkg"
-          if [[ "${{ matrix.artifact }}" == win-* ]]; then
-            GLOBS="$GLOBS ./vpk-output/*-Portable.zip"
-          fi
-          for f in $GLOBS; do
+          NAME_BASE="Bakabase-Client-${{ inputs.version }}-${{ matrix.artifact }}"
+
+          for f in ./vpk-output/*Setup*.exe; do
             [ -f "$f" ] || continue
-            ./ossutil64 cp "$f" "${ARCHIVE_BASE}/$(basename "$f")"
+            ./ossutil64 cp "$f" "${ARCHIVE_BASE}/${NAME_BASE}-Setup.exe"
           done
+          for f in ./vpk-output/*.pkg; do
+            [ -f "$f" ] || continue
+            ./ossutil64 cp "$f" "${ARCHIVE_BASE}/${NAME_BASE}-Setup.pkg"
+          done
+          if [[ "${{ matrix.artifact }}" == win-* ]]; then
+            for f in ./vpk-output/*-Portable.zip; do
+              [ -f "$f" ] || continue
+              ./ossutil64 cp "$f" "${ARCHIVE_BASE}/${NAME_BASE}-Portable.zip"
+            done
+          fi
 
   deploy-tampermonkey:
     runs-on: ubuntu-latest
