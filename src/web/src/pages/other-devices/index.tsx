@@ -148,6 +148,14 @@ const DesktopClientCard: React.FC<{ downloads: ClientDownloads }> = ({ downloads
 
       <div className="text-sm text-foreground-500">{t<string>("otherDevices.client.intro")}</div>
 
+      {/* The question this page gets asked from outside: the two downloads are named
+          Bakabase and Bakabase Client, and nothing about the names says that one of them
+          cannot work on its own. Said here because this is where someone goes to fetch
+          the second one. */}
+      <div className="text-sm border-l-2 border-primary/40 pl-3 text-foreground-500">
+        {t<string>("otherDevices.client.vsAllInOne")}
+      </div>
+
       {platforms.map((platform) => {
         const files = (downloads.files ?? []).filter((f) => f.platform === platform.id);
 

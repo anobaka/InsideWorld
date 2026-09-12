@@ -421,6 +421,7 @@
   "otherDevices.recommended": "Recommended",
   "otherDevices.client.title": "Another computer",
   "otherDevices.client.intro": "The thin client: it shows this library, plays on that machine, and stores nothing locally. Send one of these links to the computer you want to use it from.",
+  "otherDevices.client.vsAllInOne": "Not the same download as the app you are in now. Bakabase is the all-in-one: it holds the library and serves it, and that is what is running here. Bakabase Client is the window only — it keeps nothing and has to be pointed at a computer running Bakabase.",
   "otherDevices.client.windows": "Windows (x64)",
   "otherDevices.client.macArm": "macOS (Apple Silicon)",
   "otherDevices.client.macIntel": "macOS (Intel)",

@@ -306,6 +306,33 @@ const AppInfo: React.FC<AppInfoProps> = ({ appInfo, applyPatches, query }) => {
       value: React.ReactNode;
     })[] = [
       {
+        // Which of the two downloads this install is. Named because the pair is
+        // genuinely confusing from outside — one is called Bakabase and the other
+        // Bakabase Client, and nothing on screen has ever said which one is open or
+        // what the difference amounts to.
+        id: "edition",
+        label: "configuration.appInfo.edition",
+        keywords: ["edition", "client", "server", "版本", "客户端", "一体版", "服务端"],
+        value: (
+          <div className="flex items-center gap-2 flex-wrap">
+            <Chip color="primary" radius="sm" variant="flat">
+              {t(
+                isPureClient
+                  ? "configuration.appInfo.edition.client"
+                  : "configuration.appInfo.edition.allInOne",
+              )}
+            </Chip>
+            <span className="text-sm text-foreground-500">
+              {t(
+                isPureClient
+                  ? "configuration.appInfo.edition.client.tip"
+                  : "configuration.appInfo.edition.allInOne.tip",
+              )}
+            </span>
+          </div>
+        ),
+      },
+      {
         id: "appDataPath",
         label: "configuration.appInfo.appDataPath",
         keywords: ["path", "directory", "folder", "数据", "目录"],

@@ -114,47 +114,55 @@
 </head>
 <body>
 <main>
-  <h1>Connect to a server</h1>
-  <p class="lede">This is the Bakabase client. Your library lives on a server; point this at it once
-    and it is remembered.</p>
+  <!--
+    The English below is not the copy this page ships with — it is the fallback if the
+    script never runs. Every string carries a data-t key and is replaced from the
+    dictionary at the bottom before first paint.
+  -->
+  <h1 data-t="title">Connect to a server</h1>
+  <p class="lede" data-t="lede">This is the Bakabase client. Your library lives on a server; point
+    this at it once and it is remembered.</p>
 
   <section class="panel" id="update" hidden>
-    <h2>Client update</h2>
+    <h2 data-t="update.heading">Client update</h2>
     <p class="note" id="update-note" style="margin-top: 0"></p>
     <p class="row" style="margin: 10px 0 0">
-      <button class="primary" id="update-now" type="button">Update and restart</button>
+      <button class="primary" id="update-now" type="button" data-t="update.action">Update and restart</button>
     </p>
   </section>
 
   <section class="panel">
-    <h2>On this network</h2>
+    <h2 data-t="discovery.heading">On this network</h2>
     <ul id="found"></ul>
-    <p class="note" id="scanning">Looking…</p>
-    <p class="note" id="none" hidden>Nothing answered. Enter the address below, or check that remote
-      access is switched on over there.</p>
-    <p class="row" style="margin: 12px 0 0"><button id="rescan" type="button">Scan again</button></p>
+    <p class="note" id="scanning" data-t="discovery.looking">Looking…</p>
+    <p class="note" id="none" hidden data-t="discovery.none">Nothing answered. Enter the address
+      below, or check that remote access is switched on over there.</p>
+    <p class="row" style="margin: 12px 0 0">
+      <button id="rescan" type="button" data-t="discovery.rescan">Scan again</button>
+    </p>
   </section>
 
   <section class="panel">
-    <h2>Address</h2>
+    <h2 data-t="address.heading">Address</h2>
     <form class="row" id="address-form">
       <input id="address" name="address" placeholder="192.168.1.5:34567" autocomplete="off"
-             spellcheck="false" aria-label="Server address">
-      <button class="primary" type="submit">Connect</button>
+             spellcheck="false" aria-label="Server address" data-t-attr="aria-label:address.label">
+      <button class="primary" type="submit" data-t="address.connect">Connect</button>
     </form>
     <p class="note" id="address-note" hidden></p>
   </section>
 
   <section class="panel" id="pairing" hidden>
-    <h2>Pairing</h2>
+    <h2 data-t="pairing.heading">Pairing</h2>
     <p class="note" id="pairing-lede" style="margin-top: 0"></p>
     <form class="row" id="code-form">
       <input id="code" inputmode="numeric" maxlength="6" placeholder="6-digit code"
-             autocomplete="off" aria-label="Pairing code">
-      <button class="primary" type="submit">Pair</button>
+             autocomplete="off" aria-label="Pairing code"
+             data-t-attr="placeholder:pairing.codePlaceholder,aria-label:pairing.codeLabel">
+      <button class="primary" type="submit" data-t="pairing.pair">Pair</button>
     </form>
     <p class="row" style="margin: 10px 0 0">
-      <button id="request" type="button">Ask the server's owner to approve instead</button>
+      <button id="request" type="button" data-t="pairing.request">Ask the server's owner to approve instead</button>
     </p>
     <p class="note" id="pairing-note" hidden></p>
   </section>
@@ -163,6 +171,146 @@
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
+
+  // ---- text ----
+  //
+  // Spelled out here rather than fetched, because of what this page is: the screen shown
+  // when there is no server, and the server is where the app's own translations live. By
+  // the time the frontend could tell us the user's chosen language, this page is already
+  // gone. So the only signal available is the locale the web view reports from the OS —
+  // which for a screen seen before anything is configured is also the right one.
+  //
+  // Keeping it to two languages and one file is deliberate: the client package carries no
+  // web frontend, and an i18n dependency here would be the first crack in that.
+  var STRINGS = {
+    en: {
+      'title': 'Connect to a server',
+      'lede': 'This is the Bakabase client. Your library lives on a server; point this at it once and it is remembered.',
+      'update.heading': 'Client update',
+      'update.action': 'Update and restart',
+      'update.available': 'Version {version} is available. You are on {running}.',
+      'update.olderBuild': 'an older build',
+      'update.downloading': 'Downloading…',
+      'update.downloadingPercent': 'Downloading… {percent}%',
+      'update.restarting': 'Restarting…',
+      'update.failed': 'The update could not be downloaded.',
+      'discovery.heading': 'On this network',
+      'discovery.looking': 'Looking…',
+      'discovery.none': 'Nothing answered. Enter the address below, or check that remote access is switched on over there.',
+      'discovery.rescan': 'Scan again',
+      'discovery.thisComputer': 'this computer',
+      'discovery.use': 'Use',
+      'address.heading': 'Address',
+      'address.label': 'Server address',
+      'address.connect': 'Connect',
+      'address.reaching': 'Reaching {address}…',
+      'address.reached': 'Reached {name}.',
+      'address.failed': 'Could not reach it: {error}',
+      'handshake.Unreachable': 'Nothing answered at that address.',
+      'handshake.NotBakabase': 'Something answered, but it is not a Bakabase server.',
+      'handshake.ClientTooOld': 'That server is newer than this client. Update the client.',
+      'handshake.ServerTooOld': 'That server is too old for this client. Update the server.',
+      'handshake.RemoteAccessDisabled': 'That server has remote access switched off. Turn it on in its settings.',
+      'handshake.SelfAddress': 'That is this client’s own address. Enter the address of the computer running Bakabase — its settings page shows it.',
+      'handshake.unknown': 'Could not connect.',
+      'pairing.heading': 'Pairing',
+      'pairing.codePlaceholder': '6-digit code',
+      'pairing.codeLabel': 'Pairing code',
+      'pairing.pair': 'Pair',
+      'pairing.request': 'Ask the server’s owner to approve instead',
+      'pairing.lede': 'Open Bakabase on {name} and read the code from its settings, or ask whoever is at it to approve this device.',
+      'pairing.theServer': 'the server',
+      'pairing.pairing': 'Pairing…',
+      'pairing.asking': 'Asking…',
+      'pairing.CodeRejected': 'That code was wrong or has expired. Read a fresh one from the server.',
+      'pairing.AwaitingApproval': 'Waiting for someone at the server to approve this device…',
+      'pairing.RequestRejected': 'The request was turned down, or waited too long.',
+      'pairing.Unreachable': 'The server stopped answering.',
+      'pairing.TooManyAttempts': 'The server is not taking more attempts from here for now. Try again in a few minutes.',
+      'pairing.PairingUnsupported': 'That server is too old to pair with.',
+      'pairing.unknown': 'Could not pair.'
+    },
+    zh: {
+      'title': '连接到服务端',
+      'lede': '这是 Bakabase 客户端。你的库在服务端上，指向它一次就会被记住。',
+      'update.heading': '客户端更新',
+      'update.action': '更新并重启',
+      'update.available': '有新版本 {version}，当前为 {running}。',
+      'update.olderBuild': '较旧的版本',
+      'update.downloading': '正在下载…',
+      'update.downloadingPercent': '正在下载… {percent}%',
+      'update.restarting': '正在重启…',
+      'update.failed': '更新下载失败。',
+      'discovery.heading': '本网络内',
+      'discovery.looking': '正在查找…',
+      'discovery.none': '没有任何响应。请在下方填写地址，或确认那台机器已经开启了远程访问。',
+      'discovery.rescan': '重新扫描',
+      'discovery.thisComputer': '本机',
+      'discovery.use': '使用',
+      'address.heading': '地址',
+      'address.label': '服务端地址',
+      'address.connect': '连接',
+      'address.reaching': '正在连接 {address}…',
+      'address.reached': '已连接 {name}。',
+      'address.failed': '无法连接：{error}',
+      'handshake.Unreachable': '该地址没有响应。',
+      'handshake.NotBakabase': '有东西响应了，但它不是 Bakabase 服务端。',
+      'handshake.ClientTooOld': '该服务端比本客户端新，请升级客户端。',
+      'handshake.ServerTooOld': '该服务端对本客户端来说太旧，请升级服务端。',
+      'handshake.RemoteAccessDisabled': '该服务端关闭了远程访问，请在它的设置里开启。',
+      'handshake.SelfAddress': '这是本客户端自己的地址。请填写运行 Bakabase 服务端的那台电脑的地址，在它的设置页里可以看到。',
+      'handshake.unknown': '无法连接。',
+      'pairing.heading': '配对',
+      'pairing.codePlaceholder': '6 位配对码',
+      'pairing.codeLabel': '配对码',
+      'pairing.pair': '配对',
+      'pairing.request': '改为请服务端那边的人批准',
+      'pairing.lede': '在 {name} 上打开 Bakabase，从它的设置里读出配对码；也可以请在它旁边的人批准本设备。',
+      'pairing.theServer': '服务端',
+      'pairing.pairing': '正在配对…',
+      'pairing.asking': '正在请求…',
+      'pairing.CodeRejected': '配对码错误或已过期，请在服务端重新读取一个。',
+      'pairing.AwaitingApproval': '正在等待服务端那边有人批准本设备…',
+      'pairing.RequestRejected': '请求被拒绝，或等待过久已失效。',
+      'pairing.Unreachable': '服务端不再响应。',
+      'pairing.TooManyAttempts': '服务端暂时不再接受本机的尝试，请过几分钟再试。',
+      'pairing.PairingUnsupported': '该服务端太旧，无法配对。',
+      'pairing.unknown': '无法配对。'
+    }
+  };
+
+  var LANG = (navigator.languages && navigator.languages.length
+    ? navigator.languages
+    : [navigator.language || 'en'])
+    .some(function (tag) { return /^zh\b/i.test(String(tag || '').replace('_', '-')); }) ? 'zh' : 'en';
+
+  // Falls through to English per key rather than per language, so a key added to one
+  // dictionary and forgotten in the other shows the English rather than its own name.
+  function T(key, vars) {
+    var text = STRINGS[LANG][key] || STRINGS.en[key] || key;
+
+    return vars
+      ? text.replace(/\{(\w+)\}/g, function (whole, name) {
+          return vars[name] === undefined || vars[name] === null ? whole : vars[name];
+        })
+      : text;
+  }
+
+  document.documentElement.lang = LANG === 'zh' ? 'zh-Hans' : 'en';
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-t]'), function (el) {
+    el.textContent = T(el.getAttribute('data-t'));
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-t-attr]'), function (el) {
+    el.getAttribute('data-t-attr').split(',').forEach(function (pair) {
+      var at = pair.indexOf(':');
+
+      if (at > 0) {
+        el.setAttribute(pair.slice(0, at).trim(), T(pair.slice(at + 1).trim()));
+      }
+    });
+  });
 
   // The same numbers gen-sdk emits into constants.ts, because they are the same C#
   // enums and they travel as numbers. Spelled out here rather than compared inline:
@@ -241,13 +389,13 @@
           if (server.isThisMachine) {
             var tag = document.createElement('em');
             tag.className = 'tag';
-            tag.textContent = 'this computer';
+            tag.textContent = T('discovery.thisComputer');
             li.appendChild(tag);
           }
 
           var use = document.createElement('button');
           use.type = 'button';
-          use.textContent = 'Use';
+          use.textContent = T('discovery.use');
           use.addEventListener('click', function () { connect(server.baseAddress); });
           li.appendChild(use);
 
@@ -266,7 +414,7 @@
   function connect(address) {
     stopWaiting();
     $('address').value = address;
-    note($('address-note'), 'Reaching ' + address + '…');
+    note($('address-note'), T('address.reaching', { address: address }));
     $('pairing').hidden = true;
 
     post('/connect', { address: address }).then(function (result) {
@@ -276,7 +424,8 @@
       }
 
       pendingAddress = address;
-      note($('address-note'), 'Reached ' + (result.server ? result.server.name : address) + '.', 'good');
+      note($('address-note'),
+        T('address.reached', { name: result.server ? result.server.name : address }), 'good');
 
       if (result.server && result.server.pairingSupported === false) {
         // An older server, or one with pairing switched off: nothing to pair with,
@@ -286,31 +435,32 @@
       }
 
       $('pairing').hidden = false;
-      note($('pairing-lede'),
-        'Open Bakabase on ' + (result.server ? result.server.name : 'the server') +
-        ' and read the code from its settings, or ask whoever is at it to approve this device.');
+      note($('pairing-lede'), T('pairing.lede', {
+        name: result.server ? result.server.name : T('pairing.theServer')
+      }));
       $('code').focus();
     }).catch(function (e) {
-      note($('address-note'), 'Could not reach it: ' + e, 'bad');
+      note($('address-note'), T('address.failed', { error: e }), 'bad');
     });
   }
 
-  function describeHandshake(result) {
-    if (!result) { return 'Could not connect.'; }
-
-    switch (result.outcome) {
-      case Handshake.Unreachable: return 'Nothing answered at that address.';
-      case Handshake.NotBakabase: return 'Something answered, but it is not a Bakabase server.';
-      case Handshake.ClientTooOld: return 'That server is newer than this client. Update the client.';
-      case Handshake.ServerTooOld: return 'That server is too old for this client. Update the server.';
-      case Handshake.RemoteAccessDisabled:
-        return 'That server has remote access switched off. Turn it on in its settings.';
-      case Handshake.SelfAddress:
-        // The address of this window, which is the one address that cannot be right.
-        return 'That is this client’s own address. Enter the address of the computer ' +
-          'running Bakabase — its settings page shows it.';
-      default: return result.detail || 'Could not connect.';
+  // The enum member's own name is the translation key, so a member added to the C# enum
+  // needs a dictionary entry and nothing else — no third list of cases to keep in step
+  // with the other two. An outcome with no entry falls back to what the server said.
+  function nameOf(map, value) {
+    for (var name in map) {
+      if (map[name] === value) { return name; }
     }
+
+    return null;
+  }
+
+  function describeHandshake(result) {
+    if (!result) { return T('handshake.unknown'); }
+
+    var key = 'handshake.' + nameOf(Handshake, result.outcome);
+
+    return STRINGS.en[key] ? T(key) : (result.detail || T('handshake.unknown'));
   }
 
   // ---- pairing ----
@@ -321,28 +471,16 @@
       return true;
     }
 
-    switch (result && result.outcome) {
-      case Pairing.CodeRejected:
-        note($('pairing-note'), 'That code was wrong or has expired. Read a fresh one from the server.', 'bad');
-        break;
-      case Pairing.AwaitingApproval:
-        note($('pairing-note'), 'Waiting for someone at the server to approve this device…');
-        return false;
-      case Pairing.RequestRejected:
-        note($('pairing-note'), 'The request was turned down, or waited too long.', 'bad');
-        break;
-      case Pairing.Unreachable:
-        note($('pairing-note'), 'The server stopped answering.', 'bad');
-        break;
-      case Pairing.TooManyAttempts:
-        note($('pairing-note'), 'The server is not taking more attempts from here for now. Try again in a few minutes.', 'bad');
-        break;
-      case Pairing.PairingUnsupported:
-        note($('pairing-note'), 'That server is too old to pair with.', 'bad');
-        break;
-      default:
-        note($('pairing-note'), (result && result.detail) || 'Could not pair.', 'bad');
+    // Still waiting is not a failure, and is the one outcome that leaves the poll running.
+    if (result && result.outcome === Pairing.AwaitingApproval) {
+      note($('pairing-note'), T('pairing.AwaitingApproval'));
+      return false;
     }
+
+    var key = 'pairing.' + nameOf(Pairing, result && result.outcome);
+
+    note($('pairing-note'),
+      STRINGS.en[key] ? T(key) : ((result && result.detail) || T('pairing.unknown')), 'bad');
 
     stopWaiting();
     return true;
@@ -355,7 +493,7 @@
   $('code-form').addEventListener('submit', function (e) {
     e.preventDefault();
     stopWaiting();
-    note($('pairing-note'), 'Pairing…');
+    note($('pairing-note'), T('pairing.pairing'));
 
     post('/pair/code', { address: pendingAddress, code: $('code').value.trim() })
       .then(handlePairing)
@@ -364,7 +502,7 @@
 
   $('request').addEventListener('click', function () {
     stopWaiting();
-    note($('pairing-note'), 'Asking…');
+    note($('pairing-note'), T('pairing.asking'));
 
     post('/pair/request', { address: pendingAddress }).then(function (result) {
       // The request id, not the outcome. A filed request is the only thing that can be
@@ -376,7 +514,7 @@
       }
 
       pendingRequestId = result.requestId;
-      note($('pairing-note'), 'Waiting for someone at the server to approve this device…');
+      note($('pairing-note'), T('pairing.AwaitingApproval'));
 
       // Polled rather than pushed: the approval happens on another machine, and this
       // client has no connection to it yet — that connection is what is being asked for.
@@ -400,9 +538,10 @@
         if (!info || !info.version) { return; }
 
         $('update').hidden = false;
-        note($('update-note'),
-          'Version ' + info.version + ' is available. You are on ' +
-          (info.runningVersion || 'an older build') + '.');
+        note($('update-note'), T('update.available', {
+          version: info.version,
+          running: info.runningVersion || T('update.olderBuild')
+        }));
       })
       .catch(function () { /* an update check is never worth an error on this page */ });
   }
@@ -414,15 +553,15 @@
 
         if (state.status === Updater.PendingRestart) {
           clearInterval(waitingForDownload);
-          note($('update-note'), 'Restarting…');
+          note($('update-note'), T('update.restarting'));
           // Never returns on success: the process is replaced.
           fetch('/client/updater/restart', { method: 'POST' }).catch(function () {});
         } else if (state.status === Updater.Failed) {
           clearInterval(waitingForDownload);
           $('update-now').disabled = false;
-          note($('update-note'), state.error || 'The update could not be downloaded.', 'bad');
+          note($('update-note'), state.error || T('update.failed'), 'bad');
         } else {
-          note($('update-note'), 'Downloading… ' + (state.percentage || 0) + '%');
+          note($('update-note'), T('update.downloadingPercent', { percent: state.percentage || 0 }));
         }
       }).catch(function () {});
     }, 1000);
@@ -430,7 +569,7 @@
 
   $('update-now').addEventListener('click', function () {
     $('update-now').disabled = true;
-    note($('update-note'), 'Downloading…');
+    note($('update-note'), T('update.downloading'));
 
     fetch('/client/updater/update', { method: 'POST' })
       .then(unwrap)
