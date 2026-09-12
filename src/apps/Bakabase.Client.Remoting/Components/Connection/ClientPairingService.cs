@@ -72,12 +72,6 @@ public interface IClientPairingService
 /// </remarks>
 public sealed class ClientPairingService(HttpClient http, IClientConnectionStore store) : IClientPairingService
 {
-    private static readonly JsonSerializerOptions Json = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        Converters = {new JsonStringEnumConverter()}
-    };
-
     public async Task<ClientPairingResult> PairWithCodeAsync(string baseAddress, string code,
         CancellationToken ct = default)
     {
@@ -200,7 +194,7 @@ public sealed class ClientPairingService(HttpClient http, IClientConnectionStore
         try
         {
             return (await JsonSerializer.DeserializeAsync<Envelope<T>>(
-                await response.Content.ReadAsStreamAsync(ct), Json, ct))?.Data;
+                await response.Content.ReadAsStreamAsync(ct), ServerJson.Options, ct))?.Data;
         }
         catch (JsonException)
         {

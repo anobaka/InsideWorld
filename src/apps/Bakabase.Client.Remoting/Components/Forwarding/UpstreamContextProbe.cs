@@ -20,12 +20,6 @@ public sealed class UpstreamContextProbe(HttpClient http, IUpstreamTarget target
 {
     public static readonly TimeSpan CacheLifetime = TimeSpan.FromSeconds(5);
 
-    private static readonly JsonSerializerOptions Json = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        Converters = {new JsonStringEnumConverter()}
-    };
-
     private readonly Func<DateTime> _now = now ?? (() => DateTime.UtcNow);
     private readonly Lock _gate = new();
     private UpstreamContext? _cached;
@@ -77,7 +71,7 @@ public sealed class UpstreamContextProbe(HttpClient http, IUpstreamTarget target
             }
 
             var payload = (await JsonSerializer.DeserializeAsync<Envelope<ContextPayload>>(
-                await response.Content.ReadAsStreamAsync(ct), Json, ct))?.Data;
+                await response.Content.ReadAsStreamAsync(ct), ServerJson.Options, ct))?.Data;
 
             return payload == null ? null : new UpstreamContext(payload.Mode, payload.Paired);
         }

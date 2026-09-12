@@ -26,6 +26,7 @@ import { Modal, toast } from "@/components/bakaui";
 import { useBakabaseContext } from "@/components/ContextProvider/BakabaseContextProvider";
 import BApi from "@/sdk/BApi";
 import LlmProviderSelector, { useLlmProviders } from "@/components/LlmProviderSelector";
+import { millisecondsUntil, parseServerTime } from "@/core/serverTime";
 
 type CacheEntry = BakabaseModulesAIModelsDbLlmCallCacheEntryDbModel;
 
@@ -111,13 +112,15 @@ const AiCachePage = () => {
   const isExpired = (entry: CacheEntry) => {
     if (!entry.expiresAt) return false;
 
-    return new Date(entry.expiresAt) < new Date();
+    // Through parseServerTime: the server's timestamps carry no zone, and reading them
+    // as local time marked every entry expired hours early east of Greenwich.
+    return millisecondsUntil(entry.expiresAt) <= 0;
   };
 
-  const formatTime = (iso?: string) => {
-    if (!iso) return "-";
+  const formatTime = (serverTime?: string) => {
+    const at = parseServerTime(serverTime);
 
-    return new Date(iso).toLocaleString();
+    return at == null ? "-" : at.toLocaleString();
   };
 
   const formatJson = (json: string) => {

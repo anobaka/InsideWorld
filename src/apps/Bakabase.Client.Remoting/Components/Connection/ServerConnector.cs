@@ -37,12 +37,6 @@ public sealed class ServerConnector(HttpClient http, ServerClock clock) : IServe
 
     public const int MaxSupportedProtocolVersion = RemoteAccessProtocol.CurrentVersion;
 
-    private static readonly JsonSerializerOptions Json = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        Converters = {new JsonStringEnumConverter()}
-    };
-
     public async Task<ServerHandshakeResult> HandshakeAsync(string baseAddress, CancellationToken ct = default)
     {
         if (!Uri.TryCreate(Normalize(baseAddress), UriKind.Absolute, out var root) ||
@@ -89,7 +83,7 @@ public sealed class ServerConnector(HttpClient http, ServerClock clock) : IServe
         try
         {
             payload = (await JsonSerializer.DeserializeAsync<Envelope<ServerInfoPayload>>(
-                await response.Content.ReadAsStreamAsync(ct), Json, ct))?.Data;
+                await response.Content.ReadAsStreamAsync(ct), ServerJson.Options, ct))?.Data;
         }
         catch (JsonException e)
         {
