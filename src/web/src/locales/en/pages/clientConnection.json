@@ -26,6 +26,7 @@
   "clientConnection.handshake.ClientTooOld": "That server is newer than this client. Update the client. {{detail}}",
   "clientConnection.handshake.ServerTooOld": "That server is too old for this client. Update the server. {{detail}}",
   "clientConnection.handshake.RemoteAccessDisabled": "That server is not serving other devices. Turn on remote access in its settings.",
+  "clientConnection.handshake.SelfAddress": "That is this client's own address. Enter the address of the computer running Bakabase — its settings page shows it.",
   "clientConnection.pairing.Unreachable": "The server stopped answering.",
   "clientConnection.pairing.CodeRejected": "That code was not accepted. Generate a new one on the server and try again.",
   "clientConnection.pairing.AwaitingApproval": "Still waiting for approval.",

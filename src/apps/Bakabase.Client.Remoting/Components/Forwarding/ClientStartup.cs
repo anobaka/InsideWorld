@@ -75,6 +75,11 @@ public class ClientStartup(IConfiguration configuration, IWebHostEnvironment env
             .AddHttpMessageHandler(sp => new DeviceSigningHandler(
                 sp.GetRequiredService<IClientCredentialProvider>(), sp.GetRequiredService<ServerClock>()));
 
+        // The port the host actually bound, so the handshake can recognise an address
+        // that points back here. Resolved lazily for the same reason the guard's is: the
+        // listening address exists only once the host has started.
+        services.TryAddSingleton(sp => new ClientSelfAddress(ResolveListeningPort(sp.GetRequiredService<AppContext>())));
+
         services.AddHttpClient<IServerConnector, ServerConnector>();
         services.AddHttpClient<IClientPairingService, ClientPairingService>();
 

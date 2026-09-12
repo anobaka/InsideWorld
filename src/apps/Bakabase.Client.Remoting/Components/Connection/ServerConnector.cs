@@ -26,7 +26,7 @@ public interface IServerConnector
 /// otherwise have everything refused as expired — a failure that looks exactly like a
 /// broken pairing and sends the user to the wrong fix.
 /// </remarks>
-public sealed class ServerConnector(HttpClient http, ServerClock clock) : IServerConnector
+public sealed class ServerConnector(HttpClient http, ServerClock clock, ClientSelfAddress self) : IServerConnector
 {
     /// <summary>
     /// The oldest contract this client can talk to. Separate from
@@ -44,6 +44,17 @@ public sealed class ServerConnector(HttpClient http, ServerClock clock) : IServe
         {
             return ServerHandshakeResult.Failed(ServerHandshakeOutcome.NotBakabase,
                 $"'{baseAddress}' is not an http address.");
+        }
+
+        // Before the request rather than after it, because sending it is what makes this
+        // unrecoverable: this address answers. With no server attached it answers with
+        // the connect page, and with one attached the forwarder relays the question
+        // upstream and the real server's identity comes back — a handshake that succeeds
+        // and pairs this client to itself.
+        if (self.Matches(root))
+        {
+            return ServerHandshakeResult.Failed(ServerHandshakeOutcome.SelfAddress,
+                $"{root.Authority} is this client's own address.");
         }
 
         // The clock's own source, not DateTime.UtcNow: the round trip has to be

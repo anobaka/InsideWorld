@@ -5200,7 +5200,8 @@ export enum ServerHandshakeOutcome {
   NotBakabase = 2,
   ClientTooOld = 3,
   ServerTooOld = 4,
-  RemoteAccessDisabled = 5
+  RemoteAccessDisabled = 5,
+  SelfAddress = 6
 }
 
 export const serverHandshakeOutcomes = [
@@ -5209,7 +5210,8 @@ export const serverHandshakeOutcomes = [
   { label: 'NotBakabase', value: ServerHandshakeOutcome.NotBakabase },
   { label: 'ClientTooOld', value: ServerHandshakeOutcome.ClientTooOld },
   { label: 'ServerTooOld', value: ServerHandshakeOutcome.ServerTooOld },
-  { label: 'RemoteAccessDisabled', value: ServerHandshakeOutcome.RemoteAccessDisabled }
+  { label: 'RemoteAccessDisabled', value: ServerHandshakeOutcome.RemoteAccessDisabled },
+  { label: 'SelfAddress', value: ServerHandshakeOutcome.SelfAddress }
 ] as const;
 
 export const ServerHandshakeOutcomeLabel: Record<ServerHandshakeOutcome, string> = {
@@ -5218,7 +5220,8 @@ export const ServerHandshakeOutcomeLabel: Record<ServerHandshakeOutcome, string>
   [ServerHandshakeOutcome.NotBakabase]: 'NotBakabase',
   [ServerHandshakeOutcome.ClientTooOld]: 'ClientTooOld',
   [ServerHandshakeOutcome.ServerTooOld]: 'ServerTooOld',
-  [ServerHandshakeOutcome.RemoteAccessDisabled]: 'RemoteAccessDisabled'
+  [ServerHandshakeOutcome.RemoteAccessDisabled]: 'RemoteAccessDisabled',
+  [ServerHandshakeOutcome.SelfAddress]: 'SelfAddress'
 };
 
 export enum ClientForwardingFailure {

@@ -169,7 +169,7 @@
   // a bare `outcome === 3` in a branch is how these get mixed up.
   var Handshake = {
     Ok: 0, Unreachable: 1, NotBakabase: 2, ClientTooOld: 3, ServerTooOld: 4,
-    RemoteAccessDisabled: 5
+    RemoteAccessDisabled: 5, SelfAddress: 6
   };
   // Bakabase.Infrastructures' UpdaterStatus, which travels as a number like the rest.
   var Updater = {
@@ -305,6 +305,10 @@
       case Handshake.ServerTooOld: return 'That server is too old for this client. Update the server.';
       case Handshake.RemoteAccessDisabled:
         return 'That server has remote access switched off. Turn it on in its settings.';
+      case Handshake.SelfAddress:
+        // The address of this window, which is the one address that cannot be right.
+        return 'That is this client’s own address. Enter the address of the computer ' +
+          'running Bakabase — its settings page shows it.';
       default: return result.detail || 'Could not connect.';
     }
   }
