@@ -10,12 +10,16 @@ using System.Threading.Tasks;
 using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Client.Remoting.Abstractions;
 using Bakabase.Client.Remoting.Abstractions.Models;
+using Bakabase.Client.Remoting.Components;
 using Bakabase.Client.Remoting.Components.Diagnostics;
 using Bakabase.Client.Remoting.Components.Forwarding;
 using Bakabase.Client.Remoting.Components.Shell;
 using Bakabase.Client.Remoting.Components.Updating;
 using Bakabase.Client.Remoting.Components.UserMachine;
+using Bakabase.Infrastructures.Components.App;
+using Bakabase.Infrastructures.Components.Orm.Log;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -522,5 +526,43 @@ public class ClientPipelineTests
 
         Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.IsFalse(response.Headers.Contains("X-Bakabase-Client"));
+    }
+
+    // ---- composition ----
+
+    [TestMethod]
+    public void The_client_keeps_no_database()
+    {
+        // ClientStartup composes its own services rather than deriving from AppStartup,
+        // so nothing here registers a DbContext. That is the point of the flavour — the
+        // client's log is read back out of the Serilog file by ClientLogReader, and there
+        // is no library to store.
+        Assert.IsNull(_host.Services.GetService<LogDbContext>());
+        Assert.IsNull(_host.Services.GetService<DbContext>());
+    }
+
+    /// <summary>
+    /// Reads the host's own answer about the database without starting one.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="AppHost"/>'s constructor only assigns its two arguments, so a probe
+    /// costs nothing and touches no application data.
+    /// </remarks>
+    private sealed class HostProbe() : ClientHost(null!, null!)
+    {
+        public bool ClaimsALogDatabase => HasLogDatabase;
+    }
+
+    [TestMethod]
+    public void The_client_host_does_not_claim_a_log_database()
+    {
+        // The crash this pins: AppHost's startup sequence migrates LogDbContext, and the
+        // client inherited that step while registering no such context. The launch died
+        // on a NullReferenceException from inside a SQLite migration — a stack naming the
+        // database layer for what was purely a question of which host this is.
+        //
+        // Paired with the assertion above on purpose: one says the client has no database,
+        // the other says the host knows it. Either alone lets them drift back apart.
+        Assert.IsFalse(new HostProbe().ClaimsALogDatabase);
     }
 }
