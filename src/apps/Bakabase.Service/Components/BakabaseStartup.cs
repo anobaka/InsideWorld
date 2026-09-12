@@ -136,7 +136,7 @@ namespace Bakabase.Service.Components
 
             services.AddSingleton<ThirdPartyHttpRequestLogger>();
 
-            services.TryAddSingleton<Bakabase.Service.Components.Mobile.MobileAppDownloadService>();
+            services.TryAddSingleton<Bakabase.Service.Components.Downloads.AppDownloadManifestService>();
             services.TryAddSingleton<Bakabase.Service.Components.Changelog.ChangelogService>();
 
             services.AddBakabaseMigrations();

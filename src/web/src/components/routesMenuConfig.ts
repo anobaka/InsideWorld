@@ -62,7 +62,7 @@ import ResourceProfilePage from "@/pages/resource-profile";
 import PathRuleConfigPage from "@/pages/path-mark-config";
 import PathMarksPage from "@/pages/path-marks";
 import ProfilerPage from "@/pages/profiler";
-import MobileAppPage from "@/pages/mobile-app";
+import OtherDevicesPage from "@/pages/other-devices";
 import ClientConnectionPage from "@/pages/client-connection";
 import ClientPathMappingPage from "@/pages/client-path-mapping";
 import ComparisonPage from "@/pages/comparison";
@@ -478,9 +478,9 @@ export const routesMenuConfig: RouteMenuItem[] = [
     ],
   },
   {
-    name: "menu.mobileApp",
-    path: "/mobile-app",
-    component: MobileAppPage,
+    name: "menu.otherDevices",
+    path: "/other-devices",
+    component: OtherDevicesPage,
     icon: AiOutlineMobile,
     layout: "basic",
     menu: true,

@@ -337,13 +337,20 @@ jobs:
           path: ./mobile-artifacts
         continue-on-error: true
 
+      # Names here are copies made for the GitHub Release listing and nothing else.
+      # The updater and the app itself never see them: Velopack identifies a release by
+      # its --packId and by the main executable name recorded in every installed
+      # manifest, and it downloads from the vpk-produced files under releases/{rid}/,
+      # which this job does not touch. Renaming a copy therefore costs an old bookmark
+      # and nothing more; renaming a packId or an exe would strand every installation.
       - name: Collect Velopack installers for release
         shell: bash
         run: |
           CDN_BASE="https://cdn-public.anobaka.com/app/bakabase"
           VERSION="${{ inputs.version }}"
 
-          # Copy Velopack Setup files with platform-suffixed names for GitHub Release
+          # Product-version-platform-shape, so the Assets list sorts by product and then
+          # by platform, and a downloaded file still says what it is a week later.
           for dir in ./vpk-artifacts/vpk-*/; do
             [ -d "$dir" ] || continue
             artifact_name=$(basename "$dir" | sed 's/^vpk-//')
@@ -355,56 +362,68 @@ jobs:
             for f in "$dir"*Setup*.exe; do
               [ -f "$f" ] || continue
               orig_name=$(basename "$f")
-              cp "$f" "./Bakabase-Setup-${VERSION}-${artifact_name}.exe"
-              echo "  -> Bakabase-Setup-${VERSION}-${artifact_name}.exe (from $orig_name)"
-              echo "SETUP_CDN_${env_suffix}=${ARCHIVE_BASE}/${orig_name}" >> "$GITHUB_ENV"
+              cp "$f" "./Bakabase-${VERSION}-${artifact_name}-Setup.exe"
+              echo "  -> Bakabase-${VERSION}-${artifact_name}-Setup.exe (from $orig_name)"
+              echo "SETUP_CDN_${env_suffix}=${ARCHIVE_BASE}/Bakabase-${VERSION}-${artifact_name}-Setup.exe" >> "$GITHUB_ENV"
             done
             # Find Setup pkg (macOS)
             for f in "$dir"*.pkg; do
               [ -f "$f" ] || continue
               orig_name=$(basename "$f")
-              cp "$f" "./Bakabase-Setup-${VERSION}-${artifact_name}.pkg"
-              echo "  -> Bakabase-Setup-${VERSION}-${artifact_name}.pkg (from $orig_name)"
-              echo "SETUP_CDN_${env_suffix}=${ARCHIVE_BASE}/${orig_name}" >> "$GITHUB_ENV"
+              cp "$f" "./Bakabase-${VERSION}-${artifact_name}-Setup.pkg"
+              echo "  -> Bakabase-${VERSION}-${artifact_name}-Setup.pkg (from $orig_name)"
+              echo "SETUP_CDN_${env_suffix}=${ARCHIVE_BASE}/Bakabase-${VERSION}-${artifact_name}-Setup.pkg" >> "$GITHUB_ENV"
             done
             # Find Portable zip (Windows)
             for f in "$dir"*-Portable.zip; do
               [ -f "$f" ] || continue
               orig_name=$(basename "$f")
-              cp "$f" "./bakabase-${VERSION}-${artifact_name}.zip"
-              echo "  -> bakabase-${VERSION}-${artifact_name}.zip (from $orig_name)"
-              echo "PORTABLE_CDN_${env_suffix}=${ARCHIVE_BASE}/${orig_name}" >> "$GITHUB_ENV"
+              cp "$f" "./Bakabase-${VERSION}-${artifact_name}-Portable.zip"
+              echo "  -> Bakabase-${VERSION}-${artifact_name}-Portable.zip (from $orig_name)"
+              echo "PORTABLE_CDN_${env_suffix}=${ARCHIVE_BASE}/Bakabase-${VERSION}-${artifact_name}-Portable.zip" >> "$GITHUB_ENV"
             done
           done
-          ls -lh Bakabase-Setup-${VERSION}-* 2>/dev/null || echo "No Velopack installers found"
-          ls -lh bakabase-${VERSION}-*.zip 2>/dev/null || echo "No Velopack portable zips found"
+          ls -lh Bakabase-${VERSION}-* 2>/dev/null || echo "No Velopack installers found"
 
       - name: Collect client installers for release
         shell: bash
         run: |
           VERSION="${{ inputs.version }}"
 
-          # Same shapes as the all-in-one's, under names that say which product they
-          # install. Both go on one release: same repository, same version stream.
+          # Same shapes and the same naming as the all-in-one's, under a product name
+          # that says which one this installs. Both go on one release: same repository,
+          # same version stream. The CDN links go into the environment here too — without
+          # them the download section below had no client row at all, and the packages
+          # were reachable only by scrolling to the Assets list and guessing.
+          CDN_BASE="https://cdn-public.anobaka.com/app/bakabase-client"
+
           for dir in ./client-vpk-artifacts/velopack-client-*/; do
             [ -d "$dir" ] || continue
             artifact_name=$(basename "$dir" | sed 's/^velopack-client-//')
+            env_suffix=$(echo "$artifact_name" | tr '-' '_')
             echo "Processing client Velopack artifact: $artifact_name"
+            ARCHIVE_BASE="${CDN_BASE}/archives/${VERSION}/${artifact_name}"
 
             for f in "$dir"*Setup*.exe; do
               [ -f "$f" ] || continue
-              cp "$f" "./Bakabase.Client-Setup-${VERSION}-${artifact_name}.exe"
+              orig_name=$(basename "$f")
+              cp "$f" "./Bakabase-Client-${VERSION}-${artifact_name}-Setup.exe"
+              echo "CLIENT_SETUP_CDN_${env_suffix}=${ARCHIVE_BASE}/Bakabase-Client-${VERSION}-${artifact_name}-Setup.exe" >> "$GITHUB_ENV"
             done
             for f in "$dir"*.pkg; do
               [ -f "$f" ] || continue
-              cp "$f" "./Bakabase.Client-Setup-${VERSION}-${artifact_name}.pkg"
+              orig_name=$(basename "$f")
+              cp "$f" "./Bakabase-Client-${VERSION}-${artifact_name}-Setup.pkg"
+              echo "CLIENT_SETUP_CDN_${env_suffix}=${ARCHIVE_BASE}/Bakabase-Client-${VERSION}-${artifact_name}-Setup.pkg" >> "$GITHUB_ENV"
             done
             for f in "$dir"*-Portable.zip; do
               [ -f "$f" ] || continue
-              cp "$f" "./bakabase-client-${VERSION}-${artifact_name}.zip"
+              orig_name=$(basename "$f")
+              cp "$f" "./Bakabase-Client-${VERSION}-${artifact_name}-Portable.zip"
+              echo "CLIENT_PORTABLE_CDN_${env_suffix}=${ARCHIVE_BASE}/Bakabase-Client-${VERSION}-${artifact_name}-Portable.zip" >> "$GITHUB_ENV"
             done
           done
-          ls -lh Bakabase.Client-Setup-${VERSION}-* 2>/dev/null || echo "No client installers found"
+          ls -lh Bakabase-Client-${VERSION}-* 2>/dev/null || echo "No client installers found"
 
       - name: Append download links to changelog
         shell: bash
@@ -413,9 +432,17 @@ jobs:
           CDN_BASE="https://cdn-public.anobaka.com/app/bakabase"
           CHANGELOG="CHANGELOG_${VERSION}.md"
 
+          # Which one do I want? The answer has to come before the tables: two products
+          # ship from this repository at the same version, and a reader who does not know
+          # that picks by filename and gets it wrong half the time.
           {
             echo ""
             echo "### Downloads / 下载地址"
+            echo ""
+            echo "| | What it is | 这是什么 |"
+            echo "|---|---|---|"
+            echo "| **Bakabase** | The full app: it manages your library on this machine. **Pick this one if you are not sure.** | 完整版，在本机管理你的媒体库。**不确定选哪个就选它。** |"
+            echo "| **Bakabase Client** | A thin client: it connects to a Bakabase already running on another machine, and keeps no library of its own. | 瘦客户端，连接另一台机器上已经在跑的 Bakabase，本机不存库。 |"
             echo ""
             echo "> Aliyun CDN links are provided below. You can also download from the GitHub Assets section at the bottom of this page."
             echo ">"
@@ -427,42 +454,43 @@ jobs:
             echo ""
           } >> "$CHANGELOG"
 
-          # Windows
-          {
-            echo "#### Windows"
-            echo ""
-            echo "| | Installer / 安装版 (Recommended / 推荐) | Portable / 免安装版 |"
-            echo "|---|---|---|"
-            CDN_INSTALLER=""
-            CDN_PORTABLE=""
-            if [ -n "$SETUP_CDN_win_x64" ]; then
-              CDN_INSTALLER="[Download / 下载]($SETUP_CDN_win_x64)"
+          link_or_dash() {
+            if [ -n "$1" ]; then
+              echo "[Download / 下载]($1)"
+            else
+              echo "—"
             fi
-            if [ -n "$PORTABLE_CDN_win_x64" ]; then
-              CDN_PORTABLE="[Download / 下载]($PORTABLE_CDN_win_x64)"
-            fi
-            echo "| Aliyun CDN / 阿里云CDN | ${CDN_INSTALLER} | ${CDN_PORTABLE} |"
-            echo ""
-          } >> "$CHANGELOG"
+          }
 
-          # macOS
-          {
-            echo "#### macOS"
-            echo ""
-            echo "| | Apple Silicon (arm64) | Intel (x64) |"
-            echo "|---|---|---|"
+          # One table per product, both keyed the same way, so the two can be compared
+          # at a glance rather than read as unrelated sections.
+          emit_product_table() {
+            local heading="$1" setup_win="$2" portable_win="$3" setup_arm="$4" setup_x64="$5"
 
-            # Installer row
-            CDN_ARM64=""
-            CDN_X64=""
-            if [ -n "$SETUP_CDN_osx_arm64" ]; then
-              CDN_ARM64="[Download / 下载]($SETUP_CDN_osx_arm64)"
+            # Nothing published for this product in this run — say nothing rather than
+            # printing a table of empty cells.
+            if [ -z "$setup_win$portable_win$setup_arm$setup_x64" ]; then
+              return
             fi
-            if [ -n "$SETUP_CDN_osx_x64" ]; then
-              CDN_X64="[Download / 下载]($SETUP_CDN_osx_x64)"
-            fi
-            echo "| **Installer / 安装版** | ${CDN_ARM64} | ${CDN_X64} |"
+
+            echo "#### ${heading}"
             echo ""
+            echo "| Platform / 平台 | Installer / 安装版 (Recommended / 推荐) | Portable / 免安装版 |"
+            echo "|---|---|---|"
+            echo "| Windows x64 | $(link_or_dash "$setup_win") | $(link_or_dash "$portable_win") |"
+            echo "| macOS Apple Silicon (arm64) | $(link_or_dash "$setup_arm") | — |"
+            echo "| macOS Intel (x64) | $(link_or_dash "$setup_x64") | — |"
+            echo ""
+          }
+
+          {
+            emit_product_table "Bakabase" \
+              "$SETUP_CDN_win_x64" "$PORTABLE_CDN_win_x64" \
+              "$SETUP_CDN_osx_arm64" "$SETUP_CDN_osx_x64"
+
+            emit_product_table "Bakabase Client / 纯客户端" \
+              "$CLIENT_SETUP_CDN_win_x64" "$CLIENT_PORTABLE_CDN_win_x64" \
+              "$CLIENT_SETUP_CDN_osx_arm64" "$CLIENT_SETUP_CDN_osx_x64"
           } >> "$CHANGELOG"
 
           # Mobile app packages, when this release carries a changed app
@@ -509,14 +537,14 @@ jobs:
           body_path: CHANGELOG_${{ inputs.version }}.md
           prerelease: ${{ steps.prerelease.outputs.prerelease == 'true' }}
           files: |
-            bakabase-${{ inputs.version }}-win-x64.zip
-            Bakabase-Setup-${{ inputs.version }}-win-x64.exe
-            Bakabase-Setup-${{ inputs.version }}-osx-x64.pkg
-            Bakabase-Setup-${{ inputs.version }}-osx-arm64.pkg
-            bakabase-client-${{ inputs.version }}-win-x64.zip
-            Bakabase.Client-Setup-${{ inputs.version }}-win-x64.exe
-            Bakabase.Client-Setup-${{ inputs.version }}-osx-x64.pkg
-            Bakabase.Client-Setup-${{ inputs.version }}-osx-arm64.pkg
+            Bakabase-${{ inputs.version }}-win-x64-Setup.exe
+            Bakabase-${{ inputs.version }}-win-x64-Portable.zip
+            Bakabase-${{ inputs.version }}-osx-arm64-Setup.pkg
+            Bakabase-${{ inputs.version }}-osx-x64-Setup.pkg
+            Bakabase-Client-${{ inputs.version }}-win-x64-Setup.exe
+            Bakabase-Client-${{ inputs.version }}-win-x64-Portable.zip
+            Bakabase-Client-${{ inputs.version }}-osx-arm64-Setup.pkg
+            Bakabase-Client-${{ inputs.version }}-osx-x64-Setup.pkg
             mobile-artifacts/*
           fail_on_unmatched_files: false
         env:
@@ -595,3 +623,27 @@ jobs:
       # Last: a reader that sees a version in the index must find its body.
       - name: Upload changelog index to OSS
         run: ./ossutil64 cp index.json "${CHANGELOGS_PREFIX}/index.json" -f
+
+      # The thin client's download manifest, the same mechanism the mobile app uses.
+      # Built here rather than in the release job because it reads the assets back off
+      # the release that job just created — CI records what it actually published, so
+      # the "other devices" page never has to compose a URL and be quietly wrong about
+      # it after a rename.
+      #
+      # Best-effort as a whole: a run where the client did not build has no packages to
+      # announce, and yesterday's manifest keeps serving.
+      #
+      # No CDN purge here, unlike the mobile pipeline's: the reader appends a cache-bust
+      # query, which makes every fetch a distinct URL the edge has to go to origin for.
+      # A purge would only help someone opening the bare manifest URL by hand.
+      - name: Build and upload the client download manifest
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 scripts/desktop/build_client_manifest.py \
+            --owner "${{ github.repository_owner }}" \
+            --repo "$(basename '${{ github.repository }}')" \
+            --out client-manifest.json
+          ./ossutil64 cp client-manifest.json \
+            "oss://anobaka-public/app/bakabase-client/manifest.json" -f

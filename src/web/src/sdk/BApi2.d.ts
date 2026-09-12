@@ -3664,22 +3664,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/mobile-app/downloads": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["GetMobileAppDownloads"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/notification": {
         parameters: {
             query?: never;
@@ -4238,6 +4222,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["PatchAvSourceOptions"];
+        trace?: never;
+    };
+    "/other-devices/downloads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetOtherDeviceDownloads"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/password": {
@@ -10921,6 +10921,22 @@ export interface components {
             markdown: string;
             htmlUrl?: string;
         };
+        "Bakabase.Service.Models.View.ClientAppDownloadFileViewModel": {
+            name: string;
+            platform: string;
+            shape: string;
+            /** Format: int64 */
+            size: number;
+            githubUrl?: string;
+            cdnUrl?: string;
+        };
+        "Bakabase.Service.Models.View.ClientAppDownloadsViewModel": {
+            version: string;
+            /** Format: date-time */
+            publishedAt?: string;
+            releaseUrl?: string;
+            files: components["schemas"]["Bakabase.Service.Models.View.ClientAppDownloadFileViewModel"][];
+        };
         "Bakabase.Service.Models.View.ComparisonPlanViewModel": {
             /** Format: int32 */
             id: number;
@@ -11087,6 +11103,10 @@ export interface components {
             releaseUrl?: string;
             sidestoreSourceUrl?: string;
             files: components["schemas"]["Bakabase.Service.Models.View.MobileAppDownloadFileViewModel"][];
+        };
+        "Bakabase.Service.Models.View.OtherDeviceDownloadsViewModel": {
+            mobile?: components["schemas"]["Bakabase.Service.Models.View.MobileAppDownloadsViewModel"];
+            desktopClient?: components["schemas"]["Bakabase.Service.Models.View.ClientAppDownloadsViewModel"];
         };
         "Bakabase.Service.Models.View.PropertyTypeForManuallySettingValueViewModel": {
             type: components["schemas"]["Bakabase.Abstractions.Models.Domain.Constants.PropertyType"];
@@ -12557,11 +12577,11 @@ export interface components {
             message?: string;
             data?: components["schemas"]["Bakabase.Service.Models.View.FileRenameEntryViewModel"];
         };
-        "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.MobileAppDownloadsViewModel]": {
+        "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.OtherDeviceDownloadsViewModel]": {
             /** Format: int32 */
             code: number;
             message?: string;
-            data?: components["schemas"]["Bakabase.Service.Models.View.MobileAppDownloadsViewModel"];
+            data?: components["schemas"]["Bakabase.Service.Models.View.OtherDeviceDownloadsViewModel"];
         };
         "Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.RemoteAccessClientContextViewModel]": {
             /** Format: int32 */
@@ -20703,28 +20723,6 @@ export interface operations {
             };
         };
     };
-    GetMobileAppDownloads: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.MobileAppDownloadsViewModel]"];
-                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.MobileAppDownloadsViewModel]"];
-                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.MobileAppDownloadsViewModel]"];
-                };
-            };
-        };
-    };
     SearchNotifications: {
         parameters: {
             query?: {
@@ -22397,6 +22395,28 @@ export interface operations {
                     "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
                     "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
                     "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.BaseResponse"];
+                };
+            };
+        };
+    };
+    GetOtherDeviceDownloads: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.OtherDeviceDownloadsViewModel]"];
+                    "application/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.OtherDeviceDownloadsViewModel]"];
+                    "text/json": components["schemas"]["Bootstrap.Models.ResponseModels.SingletonResponse`1[Bakabase.Service.Models.View.OtherDeviceDownloadsViewModel]"];
                 };
             };
         };
