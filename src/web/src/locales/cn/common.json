@@ -421,6 +421,7 @@
   "otherDevices.recommended": "推荐",
   "otherDevices.client.title": "另一台电脑",
   "otherDevices.client.intro": "纯客户端：显示这个媒体库、在那台机器上播放，本机不存任何东西。把下面的链接发到你想用的那台电脑上。",
+  "otherDevices.client.vsAllInOne": "和你现在打开的这个不是同一个下载。Bakabase 是一体版：媒体库存在它这里，也由它对外提供服务，也就是你此刻正在运行的这个。Bakabase Client 只是一个窗口，自己什么都不存，必须指向一台正在运行 Bakabase 的电脑。",
   "otherDevices.client.windows": "Windows（x64）",
   "otherDevices.client.macArm": "macOS（Apple 芯片）",
   "otherDevices.client.macIntel": "macOS（Intel）",

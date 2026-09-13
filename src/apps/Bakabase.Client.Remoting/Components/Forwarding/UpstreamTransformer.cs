@@ -11,8 +11,18 @@ namespace Bakabase.Client.Remoting.Components.Forwarding;
 /// <remarks>
 /// <para>
 /// Signing happens here rather than in a message handler because the signature covers
-/// the path and query, and YARP only settles those while building the outgoing request.
+/// the path and query, and a message handler runs after YARP has already decided them.
 /// Signing earlier would sign a URL that no longer matches what goes on the wire.
+/// </para>
+/// <para>
+/// Which makes the order below load-bearing, and it is the opposite of what it looks
+/// like: YARP fills <see cref="HttpRequestMessage.RequestUri"/> in <em>after</em> the
+/// transformer returns, and only if it is still null. So a transformer that signs
+/// without building the address first is handed a request with no URI at all — and the
+/// signer, correctly, refuses to sign one. That threw inside YARP, which reported it as
+/// a failure to create the request, which the forwarder reported as "the server is not
+/// answering": a client that had just paired successfully answered every single request
+/// with a 503 naming a server that was fine.
 /// </para>
 /// <para>
 /// Anything the caller sent as <c>Authorization</c> is dropped first. A page in the
@@ -26,6 +36,13 @@ public sealed class UpstreamTransformer(IClientCredentialProvider credentials, S
         string destinationPrefix, CancellationToken cancellationToken)
     {
         await base.TransformRequestAsync(httpContext, proxyRequest, destinationPrefix, cancellationToken);
+
+        // The address YARP would have built itself, built here instead so there is
+        // something to sign. Composed with YARP's own helper rather than by hand: it is
+        // what decides how the prefix, the path and the query are joined and escaped,
+        // and a second opinion on that is a signature over a URL the server never sees.
+        proxyRequest.RequestUri ??= RequestUtilities.MakeDestinationAddress(
+            destinationPrefix, httpContext.Request.Path, httpContext.Request.QueryString);
 
         // The upstream decides who we are from the signature alone; a Host of
         // 127.0.0.1 would just be a lie it has no use for.

@@ -11,6 +11,7 @@ using Bakabase.Abstractions.Models.Domain.Constants;
 using Bakabase.Client.Remoting.Abstractions;
 using Bakabase.Client.Remoting.Abstractions.Models;
 using Bakabase.Client.Remoting.Components.Connection;
+using Bakabase.Client.Remoting.Components.Forwarding;
 using Bakabase.Modules.RemoteAccess.Abstractions.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -35,6 +36,9 @@ public class ClientConnectionTests
     private ClientConnectionStore _store = null!;
     private ClientPairingService _pairing = null!;
     private DateTime _now;
+
+    /// <summary>Where this client's own forwarding layer is pretending to listen.</summary>
+    private const int SelfPort = 34600;
 
     private sealed class TempDirectory(string path) : IClientDataDirectory
     {
@@ -94,7 +98,7 @@ public class ClientConnectionTests
         _handler = new StubHandler();
         _http = new HttpClient(_handler);
         _clock = new ServerClock(() => _now);
-        _connector = new ServerConnector(_http, _clock);
+        _connector = new ServerConnector(_http, _clock, new ClientSelfAddress(SelfPort));
 
         _root = Path.Combine(Path.GetTempPath(), "bakabase-client-tests", Guid.NewGuid().ToString("N"));
         _store = new ClientConnectionStore(new TempDirectory(_root));
@@ -163,6 +167,42 @@ public class ClientConnectionTests
         _handler.Respond = _ => Json("""{"code":0,"data":{"name":"no id here"}}""");
         Assert.AreEqual(ServerHandshakeOutcome.NotBakabase,
             (await _connector.HandshakeAsync("192.168.1.5:34567")).Outcome);
+    }
+
+    [TestMethod]
+    public async Task This_clients_own_address_is_refused_without_being_asked()
+    {
+        // Every spelling of loopback, because the user copies whichever one the window's
+        // URL bar happens to show.
+        foreach (var address in new[]
+                 {
+                     $"127.0.0.1:{SelfPort}", $"http://localhost:{SelfPort}", $"http://[::1]:{SelfPort}",
+                     $"http://127.0.0.2:{SelfPort}"
+                 })
+        {
+            var result = await _connector.HandshakeAsync(address);
+
+            Assert.AreEqual(ServerHandshakeOutcome.SelfAddress, result.Outcome, address);
+        }
+
+        // The real assertion. Sending it is what makes this unrecoverable: with a server
+        // attached the forwarder relays the question upstream and the handshake would
+        // succeed, pairing this client to itself.
+        Assert.AreEqual(0, _handler.Requests.Count);
+    }
+
+    [TestMethod]
+    public async Task A_server_on_this_same_machine_is_still_a_server()
+    {
+        // The case the client exists to allow as much as any other: the all-in-one
+        // serving a library on this machine, with the client pointed at it. It is on
+        // loopback too, and only the port tells them apart.
+        _handler.Respond = _ => Json(ServerInfo());
+
+        var result = await _connector.HandshakeAsync($"127.0.0.1:{LoopbackPortAllocator.AllInOneWindowStart}");
+
+        Assert.AreEqual(ServerHandshakeOutcome.Ok, result.Outcome);
+        Assert.AreEqual("server-1", result.Server!.Id);
     }
 
     [TestMethod]
@@ -338,6 +378,12 @@ public class ClientConnectionTests
 
         Assert.IsTrue(result.Succeeded);
         Assert.AreEqual("req-1", result.Ticket!.RequestId);
+
+        // And it says it is waiting, which is the state it is actually in. Reported as
+        // Paired, the connect page read it as "you are in", left for the library with no
+        // credentials, and never started polling — so an approval given at the server
+        // was never collected, however long the user sat there.
+        Assert.AreEqual(ClientPairingOutcome.AwaitingApproval, result.Outcome);
     }
 
     [TestMethod]

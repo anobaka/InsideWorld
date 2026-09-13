@@ -26,6 +26,7 @@
   "clientConnection.handshake.ClientTooOld": "该服务端比本客户端新，请升级客户端。{{detail}}",
   "clientConnection.handshake.ServerTooOld": "该服务端对本客户端来说太旧，请升级服务端。{{detail}}",
   "clientConnection.handshake.RemoteAccessDisabled": "该服务端没有对其他设备开放，请在它的设置里开启远程访问。",
+  "clientConnection.handshake.SelfAddress": "这是本客户端自己的地址。请填写运行 Bakabase 服务端的那台电脑的地址，在它的设置页里可以看到。",
   "clientConnection.pairing.Unreachable": "服务端不再响应。",
   "clientConnection.pairing.CodeRejected": "配对码未被接受。请在服务端重新生成后再试。",
   "clientConnection.pairing.AwaitingApproval": "仍在等待批准。",

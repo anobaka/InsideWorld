@@ -109,9 +109,14 @@ public sealed class ClientPairingService(HttpClient http, IClientConnectionStore
         // Failure, the same channel the other two endpoints use.
         var payload = await ReadAsync<TicketPayload>(response, ct);
 
+        // AwaitingApproval, not Paired: filing a request is the start of waiting, and
+        // nothing has been paired. Reporting it as Paired told the connect page the
+        // device was in — so it navigated to a library it had no credentials for and
+        // never started polling for the approval, which then went uncollected however
+        // long the user waited at the server.
         return payload?.RequestId == null
             ? new ClientPairingRequestResult(Map(payload?.Failure), null, null)
-            : new ClientPairingRequestResult(ClientPairingOutcome.Paired,
+            : new ClientPairingRequestResult(ClientPairingOutcome.AwaitingApproval,
                 new ClientPairingTicket(payload.RequestId, payload.ExpiresAt), null);
     }
 

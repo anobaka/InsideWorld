@@ -519,6 +519,28 @@ public class ClientPipelineTests
     }
 
     [TestMethod]
+    public async Task Connecting_to_this_client_itself_is_refused()
+    {
+        // End to end, against a real listener on a real port, because the wiring is the
+        // part that can go wrong: the connector has to be handed the port the host
+        // actually bound, and the only proof of that is the running host recognising its
+        // own address.
+        //
+        // Left to the handshake this would not fail. With no server attached this
+        // listener answers the connect page — read as "not a Bakabase server", which
+        // sends the user off to check a server that was never the problem — and with one
+        // attached the forwarder relays the question upstream, so it would succeed and
+        // pair the client to itself.
+        var response = await Send($"{ClientApiEndpoints.Prefix}/connect", method: HttpMethod.Post,
+            body: $"{{\"address\":\"127.0.0.1:{_port}\"}}");
+
+        var data = JsonDocument.Parse(await response.Content.ReadAsStringAsync())
+            .RootElement.GetProperty("data");
+
+        Assert.AreEqual((int) ServerHandshakeOutcome.SelfAddress, data.GetProperty("outcome").GetInt32());
+    }
+
+    [TestMethod]
     public async Task Opening_a_link_refuses_anything_that_is_not_a_web_address()
     {
         // Reached the local handler rather than the forwarder, and stopped there.

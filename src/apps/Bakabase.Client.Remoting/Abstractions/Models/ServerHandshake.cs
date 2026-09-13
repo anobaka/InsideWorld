@@ -35,7 +35,14 @@ public enum ServerHandshakeOutcome
     ServerTooOld = 4,
 
     /// <summary>Reached, understood, and refusing everyone: remote access is switched off there.</summary>
-    RemoteAccessDisabled = 5
+    RemoteAccessDisabled = 5,
+
+    /// <summary>
+    /// This client's own address. Separate from <see cref="NotBakabase"/> because the fix
+    /// is the opposite of what that one suggests: the address is not wrong about Bakabase,
+    /// it is wrong about which computer.
+    /// </summary>
+    SelfAddress = 6
 }
 
 public sealed record ServerHandshakeResult(ServerHandshakeOutcome Outcome, ServerInfo? Server, string? Detail)
