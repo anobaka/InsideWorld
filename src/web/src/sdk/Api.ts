@@ -318,6 +318,12 @@ export type BakabaseAbstractionsModelsDomainConstantsResourceCacheType = 1 | 2 |
 export type BakabaseAbstractionsModelsDomainConstantsResourceDataType = 1 | 2 | 3;
 
 /**
+ * [1: Pending, 2: Dismissed]
+ * @format int32
+ */
+export type BakabaseAbstractionsModelsDomainConstantsResourceMatchSuggestionStatus = 1 | 2;
+
+/**
  * [1: Pending, 2: Moving, 3: Succeeded, 4: Failed, 5: Cancelled, 6: Interrupted]
  * @format int32
  */
@@ -330,10 +336,10 @@ export type BakabaseAbstractionsModelsDomainConstantsResourceMoveRecordStatus =
   | 6;
 
 /**
- * [1: PathMark, 2: Steam, 3: DLsite, 4: ExHentai, 5: Aigc]
+ * [1: PathMark, 2: Steam, 3: DLsite, 4: ExHentai, 5: Aigc, 6: Bangumi, 7: Pixiv, 8: Vndb]
  * @format int32
  */
-export type BakabaseAbstractionsModelsDomainConstantsResourceSource = 1 | 2 | 3 | 4 | 5;
+export type BakabaseAbstractionsModelsDomainConstantsResourceSource = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 /**
  * [1: Active, 2: Absent, 3: Unavailable]
@@ -748,6 +754,14 @@ export interface BakabaseAbstractionsModelsDomainResource {
   /** @deprecated */
   mediaLibraryColor?: string;
   mediaLibraries?: BakabaseAbstractionsModelsDomainResourceMediaLibraryInfo[];
+  collections?: BakabaseAbstractionsModelsDomainResourceCollectionInfo[];
+}
+
+export interface BakabaseAbstractionsModelsDomainResourceCollectionInfo {
+  /** @format int32 */
+  id: number;
+  name: string;
+  color?: string;
 }
 
 export interface BakabaseAbstractionsModelsDomainResourceMediaLibraryInfo {
@@ -795,6 +809,24 @@ export interface BakabaseAbstractionsModelsDomainResourceFileSystemCache {
   coverPaths?: string[];
   playableFilePaths?: string[];
   cachedTypes: BakabaseAbstractionsModelsDomainConstantsResourceCacheType[];
+}
+
+export interface BakabaseAbstractionsModelsDomainResourceMatchSuggestion {
+  /** @format int32 */
+  id: number;
+  /** @format int32 */
+  resourceId: number;
+  resourceName?: string;
+  /** @format int32 */
+  candidateResourceId: number;
+  candidateResourceName?: string;
+  /** @format double */
+  score: number;
+  reason?: string;
+  /** [1: Pending, 2: Dismissed] */
+  status: BakabaseAbstractionsModelsDomainConstantsResourceMatchSuggestionStatus;
+  /** @format date-time */
+  createdAt: string;
 }
 
 export interface BakabaseAbstractionsModelsDomainResourceProfileEnhancerOptions {
@@ -855,7 +887,7 @@ export interface BakabaseAbstractionsModelsDomainResourceSourceLink {
   id: number;
   /** @format int32 */
   resourceId: number;
-  /** [1: PathMark, 2: Steam, 3: DLsite, 4: ExHentai, 5: Aigc] */
+  /** [1: PathMark, 2: Steam, 3: DLsite, 4: ExHentai, 5: Aigc, 6: Bangumi, 7: Pixiv, 8: Vndb] */
   source: BakabaseAbstractionsModelsDomainConstantsResourceSource;
   sourceKey: string;
   /** @format date-time */
@@ -889,7 +921,7 @@ export interface BakabaseAbstractionsModelsDomainSourceMetadataFieldInfo {
 export interface BakabaseAbstractionsModelsDomainSourceMetadataMapping {
   /** @format int32 */
   id: number;
-  /** [1: PathMark, 2: Steam, 3: DLsite, 4: ExHentai, 5: Aigc] */
+  /** [1: PathMark, 2: Steam, 3: DLsite, 4: ExHentai, 5: Aigc, 6: Bangumi, 7: Pixiv, 8: Vndb] */
   source: BakabaseAbstractionsModelsDomainConstantsResourceSource;
   metadataField: string;
   /** [1: Internal, 2: Reserved, 4: Custom, 7: All] */
@@ -1209,6 +1241,13 @@ export interface BakabaseAbstractionsModelsViewThirdPartyContentTrackerStatusVie
   viewedAt?: string;
   isViewed: boolean;
   hasUpdate: boolean;
+}
+
+export interface BakabaseAbstractionsServicesPlaceholderResourceResult {
+  /** @format int32 */
+  resourceId: number;
+  created: boolean;
+  name?: string;
 }
 
 /**
@@ -1935,7 +1974,7 @@ export interface BakabaseInsideWorldBusinessComponentsDownloaderAbstractionsMode
   id: number;
   key: string;
   name?: string;
-  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam] */
+  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam, 13: Vndb] */
   thirdPartyId: BakabaseInsideWorldModelsConstantsThirdPartyId;
   /** @format int32 */
   type: number;
@@ -1988,7 +2027,7 @@ export interface BakabaseInsideWorldBusinessComponentsDownloaderAbstractionsMode
 }
 
 export interface BakabaseInsideWorldBusinessComponentsDownloaderAbstractionsModelsDownloaderDefinition {
-  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam] */
+  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam, 13: Vndb] */
   thirdPartyId: BakabaseInsideWorldModelsConstantsThirdPartyId;
   /** @format int32 */
   taskType: number;
@@ -2025,13 +2064,13 @@ export interface BakabaseInsideWorldBusinessComponentsDownloaderAbstractionsMode
 }
 
 export interface BakabaseInsideWorldBusinessComponentsDownloaderAbstractionsModelsInputDownloadRecordQueryInputModel {
-  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam] */
+  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam, 13: Vndb] */
   thirdPartyId: BakabaseInsideWorldModelsConstantsThirdPartyId;
   keys: string[];
 }
 
 export interface BakabaseInsideWorldBusinessComponentsDownloaderAbstractionsModelsInputDownloadTaskAddInputModel {
-  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam] */
+  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam, 13: Vndb] */
   thirdPartyId: BakabaseInsideWorldModelsConstantsThirdPartyId;
   /** @format int32 */
   type: number;
@@ -2053,7 +2092,7 @@ export interface BakabaseInsideWorldBusinessComponentsDownloaderAbstractionsMode
 
 export interface BakabaseInsideWorldBusinessComponentsDownloaderAbstractionsModelsInputDownloadTaskDeleteInputModel {
   ids?: number[];
-  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam] */
+  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam, 13: Vndb] */
   thirdPartyId?: BakabaseInsideWorldModelsConstantsThirdPartyId;
 }
 
@@ -2086,7 +2125,7 @@ export type BakabaseInsideWorldBusinessComponentsDownloaderComponentsDownloaders
 export interface BakabaseInsideWorldBusinessComponentsDownloaderModelsDbDownloadRecordDbModel {
   /** @format int32 */
   id: number;
-  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam] */
+  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam, 13: Vndb] */
   thirdPartyId: BakabaseInsideWorldModelsConstantsThirdPartyId;
   /** @minLength 1 */
   key: string;
@@ -2468,7 +2507,7 @@ export type BakabaseInsideWorldModelsConstantsAdditionalCoverDiscoveringSource =
 export type BakabaseInsideWorldModelsConstantsAdditionalItemsCustomPropertyAdditionalItem = 0 | 2;
 
 /**
- * [0: None, 32: Properties, 64: Alias, 288: DisplayName, 512: HasChildren, 2048: MediaLibraryName, 16416: Cover, 32768: PlayableItem, 52064: All]
+ * [0: None, 32: Properties, 64: Alias, 288: DisplayName, 512: HasChildren, 2048: MediaLibraryName, 16416: Cover, 32768: PlayableItem, 65536: CollectionName, 117600: All]
  * @format int32
  */
 export type BakabaseInsideWorldModelsConstantsAdditionalItemsResourceAdditionalItem =
@@ -2480,7 +2519,8 @@ export type BakabaseInsideWorldModelsConstantsAdditionalItemsResourceAdditionalI
   | 2048
   | 16416
   | 32768
-  | 52064;
+  | 65536
+  | 117600;
 
 /**
  * [1: Latest, 2: Frequency]
@@ -2553,7 +2593,7 @@ export type BakabaseInsideWorldModelsConstantsPlaylistItemType = 1 | 2 | 3 | 4;
 export type BakabaseInsideWorldModelsConstantsStartupPage = 0 | 1;
 
 /**
- * [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam]
+ * [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam, 13: Vndb]
  * @format int32
  */
 export type BakabaseInsideWorldModelsConstantsThirdPartyId =
@@ -2568,7 +2608,8 @@ export type BakabaseInsideWorldModelsConstantsThirdPartyId =
   | 9
   | 10
   | 11
-  | 12;
+  | 12
+  | 13;
 
 export interface BakabaseInsideWorldModelsModelsAosPreviewerItem {
   filePath: string;
@@ -2579,7 +2620,7 @@ export interface BakabaseInsideWorldModelsModelsAosPreviewerItem {
 }
 
 export interface BakabaseInsideWorldModelsModelsAosThirdPartyRequestStatistics {
-  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam] */
+  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam, 13: Vndb] */
   id: BakabaseInsideWorldModelsConstantsThirdPartyId;
   counts?: Record<string, number>;
 }
@@ -2614,7 +2655,7 @@ export interface BakabaseInsideWorldModelsModelsDtosDashboardStatistics {
 }
 
 export interface BakabaseInsideWorldModelsModelsDtosDashboardStatisticsDownloaderTaskCount {
-  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam] */
+  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam, 13: Vndb] */
   id: BakabaseInsideWorldModelsConstantsThirdPartyId;
   statusAndCounts: Record<string, number>;
 }
@@ -2634,7 +2675,7 @@ export interface BakabaseInsideWorldModelsModelsDtosDashboardStatisticsTextAndCo
 }
 
 export interface BakabaseInsideWorldModelsModelsDtosDashboardStatisticsThirdPartyRequestCount {
-  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam] */
+  /** [1: Bilibili, 2: ExHentai, 3: Pixiv, 4: Bangumi, 5: SoulPlus, 6: DLsite, 7: Fanbox, 8: Fantia, 9: Cien, 10: Patreon, 11: Tmdb, 12: Steam, 13: Vndb] */
   id: BakabaseInsideWorldModelsConstantsThirdPartyId;
   /** @format int32 */
   resultType: number;
@@ -3269,6 +3310,222 @@ export interface BakabaseModulesAIServicesTranslationResult {
   targetLanguage: string;
 }
 
+export interface BakabaseModulesAcquisitionAbstractionsModelsDomainAcquisitionLead {
+  /** @format int32 */
+  id: number;
+  /** @format int32 */
+  resourceId: number;
+  /** [1: PlatformHolding, 2: SharedPage, 3: SharedDocument, 4: DirectUrl, 5: Magnet, 6: Manual] */
+  kind: BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionLeadKind;
+  value: string;
+  /** [1: User, 2: Subscription, 3: SharedListImport, 4: PostParser] */
+  origin: BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionLeadOrigin;
+  note?: string;
+  /** @format date-time */
+  lastUsedAt?: string;
+  /** [1: Succeeded, 2: Failed] */
+  lastResult?: BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionLeadResult;
+  /** @format date-time */
+  createdAt: string;
+  isDerived: boolean;
+  sourceName?: string;
+}
+
+export interface BakabaseModulesAcquisitionAbstractionsModelsDomainAcquisitionTask {
+  /** @format int32 */
+  id: number;
+  /** @format int32 */
+  resourceId: number;
+  /** @format int32 */
+  collectionId?: number;
+  /** [1: PlatformHolding, 2: SharedPage, 3: SharedDocument, 4: DirectUrl, 5: Magnet, 6: Manual] */
+  leadKind: BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionLeadKind;
+  leadValue?: string;
+  /** @format int32 */
+  acquisitionLeadId?: number;
+  /** @format int32 */
+  recipeDefinitionId: number;
+  /** @format int32 */
+  workflowRunId?: number;
+  /** [1: Pending, 2: Running, 3: Waiting, 4: Completed, 5: Failed, 6: Cancelled] */
+  status: BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionStatus;
+  /** [1: WaitingForFile, 2: AmbiguousInboxFile, 3: PaidContent, 4: NoLinks, 5: ChooseLink, 6: PasswordUnknown, 7: TargetExists, 8: PickDirectory, 9: PlatformFetch] */
+  waitReason?: BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionWaitReason;
+  targetDirectory?: string;
+  error?: string;
+  /** @format date-time */
+  createdAt: string;
+  /** @format date-time */
+  updatedAt: string;
+  /** @format date-time */
+  completedAt?: string;
+  purchases: BakabaseModulesAcquisitionAbstractionsModelsDomainPurchaseRecord[];
+  resourceName?: string;
+  recipeName?: string;
+  waitPromptJson?: string;
+  /** @format date-time */
+  waitingSince?: string;
+  /** @format int32 */
+  currentStepIndex?: number;
+  isFinished: boolean;
+}
+
+/**
+ * [0: Unknown, 1: DirectUrl, 2: Baidu, 3: Xunlei, 4: Feimao, 5: Cloudflare, 6: Mega, 7: PikPak, 8: GoogleDrive, 9: OneDrive, 10: Magnet, 11: OneOneFive]
+ * @format int32
+ */
+export type BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionDriveKind =
+  | 0
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11;
+
+/**
+ * [1: PlatformHolding, 2: SharedPage, 3: SharedDocument, 4: DirectUrl, 5: Magnet, 6: Manual]
+ * @format int32
+ */
+export type BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionLeadKind =
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6;
+
+/**
+ * [1: User, 2: Subscription, 3: SharedListImport, 4: PostParser]
+ * @format int32
+ */
+export type BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionLeadOrigin =
+  | 1
+  | 2
+  | 3
+  | 4;
+
+/**
+ * [1: Succeeded, 2: Failed]
+ * @format int32
+ */
+export type BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionLeadResult =
+  | 1
+  | 2;
+
+/**
+ * [1: Pending, 2: Running, 3: Waiting, 4: Completed, 5: Failed, 6: Cancelled]
+ * @format int32
+ */
+export type BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionStatus =
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6;
+
+/**
+ * [1: WaitingForFile, 2: AmbiguousInboxFile, 3: PaidContent, 4: NoLinks, 5: ChooseLink, 6: PasswordUnknown, 7: TargetExists, 8: PickDirectory, 9: PlatformFetch]
+ * @format int32
+ */
+export type BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionWaitReason =
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9;
+
+export interface BakabaseModulesAcquisitionAbstractionsModelsDomainPurchaseRecord {
+  /** @format double */
+  price: number;
+  /** @format date-time */
+  purchasedAt: string;
+  where: string;
+}
+
+export interface BakabaseModulesAcquisitionAbstractionsServicesAcquisitionRecipeSummary {
+  /** @format int32 */
+  definitionId: number;
+  name: string;
+  isBuiltin: boolean;
+  stepKinds: string[];
+}
+
+export interface BakabaseModulesAcquisitionModelsDomainAcquisitionOptions {
+  inboxDirectory?: string;
+  libraryRootDirectory?: string;
+  directoryTemplate: string;
+  preferredDriveKinds: BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionDriveKind[];
+  recipeByLeadKind: {
+    PlatformHolding: string;
+    SharedPage: string;
+    SharedDocument: string;
+    DirectUrl: string;
+    Magnet: string;
+    Manual: string;
+  };
+  /** @format double */
+  autoPurchaseLimit: number;
+  deleteArchiveAfterExtraction: boolean;
+  tryRecentPasswords: boolean;
+  /** @format int32 */
+  recentPasswordCandidateCount: number;
+  /** @format int32 */
+  concurrency: number;
+}
+
+export interface BakabaseModulesAcquisitionModelsInputAcquisitionCreationInputModel {
+  /** @format int32 */
+  resourceId: number;
+  /** @format int32 */
+  acquisitionLeadId?: number;
+  /** [1: PlatformHolding, 2: SharedPage, 3: SharedDocument, 4: DirectUrl, 5: Magnet, 6: Manual] */
+  leadKind?: BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionLeadKind;
+  leadValue?: string;
+  /** @format int32 */
+  recipeDefinitionId?: number;
+  /** @format int32 */
+  collectionId?: number;
+}
+
+export interface BakabaseModulesAcquisitionModelsInputAcquisitionFromUrlInputModel {
+  /** @minLength 1 */
+  url: string;
+  /** @format int32 */
+  recipeDefinitionId?: number;
+  /** @format int32 */
+  collectionId?: number;
+}
+
+export interface BakabaseModulesAcquisitionModelsInputAcquisitionLeadAddInputModel {
+  /** [1: PlatformHolding, 2: SharedPage, 3: SharedDocument, 4: DirectUrl, 5: Magnet, 6: Manual] */
+  kind: BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionLeadKind;
+  /**
+   * @minLength 1
+   * @maxLength 2048
+   */
+  value: string;
+  /** [1: User, 2: Subscription, 3: SharedListImport, 4: PostParser] */
+  origin: BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionLeadOrigin;
+  /** @maxLength 512 */
+  note?: string;
+}
+
+export interface BakabaseModulesAcquisitionModelsInputAcquisitionResumeInputModel {
+  /** @minLength 1 */
+  signalJson: string;
+}
+
 export interface BakabaseModulesAliasAbstractionsModelsDomainAlias {
   text: string;
   preferred?: string;
@@ -3285,6 +3542,106 @@ export interface BakabaseModulesAliasModelsInputAliasAddInputModel {
 export interface BakabaseModulesAliasModelsInputAliasPatchInputModel {
   text?: string;
   isPreferred: boolean;
+}
+
+export interface BakabaseModulesCollectionAbstractionsModelsDomainCollectionMember {
+  /** @format int32 */
+  collectionId: number;
+  /** @format int32 */
+  resourceId: number;
+  /** [1: Manual, 2: Subscription] */
+  origin?: BakabaseModulesCollectionAbstractionsModelsDomainConstantsCollectionMembershipOrigin;
+  /** @format int32 */
+  subscriptionId?: number;
+  /** @format date-time */
+  lastSeenAt?: string;
+  isIgnored: boolean;
+  /** @format int32 */
+  order?: number;
+  isFromRule: boolean;
+}
+
+export interface BakabaseModulesCollectionAbstractionsModelsDomainCollectionProgress {
+  /** @format int32 */
+  total: number;
+  /** @format int32 */
+  owned: number;
+  /** @format int32 */
+  acquiring: number;
+  /** @format int32 */
+  ignored: number;
+  /** @format double */
+  ratio: number;
+}
+
+/**
+ * [0: All, 1: Owned, 2: Missing, 3: Acquiring, 4: Ignored, 5: GoneFromSource]
+ * @format int32
+ */
+export type BakabaseModulesCollectionAbstractionsModelsDomainConstantsCollectionMemberFilter =
+  | 0
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5;
+
+/**
+ * [1: Manual, 2: Subscription]
+ * @format int32
+ */
+export type BakabaseModulesCollectionAbstractionsModelsDomainConstantsCollectionMembershipOrigin =
+  | 1
+  | 2;
+
+export interface BakabaseModulesCollectionAbstractionsModelsDomainResourceCollection {
+  /** @format int32 */
+  id: number;
+  name: string;
+  description?: string;
+  color?: string;
+  coverPath?: string;
+  ruleSearchJson?: string;
+  autoAcquire: boolean;
+  acquisitionSettingsJson?: string;
+  /** @format int32 */
+  order: number;
+  /** @format date-time */
+  createdAt: string;
+  /** @format date-time */
+  updatedAt: string;
+  progress?: BakabaseModulesCollectionAbstractionsModelsDomainCollectionProgress;
+  hasRule: boolean;
+}
+
+export interface BakabaseModulesCollectionAbstractionsServicesCollectionMemberPage {
+  resourceIds: number[];
+  /** @format int32 */
+  totalCount: number;
+  /** @format int32 */
+  pageIndex: number;
+  /** @format int32 */
+  pageSize: number;
+}
+
+export interface BakabaseModulesCollectionModelsInputCollectionInputModel {
+  /**
+   * @minLength 1
+   * @maxLength 128
+   */
+  name: string;
+  description?: string;
+  color?: string;
+  coverPath?: string;
+  ruleSearchJson?: string;
+  autoAcquire: boolean;
+  acquisitionSettingsJson?: string;
+  /** @format int32 */
+  order: number;
+}
+
+export interface BakabaseModulesCollectionModelsInputCollectionMembersInputModel {
+  resourceIds: number[];
 }
 
 export interface BakabaseModulesComparisonModelsDomainComparisonPlan {
@@ -4245,7 +4602,7 @@ export interface BakabaseModulesSubscriptionAbstractionsModelsViewSubscriptionPr
   icon?: string;
   /** [1: PlatformHolding, 2: Catalog, 3: SharingChannel] */
   sourceKind: BakabaseModulesSubscriptionAbstractionsModelsDomainConstantsSubscriptionSourceKind;
-  /** [1: PathMark, 2: Steam, 3: DLsite, 4: ExHentai, 5: Aigc, 6: Bangumi, 7: Pixiv] */
+  /** [1: PathMark, 2: Steam, 3: DLsite, 4: ExHentai, 5: Aigc, 6: Bangumi, 7: Pixiv, 8: Vndb] */
   resourceSource?: BakabaseAbstractionsModelsDomainConstantsResourceSource;
 }
 
@@ -4420,6 +4777,7 @@ export interface BakabaseModulesWorkflowAbstractionsModelsViewWorkflowDefinition
   /** @format date-time */
   lastRunAt?: string;
   lastError?: string;
+  isBuiltin: boolean;
   activities: BakabaseModulesWorkflowAbstractionsModelsViewWorkflowActivityViewModel[];
 }
 
@@ -4469,6 +4827,60 @@ export interface BakabaseModulesWorkflowAbstractionsModelsViewWorkflowTriggerDes
   displayName: string;
   requiresManualPayload: boolean;
   payloadFields: BakabaseModulesWorkflowAbstractionsModelsViewWorkflowItemTypeFieldViewModel[];
+}
+
+export interface BakabaseServiceComponentsAcquisitionAcquisitionSetupInputModel {
+  inboxDirectory?: string;
+  libraryRootDirectory?: string;
+  directoryTemplate?: string;
+  preferredDriveKinds?: BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionDriveKind[];
+  /** @format double */
+  autoPurchaseLimit?: number;
+}
+
+export interface BakabaseServiceComponentsAcquisitionAcquisitionSetupResult {
+  createdInbox: boolean;
+  createdLibrary: boolean;
+  /** @format int32 */
+  pathMarkId?: number;
+}
+
+export interface BakabaseServiceComponentsAcquisitionInboxCandidate {
+  path: string;
+  fileName: string;
+  /** @format int64 */
+  length: number;
+  /** @format date-time */
+  createdAt: string;
+  isStable: boolean;
+  scores: BakabaseServiceComponentsAcquisitionInboxCandidateScore[];
+}
+
+export interface BakabaseServiceComponentsAcquisitionInboxCandidateScore {
+  /** @format int32 */
+  acquisitionTaskId: number;
+  resourceName?: string;
+  /** @format int32 */
+  score: number;
+}
+
+export interface BakabaseServiceComponentsAcquisitionSharedListImportResult {
+  /** @format int32 */
+  created: number;
+  /** @format int32 */
+  matched: number;
+  /** @format int32 */
+  started: number;
+  problems: string[];
+}
+
+export interface BakabaseServiceComponentsAcquisitionSharedListPreviewRow {
+  title?: string;
+  url?: string;
+  password?: string;
+  /** @format int32 */
+  lineNumber: number;
+  alreadyKnown: boolean;
 }
 
 export interface BakabaseServiceControllersAppDataPathControllerRelocateRequest {
@@ -4521,6 +4933,30 @@ export interface BakabaseServiceControllersChatControllerUpdateTitleRequest {
   title: string;
 }
 
+export interface BakabaseServiceControllersCollectionAcquireMissingResult {
+  /** @format int32 */
+  started: number;
+  /** @format int32 */
+  withoutLead: number;
+  problems: string[];
+}
+
+export interface BakabaseServiceControllersCollectionPlaceholderInputModel {
+  title: string;
+}
+
+export interface BakabaseServiceControllersCollectionRulePreview {
+  /** @format int32 */
+  totalCount: number;
+  sampleResourceIds: number[];
+}
+
+export interface BakabaseServiceControllersCollectionRulePreviewInputModel {
+  ruleSearchJson?: string;
+  /** @format int32 */
+  sampleSize: number;
+}
+
 export interface BakabaseServiceControllersDiscoverySubscribeRequest {
   /** @format int32 */
   resourceId: number;
@@ -4564,6 +5000,21 @@ export interface BakabaseServiceControllersResourceHealthScoreRowViewModel {
   matchedRulesJson?: string;
   /** @format date-time */
   evaluatedAt: string;
+}
+
+export interface BakabaseServiceControllersSharedListImportInputModel {
+  rows: BakabaseServiceControllersSharedListImportRow[];
+  /** @format int32 */
+  collectionId?: number;
+  startAcquiring: boolean;
+}
+
+export interface BakabaseServiceControllersSharedListImportRow {
+  title?: string;
+  url?: string;
+  password?: string;
+  /** @format int32 */
+  lineNumber: number;
 }
 
 export interface BakabaseServiceModelsInputAvSourceTestInputModel {
@@ -4755,6 +5206,12 @@ export interface BakabaseServiceModelsInputResourceCoverSaveInputModel {
   saveMode: BakabaseInsideWorldModelsConstantsCoverSaveMode;
 }
 
+export interface BakabaseServiceModelsInputResourceMaterializeInputModel {
+  /** @minLength 1 */
+  path: string;
+  mergeIfOccupied: boolean;
+}
+
 export interface BakabaseServiceModelsInputResourceMediaLibraryMappingInputModel {
   mediaLibraryIds: number[];
 }
@@ -4774,6 +5231,19 @@ export interface BakabaseServiceModelsInputResourceOptionsPatchInputModel {
   recentFilters?: BakabaseInsideWorldBusinessComponentsConfigurationsModelsDomainResourceOptionsResourceFilter[];
   keepResourcesOnPathChange?: boolean;
   deleteKeepResourceMarkers?: boolean;
+}
+
+export interface BakabaseServiceModelsInputResourcePlaceholderInputModel {
+  items: BakabaseServiceModelsInputResourcePlaceholderItemInputModel[];
+  acquireImmediately: boolean;
+}
+
+export interface BakabaseServiceModelsInputResourcePlaceholderItemInputModel {
+  title?: string;
+  /** [1: PathMark, 2: Steam, 3: DLsite, 4: ExHentai, 5: Aigc, 6: Bangumi, 7: Pixiv, 8: Vndb] */
+  source?: BakabaseAbstractionsModelsDomainConstantsResourceSource;
+  sourceKey?: string;
+  sharedUrl?: string;
 }
 
 export interface BakabaseServiceModelsInputResourceProfileInputModel {
@@ -5433,11 +5903,30 @@ export interface BakabaseServiceModelsViewResourceHierarchyContextViewModel {
   childrenCount?: number;
 }
 
+export interface BakabaseServiceModelsViewResourceMaterializeResultViewModel {
+  materialized: boolean;
+  path?: string;
+  /** @format int32 */
+  occupiedByResourceId?: number;
+  occupiedByResourceName?: string;
+  merged: boolean;
+}
+
 export interface BakabaseServiceModelsViewResourcePathInfoViewModel {
   /** @format int32 */
   id: number;
   path: string;
   fileName: string;
+}
+
+export interface BakabaseServiceModelsViewResourcePlaceholderResultViewModel {
+  /** @format int32 */
+  index: number;
+  /** @format int32 */
+  resourceId?: number;
+  created: boolean;
+  name?: string;
+  error?: string;
 }
 
 export interface BakabaseServiceModelsViewResourceProfileViewModel {
@@ -5608,6 +6097,13 @@ export interface BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsM
   code: number;
   message?: string;
   data?: BakabaseAbstractionsModelsDomainPropertyValueScopePreference[];
+}
+
+export interface BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainResourceMatchSuggestion {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseAbstractionsModelsDomainResourceMatchSuggestion[];
 }
 
 export interface BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainResourceSourceLink {
@@ -5799,6 +6295,41 @@ export interface BootstrapModelsResponseModelsListResponse1BakabaseModulesAIMode
   data?: BakabaseModulesAIModelsDomainLlmModelInfo[];
 }
 
+export interface BootstrapModelsResponseModelsListResponse1BakabaseModulesAcquisitionAbstractionsModelsDomainAcquisitionLead {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseModulesAcquisitionAbstractionsModelsDomainAcquisitionLead[];
+}
+
+export interface BootstrapModelsResponseModelsListResponse1BakabaseModulesAcquisitionAbstractionsModelsDomainAcquisitionTask {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseModulesAcquisitionAbstractionsModelsDomainAcquisitionTask[];
+}
+
+export interface BootstrapModelsResponseModelsListResponse1BakabaseModulesAcquisitionAbstractionsServicesAcquisitionRecipeSummary {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseModulesAcquisitionAbstractionsServicesAcquisitionRecipeSummary[];
+}
+
+export interface BootstrapModelsResponseModelsListResponse1BakabaseModulesCollectionAbstractionsModelsDomainCollectionMember {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseModulesCollectionAbstractionsModelsDomainCollectionMember[];
+}
+
+export interface BootstrapModelsResponseModelsListResponse1BakabaseModulesCollectionAbstractionsModelsDomainResourceCollection {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseModulesCollectionAbstractionsModelsDomainResourceCollection[];
+}
+
 export interface BootstrapModelsResponseModelsListResponse1BakabaseModulesDataCardAbstractionsModelsDomainDataCardType {
   /** @format int32 */
   code: number;
@@ -5895,6 +6426,20 @@ export interface BootstrapModelsResponseModelsListResponse1BakabaseModulesWorkfl
   code: number;
   message?: string;
   data?: BakabaseModulesWorkflowAbstractionsModelsViewWorkflowTriggerDescriptorViewModel[];
+}
+
+export interface BootstrapModelsResponseModelsListResponse1BakabaseServiceComponentsAcquisitionInboxCandidate {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseServiceComponentsAcquisitionInboxCandidate[];
+}
+
+export interface BootstrapModelsResponseModelsListResponse1BakabaseServiceComponentsAcquisitionSharedListPreviewRow {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseServiceComponentsAcquisitionSharedListPreviewRow[];
 }
 
 export interface BootstrapModelsResponseModelsListResponse1BakabaseServiceControllersChatControllerChatToolViewModel {
@@ -6014,6 +6559,13 @@ export interface BootstrapModelsResponseModelsListResponse1BakabaseServiceModels
   code: number;
   message?: string;
   data?: BakabaseServiceModelsViewResourcePathInfoViewModel[];
+}
+
+export interface BootstrapModelsResponseModelsListResponse1BakabaseServiceModelsViewResourcePlaceholderResultViewModel {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseServiceModelsViewResourcePlaceholderResultViewModel[];
 }
 
 export interface BootstrapModelsResponseModelsListResponse1BakabaseServiceModelsViewResourceProfileViewModel {
@@ -6383,6 +6935,13 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstract
   data?: BakabaseAbstractionsModelsViewThirdPartyContentTrackerNearestViewModel;
 }
 
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsServicesPlaceholderResourceResult {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseAbstractionsServicesPlaceholderResourceResult;
+}
+
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseInfrastructuresComponentsAppModelsResponseModelsAppInfo {
   /** @format int32 */
   code: number;
@@ -6747,6 +7306,48 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesA
   data?: BakabaseModulesAIServicesTranslationResult;
 }
 
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesAcquisitionAbstractionsModelsDomainAcquisitionLead {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseModulesAcquisitionAbstractionsModelsDomainAcquisitionLead;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesAcquisitionAbstractionsModelsDomainAcquisitionTask {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseModulesAcquisitionAbstractionsModelsDomainAcquisitionTask;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesAcquisitionModelsDomainAcquisitionOptions {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseModulesAcquisitionModelsDomainAcquisitionOptions;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesCollectionAbstractionsModelsDomainCollectionProgress {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseModulesCollectionAbstractionsModelsDomainCollectionProgress;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesCollectionAbstractionsModelsDomainResourceCollection {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseModulesCollectionAbstractionsModelsDomainResourceCollection;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesCollectionAbstractionsServicesCollectionMemberPage {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseModulesCollectionAbstractionsServicesCollectionMemberPage;
+}
+
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesComparisonModelsDomainComparisonPlan {
   /** @format int32 */
   code: number;
@@ -6880,11 +7481,39 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesW
   data?: BakabaseModulesWorkflowAbstractionsModelsViewWorkflowRunViewModel;
 }
 
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceComponentsAcquisitionAcquisitionSetupResult {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseServiceComponentsAcquisitionAcquisitionSetupResult;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceComponentsAcquisitionSharedListImportResult {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseServiceComponentsAcquisitionSharedListImportResult;
+}
+
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceControllersAppDataPathControllerValidateResponse {
   /** @format int32 */
   code: number;
   message?: string;
   data?: BakabaseServiceControllersAppDataPathControllerValidateResponse;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceControllersCollectionAcquireMissingResult {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseServiceControllersCollectionAcquireMissingResult;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceControllersCollectionRulePreview {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseServiceControllersCollectionRulePreview;
 }
 
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceControllersMediaLibraryStatistics {
@@ -7020,6 +7649,13 @@ export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceM
   data?: BakabaseServiceModelsViewResourceHierarchyContextViewModel;
 }
 
+export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewResourceMaterializeResultViewModel {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: BakabaseServiceModelsViewResourceMaterializeResultViewModel;
+}
+
 export interface BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewResourceProfileViewModel {
   /** @format int32 */
   code: number;
@@ -7063,6 +7699,13 @@ export interface BootstrapModelsResponseModelsSingletonResponse1SystemCollection
     string,
     Record<string, BakabaseModulesStandardValueModelsViewStandardValueConversionRuleViewModel[]>
   >;
+}
+
+export interface BootstrapModelsResponseModelsSingletonResponse1SystemCollectionsGenericDictionary2SystemInt32SystemCollectionsGenericList1SystemInt32 {
+  /** @format int32 */
+  code: number;
+  message?: string;
+  data?: Record<string, number[] | null>;
 }
 
 export interface BootstrapModelsResponseModelsSingletonResponse1SystemCollectionsGenericDictionary2SystemInt32SystemDecimal {
@@ -8135,6 +8778,2322 @@ export class HttpClient<SecurityDataType = unknown> {
  * @version v1
  */
 export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {
+  acquisition = {
+    /**
+     * No description
+     *
+     * @tags Acquisition
+     * @name CreateAcquisitionFromUrl
+     * @request POST:/acquisition/from-url
+     */
+    createAcquisitionFromUrl: (
+      data: BakabaseModulesAcquisitionModelsInputAcquisitionFromUrlInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesAcquisitionAbstractionsModelsDomainAcquisitionTask,
+        any
+      >({
+        path: `/acquisition/from-url`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for createAcquisitionFromUrl
+     * @name createAcquisitionFromUrlUrl
+     */
+    createAcquisitionFromUrlUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/acquisition/from-url`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Acquisition
+     * @name PreviewSharedList
+     * @request POST:/acquisition/shared-list/preview
+     */
+    previewSharedList: (
+      data: {
+        /** @format binary */
+        file?: File;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseServiceComponentsAcquisitionSharedListPreviewRow,
+        any
+      >({
+        path: `/acquisition/shared-list/preview`,
+        method: "POST",
+        body: data,
+        type: ContentType.FormData,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for previewSharedList
+     * @name previewSharedListUrl
+     */
+    previewSharedListUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/acquisition/shared-list/preview`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Acquisition
+     * @name ImportSharedList
+     * @request POST:/acquisition/shared-list/import
+     */
+    importSharedList: (
+      data: BakabaseServiceControllersSharedListImportInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceComponentsAcquisitionSharedListImportResult,
+        any
+      >({
+        path: `/acquisition/shared-list/import`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for importSharedList
+     * @name importSharedListUrl
+     */
+    importSharedListUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/acquisition/shared-list/import`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Acquisition
+     * @name CreateAcquisition
+     * @request POST:/acquisition
+     */
+    createAcquisition: (
+      data: BakabaseModulesAcquisitionModelsInputAcquisitionCreationInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesAcquisitionAbstractionsModelsDomainAcquisitionTask,
+        any
+      >({
+        path: `/acquisition`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for createAcquisition
+     * @name createAcquisitionUrl
+     */
+    createAcquisitionUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/acquisition`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Acquisition
+     * @name SearchAcquisitions
+     * @request GET:/acquisition
+     */
+    searchAcquisitions: (
+      query?: {
+        /** [1: Pending, 2: Running, 3: Waiting, 4: Completed, 5: Failed, 6: Cancelled] */
+        status?: BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionStatus;
+        /** @format int32 */
+        resourceId?: number;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseModulesAcquisitionAbstractionsModelsDomainAcquisitionTask,
+        any
+      >({
+        path: `/acquisition`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for searchAcquisitions
+     * @name searchAcquisitionsUrl
+     */
+    searchAcquisitionsUrl: (query?: {
+        /** [1: Pending, 2: Running, 3: Waiting, 4: Completed, 5: Failed, 6: Cancelled] */
+        status?: BakabaseModulesAcquisitionAbstractionsModelsDomainConstantsAcquisitionStatus;
+        /** @format int32 */
+        resourceId?: number;
+      }) => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/acquisition`;
+      
+      // Build query string
+      if (query) {
+        // Object.entries rather than indexing by key: the query object is a typed
+        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
+        const queryString = Object.entries(query)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+
+        return baseUrl + path + (queryString ? `?${queryString}` : "");
+      }
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Acquisition
+     * @name GetAcquisition
+     * @request GET:/acquisition/{id}
+     */
+    getAcquisition: (id: number, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesAcquisitionAbstractionsModelsDomainAcquisitionTask,
+        any
+      >({
+        path: `/acquisition/${id}`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Acquisition
+     * @name ResumeAcquisition
+     * @request POST:/acquisition/{id}/resume
+     */
+    resumeAcquisition: (
+      id: number,
+      data: BakabaseModulesAcquisitionModelsInputAcquisitionResumeInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/acquisition/${id}/resume`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Acquisition
+     * @name RetryAcquisition
+     * @request POST:/acquisition/{id}/retry
+     */
+    retryAcquisition: (id: number, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesAcquisitionAbstractionsModelsDomainAcquisitionTask,
+        any
+      >({
+        path: `/acquisition/${id}/retry`,
+        method: "POST",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Acquisition
+     * @name CancelAcquisition
+     * @request POST:/acquisition/{id}/cancel
+     */
+    cancelAcquisition: (id: number, params: RequestParams = {}) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/acquisition/${id}/cancel`,
+        method: "POST",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Acquisition
+     * @name GetAcquisitionInbox
+     * @request GET:/acquisition/inbox
+     */
+    getAcquisitionInbox: (params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseServiceComponentsAcquisitionInboxCandidate,
+        any
+      >({
+        path: `/acquisition/inbox`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getAcquisitionInbox
+     * @name getAcquisitionInboxUrl
+     */
+    getAcquisitionInboxUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/acquisition/inbox`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Acquisition
+     * @name UnclaimAcquisitionFiles
+     * @request POST:/acquisition/{id}/unclaim
+     */
+    unclaimAcquisitionFiles: (id: number, params: RequestParams = {}) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/acquisition/${id}/unclaim`,
+        method: "POST",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Acquisition
+     * @name GetAcquisitionOptions
+     * @request GET:/acquisition/options
+     */
+    getAcquisitionOptions: (params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesAcquisitionModelsDomainAcquisitionOptions,
+        any
+      >({
+        path: `/acquisition/options`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getAcquisitionOptions
+     * @name getAcquisitionOptionsUrl
+     */
+    getAcquisitionOptionsUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/acquisition/options`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Acquisition
+     * @name PutAcquisitionOptions
+     * @request PUT:/acquisition/options
+     */
+    putAcquisitionOptions: (
+      data: BakabaseModulesAcquisitionModelsDomainAcquisitionOptions,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/acquisition/options`,
+        method: "PUT",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for putAcquisitionOptions
+     * @name putAcquisitionOptionsUrl
+     */
+    putAcquisitionOptionsUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/acquisition/options`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Acquisition
+     * @name SetUpAcquisition
+     * @request POST:/acquisition/setup
+     */
+    setUpAcquisition: (
+      data: BakabaseServiceComponentsAcquisitionAcquisitionSetupInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceComponentsAcquisitionAcquisitionSetupResult,
+        any
+      >({
+        path: `/acquisition/setup`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for setUpAcquisition
+     * @name setUpAcquisitionUrl
+     */
+    setUpAcquisitionUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/acquisition/setup`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Acquisition
+     * @name GetAcquisitionRecipes
+     * @request GET:/acquisition/recipes
+     */
+    getAcquisitionRecipes: (params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseModulesAcquisitionAbstractionsServicesAcquisitionRecipeSummary,
+        any
+      >({
+        path: `/acquisition/recipes`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getAcquisitionRecipes
+     * @name getAcquisitionRecipesUrl
+     */
+    getAcquisitionRecipesUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/acquisition/recipes`;
+      
+      return baseUrl + path;
+    },
+  };
+  resource = {
+    /**
+     * No description
+     *
+     * @tags AcquisitionLead
+     * @name GetResourceAcquisitionLeads
+     * @request GET:/resource/{resourceId}/acquisition-leads
+     */
+    getResourceAcquisitionLeads: (resourceId: number, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseModulesAcquisitionAbstractionsModelsDomainAcquisitionLead,
+        any
+      >({
+        path: `/resource/${resourceId}/acquisition-leads`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags AcquisitionLead
+     * @name AddResourceAcquisitionLead
+     * @request POST:/resource/{resourceId}/acquisition-leads
+     */
+    addResourceAcquisitionLead: (
+      resourceId: number,
+      data: BakabaseModulesAcquisitionModelsInputAcquisitionLeadAddInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesAcquisitionAbstractionsModelsDomainAcquisitionLead,
+        any
+      >({
+        path: `/resource/${resourceId}/acquisition-leads`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags AcquisitionLead
+     * @name DeleteResourceAcquisitionLead
+     * @request DELETE:/resource/{resourceId}/acquisition-leads/{id}
+     */
+    deleteResourceAcquisitionLead: (resourceId: number, id: number, params: RequestParams = {}) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/${resourceId}/acquisition-leads/${id}`,
+        method: "DELETE",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Collection
+     * @name GetCollectionIdsByResourceIds
+     * @request GET:/resource/collections
+     */
+    getCollectionIdsByResourceIds: (
+      query?: {
+        resourceIds?: number[];
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1SystemCollectionsGenericDictionary2SystemInt32SystemCollectionsGenericList1SystemInt32,
+        any
+      >({
+        path: `/resource/collections`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getCollectionIdsByResourceIds
+     * @name getCollectionIdsByResourceIdsUrl
+     */
+    getCollectionIdsByResourceIdsUrl: (query?: {
+        resourceIds?: number[];
+      }) => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/collections`;
+      
+      // Build query string
+      if (query) {
+        // Object.entries rather than indexing by key: the query object is a typed
+        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
+        const queryString = Object.entries(query)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+
+        return baseUrl + path + (queryString ? `?${queryString}` : "");
+      }
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Enhancement
+     * @name GetResourceEnhancements
+     * @request GET:/resource/{resourceId}/enhancement
+     */
+    getResourceEnhancements: (
+      resourceId: number,
+      query?: {
+        /** [0: None, 1: GeneratedPropertyValue] */
+        additionalItem?: BakabaseModulesEnhancerAbstractionsModelsDomainConstantsEnhancementAdditionalItem;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseServiceModelsViewResourceEnhancements,
+        any
+      >({
+        path: `/resource/${resourceId}/enhancement`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Enhancement
+     * @name DeleteResourceEnhancement
+     * @request DELETE:/resource/{resourceId}/enhancer/{enhancerId}/enhancement
+     */
+    deleteResourceEnhancement: (
+      resourceId: number,
+      enhancerId: number,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/${resourceId}/enhancer/${enhancerId}/enhancement`,
+        method: "DELETE",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Enhancement
+     * @name EnhanceResourceByEnhancer
+     * @request POST:/resource/{resourceId}/enhancer/{enhancerId}/enhancement
+     */
+    enhanceResourceByEnhancer: (
+      resourceId: number,
+      enhancerId: number,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/${resourceId}/enhancer/${enhancerId}/enhancement`,
+        method: "POST",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Enhancement
+     * @name ApplyEnhancementContextDataForResourceByEnhancer
+     * @request POST:/resource/{resourceId}/enhancer/{enhancerId}/enhancement/apply
+     */
+    applyEnhancementContextDataForResourceByEnhancer: (
+      resourceId: number,
+      enhancerId: number,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/${resourceId}/enhancer/${enhancerId}/enhancement/apply`,
+        method: "POST",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Enhancement
+     * @name ValidateEnhancerConfiguration
+     * @request POST:/resource/{resourceId}/enhancement/validate
+     */
+    validateEnhancerConfiguration: (
+      resourceId: number,
+      data: BakabaseAbstractionsModelsDomainEnhancerFullOptions[],
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/${resourceId}/enhancement/validate`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name GetSearchOperationsForProperty
+     * @request GET:/resource/search-operation
+     */
+    getSearchOperationsForProperty: (
+      query?: {
+        /** [1: Internal, 2: Reserved, 4: Custom, 7: All] */
+        propertyPool?: BakabaseAbstractionsModelsDomainConstantsPropertyPool;
+        /** @format int32 */
+        propertyId?: number;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainConstantsSearchOperation,
+        any
+      >({
+        path: `/resource/search-operation`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getSearchOperationsForProperty
+     * @name getSearchOperationsForPropertyUrl
+     */
+    getSearchOperationsForPropertyUrl: (query?: {
+        /** [1: Internal, 2: Reserved, 4: Custom, 7: All] */
+        propertyPool?: BakabaseAbstractionsModelsDomainConstantsPropertyPool;
+        /** @format int32 */
+        propertyId?: number;
+      }) => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/search-operation`;
+      
+      // Build query string
+      if (query) {
+        // Object.entries rather than indexing by key: the query object is a typed
+        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
+        const queryString = Object.entries(query)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+
+        return baseUrl + path + (queryString ? `?${queryString}` : "");
+      }
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name GetSearchOperationsByPropertyType
+     * @request GET:/resource/search-operation/by-type
+     */
+    getSearchOperationsByPropertyType: (
+      query?: {
+        /** [1: SingleLineText, 2: MultilineText, 3: SingleChoice, 4: MultipleChoice, 5: Number, 6: Percentage, 7: Rating, 8: Boolean, 9: Link, 10: Attachment, 11: Date, 12: DateTime, 13: Time, 14: Formula, 15: Multilevel, 16: Tags] */
+        propertyType?: BakabaseAbstractionsModelsDomainConstantsPropertyType;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainConstantsSearchOperation,
+        any
+      >({
+        path: `/resource/search-operation/by-type`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getSearchOperationsByPropertyType
+     * @name getSearchOperationsByPropertyTypeUrl
+     */
+    getSearchOperationsByPropertyTypeUrl: (query?: {
+        /** [1: SingleLineText, 2: MultilineText, 3: SingleChoice, 4: MultipleChoice, 5: Number, 6: Percentage, 7: Rating, 8: Boolean, 9: Link, 10: Attachment, 11: Date, 12: DateTime, 13: Time, 14: Formula, 15: Multilevel, 16: Tags] */
+        propertyType?: BakabaseAbstractionsModelsDomainConstantsPropertyType;
+      }) => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/search-operation/by-type`;
+      
+      // Build query string
+      if (query) {
+        // Object.entries rather than indexing by key: the query object is a typed
+        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
+        const queryString = Object.entries(query)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+
+        return baseUrl + path + (queryString ? `?${queryString}` : "");
+      }
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name GetFilterValueProperty
+     * @request GET:/resource/filter-value-property
+     */
+    getFilterValueProperty: (
+      query?: {
+        /** [1: Internal, 2: Reserved, 4: Custom, 7: All] */
+        propertyPool?: BakabaseAbstractionsModelsDomainConstantsPropertyPool;
+        /** @format int32 */
+        propertyId?: number;
+        /** [1: Equals, 2: NotEquals, 3: Contains, 4: NotContains, 5: StartsWith, 6: NotStartsWith, 7: EndsWith, 8: NotEndsWith, 9: GreaterThan, 10: LessThan, 11: GreaterThanOrEquals, 12: LessThanOrEquals, 13: IsNull, 14: IsNotNull, 15: In, 16: NotIn, 17: Matches, 18: NotMatches] */
+        operation?: BakabaseAbstractionsModelsDomainConstantsSearchOperation;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesPropertyModelsViewPropertyViewModel,
+        any
+      >({
+        path: `/resource/filter-value-property`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getFilterValueProperty
+     * @name getFilterValuePropertyUrl
+     */
+    getFilterValuePropertyUrl: (query?: {
+        /** [1: Internal, 2: Reserved, 4: Custom, 7: All] */
+        propertyPool?: BakabaseAbstractionsModelsDomainConstantsPropertyPool;
+        /** @format int32 */
+        propertyId?: number;
+        /** [1: Equals, 2: NotEquals, 3: Contains, 4: NotContains, 5: StartsWith, 6: NotStartsWith, 7: EndsWith, 8: NotEndsWith, 9: GreaterThan, 10: LessThan, 11: GreaterThanOrEquals, 12: LessThanOrEquals, 13: IsNull, 14: IsNotNull, 15: In, 16: NotIn, 17: Matches, 18: NotMatches] */
+        operation?: BakabaseAbstractionsModelsDomainConstantsSearchOperation;
+      }) => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/filter-value-property`;
+      
+      // Build query string
+      if (query) {
+        // Object.entries rather than indexing by key: the query object is a typed
+        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
+        const queryString = Object.entries(query)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+
+        return baseUrl + path + (queryString ? `?${queryString}` : "");
+      }
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name GetLastResourceSearch
+     * @request GET:/resource/last-search
+     */
+    getLastResourceSearch: (params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewResourceSearchViewModel,
+        any
+      >({
+        path: `/resource/last-search`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getLastResourceSearch
+     * @name getLastResourceSearchUrl
+     */
+    getLastResourceSearchUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/last-search`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name SaveNewResourceSearch
+     * @request POST:/resource/saved-search
+     */
+    saveNewResourceSearch: (
+      data: BakabaseServiceModelsInputSavedSearchAddInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewSavedSearchViewModel,
+        any
+      >({
+        path: `/resource/saved-search`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for saveNewResourceSearch
+     * @name saveNewResourceSearchUrl
+     */
+    saveNewResourceSearchUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/saved-search`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name PutSavedSearchName
+     * @request PUT:/resource/saved-search
+     */
+    putSavedSearchName: (
+      data: string,
+      query?: {
+        id?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/saved-search`,
+        method: "PUT",
+        query: query,
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for putSavedSearchName
+     * @name putSavedSearchNameUrl
+     */
+    putSavedSearchNameUrl: (query?: {
+        id?: string;
+      }) => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/saved-search`;
+      
+      // Build query string
+      if (query) {
+        // Object.entries rather than indexing by key: the query object is a typed
+        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
+        const queryString = Object.entries(query)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+
+        return baseUrl + path + (queryString ? `?${queryString}` : "");
+      }
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name GetSavedSearch
+     * @request GET:/resource/saved-search
+     */
+    getSavedSearch: (
+      query?: {
+        id?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewSavedSearchViewModel,
+        any
+      >({
+        path: `/resource/saved-search`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getSavedSearch
+     * @name getSavedSearchUrl
+     */
+    getSavedSearchUrl: (query?: {
+        id?: string;
+      }) => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/saved-search`;
+      
+      // Build query string
+      if (query) {
+        // Object.entries rather than indexing by key: the query object is a typed
+        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
+        const queryString = Object.entries(query)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+
+        return baseUrl + path + (queryString ? `?${queryString}` : "");
+      }
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name DeleteSavedSearch
+     * @request DELETE:/resource/saved-search
+     */
+    deleteSavedSearch: (
+      query?: {
+        id?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/saved-search`,
+        method: "DELETE",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for deleteSavedSearch
+     * @name deleteSavedSearchUrl
+     */
+    deleteSavedSearchUrl: (query?: {
+        id?: string;
+      }) => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/saved-search`;
+      
+      // Build query string
+      if (query) {
+        // Object.entries rather than indexing by key: the query object is a typed
+        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
+        const queryString = Object.entries(query)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+
+        return baseUrl + path + (queryString ? `?${queryString}` : "");
+      }
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name PutSavedSearchDisplayMode
+     * @request PUT:/resource/saved-search/display-mode
+     */
+    putSavedSearchDisplayMode: (
+      data: BakabaseAbstractionsModelsDomainConstantsFilterDisplayMode,
+      query?: {
+        id?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/saved-search/display-mode`,
+        method: "PUT",
+        query: query,
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for putSavedSearchDisplayMode
+     * @name putSavedSearchDisplayModeUrl
+     */
+    putSavedSearchDisplayModeUrl: (query?: {
+        id?: string;
+      }) => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/saved-search/display-mode`;
+      
+      // Build query string
+      if (query) {
+        // Object.entries rather than indexing by key: the query object is a typed
+        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
+        const queryString = Object.entries(query)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+
+        return baseUrl + path + (queryString ? `?${queryString}` : "");
+      }
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name SearchResources
+     * @request POST:/resource/search
+     */
+    searchResources: (
+      data: BakabaseServiceModelsInputResourceSearchInputModel,
+      query?: {
+        saveSearch?: boolean;
+        searchId?: string;
+        /** [0: None, 32: Properties, 64: Alias, 288: DisplayName, 512: HasChildren, 2048: MediaLibraryName, 16416: Cover, 32768: PlayableItem, 65536: CollectionName, 117600: All] */
+        additionalItems?: BakabaseInsideWorldModelsConstantsAdditionalItemsResourceAdditionalItem;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSearchResponse1BakabaseAbstractionsModelsDomainResource,
+        any
+      >({
+        path: `/resource/search`,
+        method: "POST",
+        query: query,
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for searchResources
+     * @name searchResourcesUrl
+     */
+    searchResourcesUrl: (query?: {
+        saveSearch?: boolean;
+        searchId?: string;
+        /** [0: None, 32: Properties, 64: Alias, 288: DisplayName, 512: HasChildren, 2048: MediaLibraryName, 16416: Cover, 32768: PlayableItem, 65536: CollectionName, 117600: All] */
+        additionalItems?: BakabaseInsideWorldModelsConstantsAdditionalItemsResourceAdditionalItem;
+      }) => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/search`;
+      
+      // Build query string
+      if (query) {
+        // Object.entries rather than indexing by key: the query object is a typed
+        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
+        const queryString = Object.entries(query)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+
+        return baseUrl + path + (queryString ? `?${queryString}` : "");
+      }
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name SearchAllResourceIds
+     * @request POST:/resource/search/ids
+     */
+    searchAllResourceIds: (
+      data: BakabaseServiceModelsInputResourceSearchInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsListResponse1SystemInt32, any>({
+        path: `/resource/search/ids`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for searchAllResourceIds
+     * @name searchAllResourceIdsUrl
+     */
+    searchAllResourceIdsUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/search/ids`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name GetResourcesByKeys
+     * @request GET:/resource/keys
+     */
+    getResourcesByKeys: (
+      query?: {
+        ids?: number[];
+        /** [0: None, 32: Properties, 64: Alias, 288: DisplayName, 512: HasChildren, 2048: MediaLibraryName, 16416: Cover, 32768: PlayableItem, 65536: CollectionName, 117600: All] */
+        additionalItems?: BakabaseInsideWorldModelsConstantsAdditionalItemsResourceAdditionalItem;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainResource,
+        any
+      >({
+        path: `/resource/keys`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getResourcesByKeys
+     * @name getResourcesByKeysUrl
+     */
+    getResourcesByKeysUrl: (query?: {
+        ids?: number[];
+        /** [0: None, 32: Properties, 64: Alias, 288: DisplayName, 512: HasChildren, 2048: MediaLibraryName, 16416: Cover, 32768: PlayableItem, 65536: CollectionName, 117600: All] */
+        additionalItems?: BakabaseInsideWorldModelsConstantsAdditionalItemsResourceAdditionalItem;
+      }) => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/keys`;
+      
+      // Build query string
+      if (query) {
+        // Object.entries rather than indexing by key: the query object is a typed
+        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
+        const queryString = Object.entries(query)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+
+        return baseUrl + path + (queryString ? `?${queryString}` : "");
+      }
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name GetResourceHierarchyContext
+     * @request GET:/resource/{id}/hierarchy-context
+     */
+    getResourceHierarchyContext: (id: number, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewResourceHierarchyContextViewModel,
+        any
+      >({
+        path: `/resource/${id}/hierarchy-context`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name OpenResourceDirectory
+     * @request GET:/resource/directory
+     */
+    openResourceDirectory: (
+      query?: {
+        /** @format int32 */
+        id?: number;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/directory`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for openResourceDirectory
+     * @name openResourceDirectoryUrl
+     */
+    openResourceDirectoryUrl: (query?: {
+        /** @format int32 */
+        id?: number;
+      }) => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/directory`;
+      
+      // Build query string
+      if (query) {
+        // Object.entries rather than indexing by key: the query object is a typed
+        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
+        const queryString = Object.entries(query)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+
+        return baseUrl + path + (queryString ? `?${queryString}` : "");
+      }
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name SetResourceMediaLibraries
+     * @request PUT:/resource/media-libraries
+     */
+    setResourceMediaLibraries: (
+      data: BakabaseInsideWorldModelsRequestModelsResourceSetMediaLibrariesRequestModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/media-libraries`,
+        method: "PUT",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for setResourceMediaLibraries
+     * @name setResourceMediaLibrariesUrl
+     */
+    setResourceMediaLibrariesUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/media-libraries`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name GetResourceMediaLibraryMappings
+     * @request POST:/resource/media-library-mappings
+     */
+    getResourceMediaLibraryMappings: (data: number[], params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1SystemCollectionsGenericDictionary2SystemInt32SystemInt32,
+        any
+      >({
+        path: `/resource/media-library-mappings`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getResourceMediaLibraryMappings
+     * @name getResourceMediaLibraryMappingsUrl
+     */
+    getResourceMediaLibraryMappingsUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/media-library-mappings`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name GetResourceDataForPreviewer
+     * @request GET:/resource/{id}/previewer
+     */
+    getResourceDataForPreviewer: (id: number, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseInsideWorldModelsModelsAosPreviewerItem,
+        any
+      >({
+        path: `/resource/${id}/previewer`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name PutResourcePropertyValue
+     * @request PUT:/resource/{id}/property-value
+     */
+    putResourcePropertyValue: (
+      id: number,
+      data: BakabaseAbstractionsModelsInputResourcePropertyValuePutInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/${id}/property-value`,
+        method: "PUT",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name GetResourcePropertyValueScopePreferences
+     * @request GET:/resource/{id}/property-value-scope-preference
+     */
+    getResourcePropertyValueScopePreferences: (id: number, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainPropertyValueScopePreference,
+        any
+      >({
+        path: `/resource/${id}/property-value-scope-preference`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name PutResourcePropertyValueScopePreference
+     * @request PUT:/resource/{id}/property-value-scope-preference
+     */
+    putResourcePropertyValueScopePreference: (
+      id: number,
+      data: BakabaseAbstractionsModelsInputResourcePropertyValueScopePreferencePutInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainPropertyValueScopePreference,
+        any
+      >({
+        path: `/resource/${id}/property-value-scope-preference`,
+        method: "PUT",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name DeleteResourcePropertyValueScopePreference
+     * @request DELETE:/resource/{id}/property-value-scope-preference
+     */
+    deleteResourcePropertyValueScopePreference: (
+      id: number,
+      query?: {
+        /** [1: Internal, 2: Reserved, 4: Custom, 7: All] */
+        propertyPool?: BakabaseAbstractionsModelsDomainConstantsPropertyPool;
+        /** @format int32 */
+        propertyId?: number;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/${id}/property-value-scope-preference`,
+        method: "DELETE",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name BulkPutResourcePropertyValue
+     * @request PUT:/resource/bulk/property-value
+     */
+    bulkPutResourcePropertyValue: (
+      data: BakabaseServiceModelsInputBulkResourcePropertyValuePutInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/bulk/property-value`,
+        method: "PUT",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for bulkPutResourcePropertyValue
+     * @name bulkPutResourcePropertyValueUrl
+     */
+    bulkPutResourcePropertyValueUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/bulk/property-value`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name PlayResourceFile
+     * @request GET:/resource/{resourceId}/play
+     */
+    playResourceFile: (
+      resourceId: number,
+      query?: {
+        file?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/${resourceId}/play`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name PlayResourceItem
+     * @request GET:/resource/{resourceId}/play-item
+     */
+    playResourceItem: (
+      resourceId: number,
+      query?: {
+        /** [1: Manual, 2: FileSystem, 3: Steam, 4: DLsite, 5: ExHentai] */
+        origin?: BakabaseAbstractionsModelsDomainConstantsDataOrigin;
+        key?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/${resourceId}/play-item`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name GetResourcePlayableItems
+     * @request GET:/resource/{id}/playable-items
+     */
+    getResourcePlayableItems: (id: number, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainPlayableItem,
+        any
+      >({
+        path: `/resource/${id}/playable-items`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name GetResourceEffectivePlayerOptions
+     * @request GET:/resource/{id}/effective-player-options
+     */
+    getResourceEffectivePlayerOptions: (id: number, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainResourceProfilePlayerOptions,
+        any
+      >({
+        path: `/resource/${id}/effective-player-options`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name PlayRandomResource
+     * @request GET:/resource/play/random
+     */
+    playRandomResource: (params: RequestParams = {}) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/play/random`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for playRandomResource
+     * @name playRandomResourceUrl
+     */
+    playRandomResourceUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/play/random`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name PickRandomPlayableItem
+     * @request GET:/resource/play/random/candidate
+     */
+    pickRandomPlayableItem: (params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainPlayableItemPick,
+        any
+      >({
+        path: `/resource/play/random/candidate`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for pickRandomPlayableItem
+     * @name pickRandomPlayableItemUrl
+     */
+    pickRandomPlayableItemUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/play/random/candidate`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name BulkDeleteResources
+     * @request POST:/resource/bulk-delete
+     */
+    bulkDeleteResources: (
+      data: BakabaseAbstractionsModelsInputBulkDeleteResourcesInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/bulk-delete`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for bulkDeleteResources
+     * @name bulkDeleteResourcesUrl
+     */
+    bulkDeleteResourcesUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/bulk-delete`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name PinResource
+     * @request PUT:/resource/{id}/pin
+     */
+    pinResource: (
+      id: number,
+      query?: {
+        pin?: boolean;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/${id}/pin`,
+        method: "PUT",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name TransferResourceData
+     * @request PUT:/resource/transfer
+     */
+    transferResourceData: (
+      data: BakabaseAbstractionsModelsInputResourceTransferInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/transfer`,
+        method: "PUT",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for transferResourceData
+     * @name transferResourceDataUrl
+     */
+    transferResourceDataUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/transfer`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name MaterializeResource
+     * @request POST:/resource/{id}/materialize
+     */
+    materializeResource: (
+      id: number,
+      data: BakabaseServiceModelsInputResourceMaterializeInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewResourceMaterializeResultViewModel,
+        any
+      >({
+        path: `/resource/${id}/materialize`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name DematerializeResource
+     * @request POST:/resource/{id}/dematerialize
+     */
+    dematerializeResource: (id: number, params: RequestParams = {}) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/${id}/dematerialize`,
+        method: "POST",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name CreatePlaceholderResources
+     * @request POST:/resource/placeholder
+     */
+    createPlaceholderResources: (
+      data: BakabaseServiceModelsInputResourcePlaceholderInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseServiceModelsViewResourcePlaceholderResultViewModel,
+        any
+      >({
+        path: `/resource/placeholder`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for createPlaceholderResources
+     * @name createPlaceholderResourcesUrl
+     */
+    createPlaceholderResourcesUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/placeholder`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name SearchResourcePaths
+     * @request GET:/resource/paths
+     */
+    searchResourcePaths: (
+      query?: {
+        keyword?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseServiceModelsViewResourcePathInfoViewModel,
+        any
+      >({
+        path: `/resource/paths`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for searchResourcePaths
+     * @name searchResourcePathsUrl
+     */
+    searchResourcePathsUrl: (query?: {
+        keyword?: string;
+      }) => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/paths`;
+      
+      // Build query string
+      if (query) {
+        // Object.entries rather than indexing by key: the query object is a typed
+        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
+        const queryString = Object.entries(query)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+
+        return baseUrl + path + (queryString ? `?${queryString}` : "");
+      }
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name SaveCover
+     * @request PUT:/resource/{id}/cover
+     */
+    saveCover: (
+      id: number,
+      data: BakabaseServiceModelsInputResourceCoverSaveInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/${id}/cover`,
+        method: "PUT",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name MarkResourceAsNotPlayed
+     * @request DELETE:/resource/{id}/played-at
+     */
+    markResourceAsNotPlayed: (id: number, params: RequestParams = {}) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/${id}/played-at`,
+        method: "DELETE",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name MarkResourceAsPlayed
+     * @request POST:/resource/{id}/played-at
+     */
+    markResourceAsPlayed: (
+      id: number,
+      query?: {
+        item?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/${id}/played-at`,
+        method: "POST",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name MarkResourcesAsPlayed
+     * @request POST:/resource/played-at/bulk
+     */
+    markResourcesAsPlayed: (
+      data: BakabaseAbstractionsModelsInputMarkResourcesPlayedInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/played-at/bulk`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for markResourcesAsPlayed
+     * @name markResourcesAsPlayedUrl
+     */
+    markResourcesAsPlayedUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/played-at/bulk`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name GetResourceSearchKeywordRecommendation
+     * @request GET:/resource/search/keyword-recommendation
+     */
+    getResourceSearchKeywordRecommendation: (
+      query?: {
+        keyword?: string;
+        /**
+         * @format int32
+         * @default 10
+         */
+        maxCount?: number;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsListResponse1SystemString, any>({
+        path: `/resource/search/keyword-recommendation`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getResourceSearchKeywordRecommendation
+     * @name getResourceSearchKeywordRecommendationUrl
+     */
+    getResourceSearchKeywordRecommendationUrl: (query?: {
+        keyword?: string;
+        /**
+         * @format int32
+         * @default 10
+         */
+        maxCount?: number;
+      }) => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/search/keyword-recommendation`;
+      
+      // Build query string
+      if (query) {
+        // Object.entries rather than indexing by key: the query object is a typed
+        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
+        const queryString = Object.entries(query)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+
+        return baseUrl + path + (queryString ? `?${queryString}` : "");
+      }
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name GetResourceMediaLibraries
+     * @request GET:/resource/{id}/media-libraries
+     */
+    getResourceMediaLibraries: (id: number, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainMediaLibraryResourceMapping,
+        any
+      >({
+        path: `/resource/${id}/media-libraries`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name ReplaceResourceMediaLibraryMappings
+     * @request PUT:/resource/{id}/media-libraries
+     */
+    replaceResourceMediaLibraryMappings: (
+      id: number,
+      data: BakabaseServiceModelsInputResourceMediaLibraryMappingInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/${id}/media-libraries`,
+        method: "PUT",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name AddResourceMediaLibraryMapping
+     * @request POST:/resource/{id}/media-libraries/{mediaLibraryId}
+     */
+    addResourceMediaLibraryMapping: (
+      id: number,
+      mediaLibraryId: number,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/${id}/media-libraries/${mediaLibraryId}`,
+        method: "POST",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name RemoveResourceMediaLibraryMapping
+     * @request DELETE:/resource/{id}/media-libraries/{mediaLibraryId}
+     */
+    removeResourceMediaLibraryMapping: (
+      id: number,
+      mediaLibraryId: number,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/${id}/media-libraries/${mediaLibraryId}`,
+        method: "DELETE",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name BulkAddResourceMediaLibraryMappings
+     * @request POST:/resource/bulk/media-libraries
+     */
+    bulkAddResourceMediaLibraryMappings: (
+      data: BakabaseServiceControllersBulkResourceMediaLibraryMappingInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/bulk/media-libraries`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for bulkAddResourceMediaLibraryMappings
+     * @name bulkAddResourceMediaLibraryMappingsUrl
+     */
+    bulkAddResourceMediaLibraryMappingsUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/bulk/media-libraries`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name GetResourceSourceLinks
+     * @request GET:/resource/{id}/source-links
+     */
+    getResourceSourceLinks: (id: number, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainResourceSourceLink,
+        any
+      >({
+        path: `/resource/${id}/source-links`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name GetResourceConflicts
+     * @request GET:/resource/{id}/conflicts
+     */
+    getResourceConflicts: (
+      id: number,
+      query?: {
+        /** [0: None, 32: Properties, 64: Alias, 288: DisplayName, 512: HasChildren, 2048: MediaLibraryName, 16416: Cover, 32768: PlayableItem, 65536: CollectionName, 117600: All] */
+        additionalItems?: BakabaseInsideWorldModelsConstantsAdditionalItemsResourceAdditionalItem;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainResource,
+        any
+      >({
+        path: `/resource/${id}/conflicts`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Resource
+     * @name MergeResources
+     * @request POST:/resource/merge
+     */
+    mergeResources: (
+      data: BakabaseAbstractionsModelsInputResourceMergeInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/merge`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for mergeResources
+     * @name mergeResourcesUrl
+     */
+    mergeResourcesUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/merge`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags ResourceDiscovery
+     * @name StreamResourceDiscovery
+     * @request GET:/resource/discovery/stream
+     */
+    streamResourceDiscovery: (params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/resource/discovery/stream`,
+        method: "GET",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for streamResourceDiscovery
+     * @name streamResourceDiscoveryUrl
+     */
+    streamResourceDiscoveryUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/discovery/stream`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags ResourceDiscovery
+     * @name SubscribeResourceDiscovery
+     * @request POST:/resource/discovery/subscribe
+     */
+    subscribeResourceDiscovery: (
+      data: BakabaseServiceControllersDiscoverySubscribeRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/discovery/subscribe`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for subscribeResourceDiscovery
+     * @name subscribeResourceDiscoveryUrl
+     */
+    subscribeResourceDiscoveryUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/discovery/subscribe`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags ResourceDiscovery
+     * @name SubscribeResourceDiscoveryBatch
+     * @request POST:/resource/discovery/subscribe/batch
+     */
+    subscribeResourceDiscoveryBatch: (
+      data: BakabaseServiceControllersDiscoverySubscribeRequest[],
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/discovery/subscribe/batch`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for subscribeResourceDiscoveryBatch
+     * @name subscribeResourceDiscoveryBatchUrl
+     */
+    subscribeResourceDiscoveryBatchUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/discovery/subscribe/batch`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags ResourceMatchSuggestion
+     * @name GetPendingResourceMatchSuggestions
+     * @request GET:/resource/match-suggestion
+     */
+    getPendingResourceMatchSuggestions: (params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainResourceMatchSuggestion,
+        any
+      >({
+        path: `/resource/match-suggestion`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getPendingResourceMatchSuggestions
+     * @name getPendingResourceMatchSuggestionsUrl
+     */
+    getPendingResourceMatchSuggestionsUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/match-suggestion`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags ResourceMatchSuggestion
+     * @name CountPendingResourceMatchSuggestions
+     * @request GET:/resource/match-suggestion/count
+     */
+    countPendingResourceMatchSuggestions: (params: RequestParams = {}) =>
+      this.request<BootstrapModelsResponseModelsSingletonResponse1SystemInt32, any>({
+        path: `/resource/match-suggestion/count`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for countPendingResourceMatchSuggestions
+     * @name countPendingResourceMatchSuggestionsUrl
+     */
+    countPendingResourceMatchSuggestionsUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/resource/match-suggestion/count`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags ResourceMatchSuggestion
+     * @name ConfirmResourceMatchSuggestion
+     * @request POST:/resource/match-suggestion/{id}/confirm
+     */
+    confirmResourceMatchSuggestion: (id: number, params: RequestParams = {}) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/match-suggestion/${id}/confirm`,
+        method: "POST",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags ResourceMatchSuggestion
+     * @name DismissResourceMatchSuggestion
+     * @request POST:/resource/match-suggestion/{id}/dismiss
+     */
+    dismissResourceMatchSuggestion: (id: number, params: RequestParams = {}) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/resource/match-suggestion/${id}/dismiss`,
+        method: "POST",
+        format: "json",
+        ...params,
+      }),
+  };
   ai = {
     /**
      * No description
@@ -10886,6 +13845,383 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         ...params,
       }),
   };
+  collection = {
+    /**
+     * No description
+     *
+     * @tags Collection
+     * @name GetAllCollections
+     * @request GET:/collection
+     */
+    getAllCollections: (
+      query?: {
+        /** @default true */
+        withProgress?: boolean;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseModulesCollectionAbstractionsModelsDomainResourceCollection,
+        any
+      >({
+        path: `/collection`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for getAllCollections
+     * @name getAllCollectionsUrl
+     */
+    getAllCollectionsUrl: (query?: {
+        /** @default true */
+        withProgress?: boolean;
+      }) => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/collection`;
+      
+      // Build query string
+      if (query) {
+        // Object.entries rather than indexing by key: the query object is a typed
+        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
+        const queryString = Object.entries(query)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+
+        return baseUrl + path + (queryString ? `?${queryString}` : "");
+      }
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Collection
+     * @name AddCollection
+     * @request POST:/collection
+     */
+    addCollection: (
+      data: BakabaseModulesCollectionModelsInputCollectionInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesCollectionAbstractionsModelsDomainResourceCollection,
+        any
+      >({
+        path: `/collection`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for addCollection
+     * @name addCollectionUrl
+     */
+    addCollectionUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/collection`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Collection
+     * @name GetCollection
+     * @request GET:/collection/{id}
+     */
+    getCollection: (id: number, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesCollectionAbstractionsModelsDomainResourceCollection,
+        any
+      >({
+        path: `/collection/${id}`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Collection
+     * @name PutCollection
+     * @request PUT:/collection/{id}
+     */
+    putCollection: (
+      id: number,
+      data: BakabaseModulesCollectionModelsInputCollectionInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesCollectionAbstractionsModelsDomainResourceCollection,
+        any
+      >({
+        path: `/collection/${id}`,
+        method: "PUT",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Collection
+     * @name DeleteCollection
+     * @request DELETE:/collection/{id}
+     */
+    deleteCollection: (id: number, params: RequestParams = {}) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/collection/${id}`,
+        method: "DELETE",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Collection
+     * @name SearchCollectionMembers
+     * @request GET:/collection/{id}/members
+     */
+    searchCollectionMembers: (
+      id: number,
+      query?: {
+        /** [0: All, 1: Owned, 2: Missing, 3: Acquiring, 4: Ignored, 5: GoneFromSource] */
+        filter?: BakabaseModulesCollectionAbstractionsModelsDomainConstantsCollectionMemberFilter;
+        /**
+         * @format int32
+         * @default 1
+         */
+        pageIndex?: number;
+        /**
+         * @format int32
+         * @default 60
+         */
+        pageSize?: number;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesCollectionAbstractionsServicesCollectionMemberPage,
+        any
+      >({
+        path: `/collection/${id}/members`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Collection
+     * @name AddCollectionMembers
+     * @request POST:/collection/{id}/members
+     */
+    addCollectionMembers: (
+      id: number,
+      data: BakabaseModulesCollectionModelsInputCollectionMembersInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/collection/${id}/members`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Collection
+     * @name RemoveCollectionMembers
+     * @request DELETE:/collection/{id}/members
+     */
+    removeCollectionMembers: (
+      id: number,
+      data: BakabaseModulesCollectionModelsInputCollectionMembersInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/collection/${id}/members`,
+        method: "DELETE",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Collection
+     * @name GetCollectionMemberships
+     * @request GET:/collection/{id}/memberships
+     */
+    getCollectionMemberships: (id: number, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsListResponse1BakabaseModulesCollectionAbstractionsModelsDomainCollectionMember,
+        any
+      >({
+        path: `/collection/${id}/memberships`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Collection
+     * @name SetCollectionMemberIgnored
+     * @request PUT:/collection/{id}/members/{resourceId}/ignored
+     */
+    setCollectionMemberIgnored: (
+      id: number,
+      resourceId: number,
+      query?: {
+        ignored?: boolean;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/collection/${id}/members/${resourceId}/ignored`,
+        method: "PUT",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Collection
+     * @name ReorderCollectionMembers
+     * @request PUT:/collection/{id}/members/order
+     */
+    reorderCollectionMembers: (
+      id: number,
+      data: BakabaseModulesCollectionModelsInputCollectionMembersInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
+        path: `/collection/${id}/members/order`,
+        method: "PUT",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Collection
+     * @name AddCollectionPlaceholderMember
+     * @request POST:/collection/{id}/members/placeholder
+     */
+    addCollectionPlaceholderMember: (
+      id: number,
+      data: BakabaseServiceControllersCollectionPlaceholderInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsServicesPlaceholderResourceResult,
+        any
+      >({
+        path: `/collection/${id}/members/placeholder`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Collection
+     * @name PreviewCollectionRule
+     * @request POST:/collection/rule/preview
+     */
+    previewCollectionRule: (
+      data: BakabaseServiceControllersCollectionRulePreviewInputModel,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceControllersCollectionRulePreview,
+        any
+      >({
+        path: `/collection/rule/preview`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Build URL for previewCollectionRule
+     * @name previewCollectionRuleUrl
+     */
+    previewCollectionRuleUrl: () => {
+      const baseUrl = this.baseUrl || "";
+      let path = `/collection/rule/preview`;
+      
+      return baseUrl + path;
+    },
+
+    /**
+     * No description
+     *
+     * @tags Collection
+     * @name AcquireMissingCollectionMembers
+     * @request POST:/collection/{id}/acquire-missing
+     */
+    acquireMissingCollectionMembers: (id: number, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceControllersCollectionAcquireMissingResult,
+        any
+      >({
+        path: `/collection/${id}/acquire-missing`,
+        method: "POST",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Collection
+     * @name GetCollectionProgress
+     * @request GET:/collection/{id}/progress
+     */
+    getCollectionProgress: (id: number, params: RequestParams = {}) =>
+      this.request<
+        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesCollectionAbstractionsModelsDomainCollectionProgress,
+        any
+      >({
+        path: `/collection/${id}/progress`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+  };
   comparison = {
     /**
      * No description
@@ -12834,1624 +16170,6 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     addExHentaiDownloadTaskUrl: () => {
       const baseUrl = this.baseUrl || "";
       let path = `/download-task/exhentai`;
-      
-      return baseUrl + path;
-    },
-  };
-  resource = {
-    /**
-     * No description
-     *
-     * @tags Enhancement
-     * @name GetResourceEnhancements
-     * @request GET:/resource/{resourceId}/enhancement
-     */
-    getResourceEnhancements: (
-      resourceId: number,
-      query?: {
-        /** [0: None, 1: GeneratedPropertyValue] */
-        additionalItem?: BakabaseModulesEnhancerAbstractionsModelsDomainConstantsEnhancementAdditionalItem;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        BootstrapModelsResponseModelsListResponse1BakabaseServiceModelsViewResourceEnhancements,
-        any
-      >({
-        path: `/resource/${resourceId}/enhancement`,
-        method: "GET",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Enhancement
-     * @name DeleteResourceEnhancement
-     * @request DELETE:/resource/{resourceId}/enhancer/{enhancerId}/enhancement
-     */
-    deleteResourceEnhancement: (
-      resourceId: number,
-      enhancerId: number,
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/${resourceId}/enhancer/${enhancerId}/enhancement`,
-        method: "DELETE",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Enhancement
-     * @name EnhanceResourceByEnhancer
-     * @request POST:/resource/{resourceId}/enhancer/{enhancerId}/enhancement
-     */
-    enhanceResourceByEnhancer: (
-      resourceId: number,
-      enhancerId: number,
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/${resourceId}/enhancer/${enhancerId}/enhancement`,
-        method: "POST",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Enhancement
-     * @name ApplyEnhancementContextDataForResourceByEnhancer
-     * @request POST:/resource/{resourceId}/enhancer/{enhancerId}/enhancement/apply
-     */
-    applyEnhancementContextDataForResourceByEnhancer: (
-      resourceId: number,
-      enhancerId: number,
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/${resourceId}/enhancer/${enhancerId}/enhancement/apply`,
-        method: "POST",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Enhancement
-     * @name ValidateEnhancerConfiguration
-     * @request POST:/resource/{resourceId}/enhancement/validate
-     */
-    validateEnhancerConfiguration: (
-      resourceId: number,
-      data: BakabaseAbstractionsModelsDomainEnhancerFullOptions[],
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/${resourceId}/enhancement/validate`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name GetSearchOperationsForProperty
-     * @request GET:/resource/search-operation
-     */
-    getSearchOperationsForProperty: (
-      query?: {
-        /** [1: Internal, 2: Reserved, 4: Custom, 7: All] */
-        propertyPool?: BakabaseAbstractionsModelsDomainConstantsPropertyPool;
-        /** @format int32 */
-        propertyId?: number;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainConstantsSearchOperation,
-        any
-      >({
-        path: `/resource/search-operation`,
-        method: "GET",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for getSearchOperationsForProperty
-     * @name getSearchOperationsForPropertyUrl
-     */
-    getSearchOperationsForPropertyUrl: (query?: {
-        /** [1: Internal, 2: Reserved, 4: Custom, 7: All] */
-        propertyPool?: BakabaseAbstractionsModelsDomainConstantsPropertyPool;
-        /** @format int32 */
-        propertyId?: number;
-      }) => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/search-operation`;
-      
-      // Build query string
-      if (query) {
-        // Object.entries rather than indexing by key: the query object is a typed
-        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
-        const queryString = Object.entries(query)
-          .filter(([, value]) => value !== undefined && value !== null)
-          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-          .join("&");
-
-        return baseUrl + path + (queryString ? `?${queryString}` : "");
-      }
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name GetSearchOperationsByPropertyType
-     * @request GET:/resource/search-operation/by-type
-     */
-    getSearchOperationsByPropertyType: (
-      query?: {
-        /** [1: SingleLineText, 2: MultilineText, 3: SingleChoice, 4: MultipleChoice, 5: Number, 6: Percentage, 7: Rating, 8: Boolean, 9: Link, 10: Attachment, 11: Date, 12: DateTime, 13: Time, 14: Formula, 15: Multilevel, 16: Tags] */
-        propertyType?: BakabaseAbstractionsModelsDomainConstantsPropertyType;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainConstantsSearchOperation,
-        any
-      >({
-        path: `/resource/search-operation/by-type`,
-        method: "GET",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for getSearchOperationsByPropertyType
-     * @name getSearchOperationsByPropertyTypeUrl
-     */
-    getSearchOperationsByPropertyTypeUrl: (query?: {
-        /** [1: SingleLineText, 2: MultilineText, 3: SingleChoice, 4: MultipleChoice, 5: Number, 6: Percentage, 7: Rating, 8: Boolean, 9: Link, 10: Attachment, 11: Date, 12: DateTime, 13: Time, 14: Formula, 15: Multilevel, 16: Tags] */
-        propertyType?: BakabaseAbstractionsModelsDomainConstantsPropertyType;
-      }) => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/search-operation/by-type`;
-      
-      // Build query string
-      if (query) {
-        // Object.entries rather than indexing by key: the query object is a typed
-        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
-        const queryString = Object.entries(query)
-          .filter(([, value]) => value !== undefined && value !== null)
-          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-          .join("&");
-
-        return baseUrl + path + (queryString ? `?${queryString}` : "");
-      }
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name GetFilterValueProperty
-     * @request GET:/resource/filter-value-property
-     */
-    getFilterValueProperty: (
-      query?: {
-        /** [1: Internal, 2: Reserved, 4: Custom, 7: All] */
-        propertyPool?: BakabaseAbstractionsModelsDomainConstantsPropertyPool;
-        /** @format int32 */
-        propertyId?: number;
-        /** [1: Equals, 2: NotEquals, 3: Contains, 4: NotContains, 5: StartsWith, 6: NotStartsWith, 7: EndsWith, 8: NotEndsWith, 9: GreaterThan, 10: LessThan, 11: GreaterThanOrEquals, 12: LessThanOrEquals, 13: IsNull, 14: IsNotNull, 15: In, 16: NotIn, 17: Matches, 18: NotMatches] */
-        operation?: BakabaseAbstractionsModelsDomainConstantsSearchOperation;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        BootstrapModelsResponseModelsSingletonResponse1BakabaseModulesPropertyModelsViewPropertyViewModel,
-        any
-      >({
-        path: `/resource/filter-value-property`,
-        method: "GET",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for getFilterValueProperty
-     * @name getFilterValuePropertyUrl
-     */
-    getFilterValuePropertyUrl: (query?: {
-        /** [1: Internal, 2: Reserved, 4: Custom, 7: All] */
-        propertyPool?: BakabaseAbstractionsModelsDomainConstantsPropertyPool;
-        /** @format int32 */
-        propertyId?: number;
-        /** [1: Equals, 2: NotEquals, 3: Contains, 4: NotContains, 5: StartsWith, 6: NotStartsWith, 7: EndsWith, 8: NotEndsWith, 9: GreaterThan, 10: LessThan, 11: GreaterThanOrEquals, 12: LessThanOrEquals, 13: IsNull, 14: IsNotNull, 15: In, 16: NotIn, 17: Matches, 18: NotMatches] */
-        operation?: BakabaseAbstractionsModelsDomainConstantsSearchOperation;
-      }) => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/filter-value-property`;
-      
-      // Build query string
-      if (query) {
-        // Object.entries rather than indexing by key: the query object is a typed
-        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
-        const queryString = Object.entries(query)
-          .filter(([, value]) => value !== undefined && value !== null)
-          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-          .join("&");
-
-        return baseUrl + path + (queryString ? `?${queryString}` : "");
-      }
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name GetLastResourceSearch
-     * @request GET:/resource/last-search
-     */
-    getLastResourceSearch: (params: RequestParams = {}) =>
-      this.request<
-        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewResourceSearchViewModel,
-        any
-      >({
-        path: `/resource/last-search`,
-        method: "GET",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for getLastResourceSearch
-     * @name getLastResourceSearchUrl
-     */
-    getLastResourceSearchUrl: () => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/last-search`;
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name SaveNewResourceSearch
-     * @request POST:/resource/saved-search
-     */
-    saveNewResourceSearch: (
-      data: BakabaseServiceModelsInputSavedSearchAddInputModel,
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewSavedSearchViewModel,
-        any
-      >({
-        path: `/resource/saved-search`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for saveNewResourceSearch
-     * @name saveNewResourceSearchUrl
-     */
-    saveNewResourceSearchUrl: () => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/saved-search`;
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name PutSavedSearchName
-     * @request PUT:/resource/saved-search
-     */
-    putSavedSearchName: (
-      data: string,
-      query?: {
-        id?: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/saved-search`,
-        method: "PUT",
-        query: query,
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for putSavedSearchName
-     * @name putSavedSearchNameUrl
-     */
-    putSavedSearchNameUrl: (query?: {
-        id?: string;
-      }) => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/saved-search`;
-      
-      // Build query string
-      if (query) {
-        // Object.entries rather than indexing by key: the query object is a typed
-        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
-        const queryString = Object.entries(query)
-          .filter(([, value]) => value !== undefined && value !== null)
-          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-          .join("&");
-
-        return baseUrl + path + (queryString ? `?${queryString}` : "");
-      }
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name GetSavedSearch
-     * @request GET:/resource/saved-search
-     */
-    getSavedSearch: (
-      query?: {
-        id?: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewSavedSearchViewModel,
-        any
-      >({
-        path: `/resource/saved-search`,
-        method: "GET",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for getSavedSearch
-     * @name getSavedSearchUrl
-     */
-    getSavedSearchUrl: (query?: {
-        id?: string;
-      }) => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/saved-search`;
-      
-      // Build query string
-      if (query) {
-        // Object.entries rather than indexing by key: the query object is a typed
-        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
-        const queryString = Object.entries(query)
-          .filter(([, value]) => value !== undefined && value !== null)
-          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-          .join("&");
-
-        return baseUrl + path + (queryString ? `?${queryString}` : "");
-      }
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name DeleteSavedSearch
-     * @request DELETE:/resource/saved-search
-     */
-    deleteSavedSearch: (
-      query?: {
-        id?: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/saved-search`,
-        method: "DELETE",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for deleteSavedSearch
-     * @name deleteSavedSearchUrl
-     */
-    deleteSavedSearchUrl: (query?: {
-        id?: string;
-      }) => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/saved-search`;
-      
-      // Build query string
-      if (query) {
-        // Object.entries rather than indexing by key: the query object is a typed
-        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
-        const queryString = Object.entries(query)
-          .filter(([, value]) => value !== undefined && value !== null)
-          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-          .join("&");
-
-        return baseUrl + path + (queryString ? `?${queryString}` : "");
-      }
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name PutSavedSearchDisplayMode
-     * @request PUT:/resource/saved-search/display-mode
-     */
-    putSavedSearchDisplayMode: (
-      data: BakabaseAbstractionsModelsDomainConstantsFilterDisplayMode,
-      query?: {
-        id?: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/saved-search/display-mode`,
-        method: "PUT",
-        query: query,
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for putSavedSearchDisplayMode
-     * @name putSavedSearchDisplayModeUrl
-     */
-    putSavedSearchDisplayModeUrl: (query?: {
-        id?: string;
-      }) => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/saved-search/display-mode`;
-      
-      // Build query string
-      if (query) {
-        // Object.entries rather than indexing by key: the query object is a typed
-        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
-        const queryString = Object.entries(query)
-          .filter(([, value]) => value !== undefined && value !== null)
-          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-          .join("&");
-
-        return baseUrl + path + (queryString ? `?${queryString}` : "");
-      }
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name SearchResources
-     * @request POST:/resource/search
-     */
-    searchResources: (
-      data: BakabaseServiceModelsInputResourceSearchInputModel,
-      query?: {
-        saveSearch?: boolean;
-        searchId?: string;
-        /** [0: None, 32: Properties, 64: Alias, 288: DisplayName, 512: HasChildren, 2048: MediaLibraryName, 16416: Cover, 32768: PlayableItem, 52064: All] */
-        additionalItems?: BakabaseInsideWorldModelsConstantsAdditionalItemsResourceAdditionalItem;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        BootstrapModelsResponseModelsSearchResponse1BakabaseAbstractionsModelsDomainResource,
-        any
-      >({
-        path: `/resource/search`,
-        method: "POST",
-        query: query,
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for searchResources
-     * @name searchResourcesUrl
-     */
-    searchResourcesUrl: (query?: {
-        saveSearch?: boolean;
-        searchId?: string;
-        /** [0: None, 32: Properties, 64: Alias, 288: DisplayName, 512: HasChildren, 2048: MediaLibraryName, 16416: Cover, 32768: PlayableItem, 52064: All] */
-        additionalItems?: BakabaseInsideWorldModelsConstantsAdditionalItemsResourceAdditionalItem;
-      }) => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/search`;
-      
-      // Build query string
-      if (query) {
-        // Object.entries rather than indexing by key: the query object is a typed
-        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
-        const queryString = Object.entries(query)
-          .filter(([, value]) => value !== undefined && value !== null)
-          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-          .join("&");
-
-        return baseUrl + path + (queryString ? `?${queryString}` : "");
-      }
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name SearchAllResourceIds
-     * @request POST:/resource/search/ids
-     */
-    searchAllResourceIds: (
-      data: BakabaseServiceModelsInputResourceSearchInputModel,
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsListResponse1SystemInt32, any>({
-        path: `/resource/search/ids`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for searchAllResourceIds
-     * @name searchAllResourceIdsUrl
-     */
-    searchAllResourceIdsUrl: () => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/search/ids`;
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name GetResourcesByKeys
-     * @request GET:/resource/keys
-     */
-    getResourcesByKeys: (
-      query?: {
-        ids?: number[];
-        /** [0: None, 32: Properties, 64: Alias, 288: DisplayName, 512: HasChildren, 2048: MediaLibraryName, 16416: Cover, 32768: PlayableItem, 52064: All] */
-        additionalItems?: BakabaseInsideWorldModelsConstantsAdditionalItemsResourceAdditionalItem;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainResource,
-        any
-      >({
-        path: `/resource/keys`,
-        method: "GET",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for getResourcesByKeys
-     * @name getResourcesByKeysUrl
-     */
-    getResourcesByKeysUrl: (query?: {
-        ids?: number[];
-        /** [0: None, 32: Properties, 64: Alias, 288: DisplayName, 512: HasChildren, 2048: MediaLibraryName, 16416: Cover, 32768: PlayableItem, 52064: All] */
-        additionalItems?: BakabaseInsideWorldModelsConstantsAdditionalItemsResourceAdditionalItem;
-      }) => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/keys`;
-      
-      // Build query string
-      if (query) {
-        // Object.entries rather than indexing by key: the query object is a typed
-        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
-        const queryString = Object.entries(query)
-          .filter(([, value]) => value !== undefined && value !== null)
-          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-          .join("&");
-
-        return baseUrl + path + (queryString ? `?${queryString}` : "");
-      }
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name GetResourceHierarchyContext
-     * @request GET:/resource/{id}/hierarchy-context
-     */
-    getResourceHierarchyContext: (id: number, params: RequestParams = {}) =>
-      this.request<
-        BootstrapModelsResponseModelsSingletonResponse1BakabaseServiceModelsViewResourceHierarchyContextViewModel,
-        any
-      >({
-        path: `/resource/${id}/hierarchy-context`,
-        method: "GET",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name OpenResourceDirectory
-     * @request GET:/resource/directory
-     */
-    openResourceDirectory: (
-      query?: {
-        /** @format int32 */
-        id?: number;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/directory`,
-        method: "GET",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for openResourceDirectory
-     * @name openResourceDirectoryUrl
-     */
-    openResourceDirectoryUrl: (query?: {
-        /** @format int32 */
-        id?: number;
-      }) => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/directory`;
-      
-      // Build query string
-      if (query) {
-        // Object.entries rather than indexing by key: the query object is a typed
-        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
-        const queryString = Object.entries(query)
-          .filter(([, value]) => value !== undefined && value !== null)
-          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-          .join("&");
-
-        return baseUrl + path + (queryString ? `?${queryString}` : "");
-      }
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name SetResourceMediaLibraries
-     * @request PUT:/resource/media-libraries
-     */
-    setResourceMediaLibraries: (
-      data: BakabaseInsideWorldModelsRequestModelsResourceSetMediaLibrariesRequestModel,
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/media-libraries`,
-        method: "PUT",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for setResourceMediaLibraries
-     * @name setResourceMediaLibrariesUrl
-     */
-    setResourceMediaLibrariesUrl: () => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/media-libraries`;
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name GetResourceMediaLibraryMappings
-     * @request POST:/resource/media-library-mappings
-     */
-    getResourceMediaLibraryMappings: (data: number[], params: RequestParams = {}) =>
-      this.request<
-        BootstrapModelsResponseModelsSingletonResponse1SystemCollectionsGenericDictionary2SystemInt32SystemInt32,
-        any
-      >({
-        path: `/resource/media-library-mappings`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for getResourceMediaLibraryMappings
-     * @name getResourceMediaLibraryMappingsUrl
-     */
-    getResourceMediaLibraryMappingsUrl: () => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/media-library-mappings`;
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name GetResourceDataForPreviewer
-     * @request GET:/resource/{id}/previewer
-     */
-    getResourceDataForPreviewer: (id: number, params: RequestParams = {}) =>
-      this.request<
-        BootstrapModelsResponseModelsListResponse1BakabaseInsideWorldModelsModelsAosPreviewerItem,
-        any
-      >({
-        path: `/resource/${id}/previewer`,
-        method: "GET",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name PutResourcePropertyValue
-     * @request PUT:/resource/{id}/property-value
-     */
-    putResourcePropertyValue: (
-      id: number,
-      data: BakabaseAbstractionsModelsInputResourcePropertyValuePutInputModel,
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/${id}/property-value`,
-        method: "PUT",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name GetResourcePropertyValueScopePreferences
-     * @request GET:/resource/{id}/property-value-scope-preference
-     */
-    getResourcePropertyValueScopePreferences: (id: number, params: RequestParams = {}) =>
-      this.request<
-        BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainPropertyValueScopePreference,
-        any
-      >({
-        path: `/resource/${id}/property-value-scope-preference`,
-        method: "GET",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name PutResourcePropertyValueScopePreference
-     * @request PUT:/resource/{id}/property-value-scope-preference
-     */
-    putResourcePropertyValueScopePreference: (
-      id: number,
-      data: BakabaseAbstractionsModelsInputResourcePropertyValueScopePreferencePutInputModel,
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainPropertyValueScopePreference,
-        any
-      >({
-        path: `/resource/${id}/property-value-scope-preference`,
-        method: "PUT",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name DeleteResourcePropertyValueScopePreference
-     * @request DELETE:/resource/{id}/property-value-scope-preference
-     */
-    deleteResourcePropertyValueScopePreference: (
-      id: number,
-      query?: {
-        /** [1: Internal, 2: Reserved, 4: Custom, 7: All] */
-        propertyPool?: BakabaseAbstractionsModelsDomainConstantsPropertyPool;
-        /** @format int32 */
-        propertyId?: number;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/${id}/property-value-scope-preference`,
-        method: "DELETE",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name BulkPutResourcePropertyValue
-     * @request PUT:/resource/bulk/property-value
-     */
-    bulkPutResourcePropertyValue: (
-      data: BakabaseServiceModelsInputBulkResourcePropertyValuePutInputModel,
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/bulk/property-value`,
-        method: "PUT",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for bulkPutResourcePropertyValue
-     * @name bulkPutResourcePropertyValueUrl
-     */
-    bulkPutResourcePropertyValueUrl: () => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/bulk/property-value`;
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name PlayResourceFile
-     * @request GET:/resource/{resourceId}/play
-     */
-    playResourceFile: (
-      resourceId: number,
-      query?: {
-        file?: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/${resourceId}/play`,
-        method: "GET",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name PlayResourceItem
-     * @request GET:/resource/{resourceId}/play-item
-     */
-    playResourceItem: (
-      resourceId: number,
-      query?: {
-        /** [1: Manual, 2: FileSystem, 3: Steam, 4: DLsite, 5: ExHentai] */
-        origin?: BakabaseAbstractionsModelsDomainConstantsDataOrigin;
-        key?: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/${resourceId}/play-item`,
-        method: "GET",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name GetResourcePlayableItems
-     * @request GET:/resource/{id}/playable-items
-     */
-    getResourcePlayableItems: (id: number, params: RequestParams = {}) =>
-      this.request<
-        BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainPlayableItem,
-        any
-      >({
-        path: `/resource/${id}/playable-items`,
-        method: "GET",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name GetResourceEffectivePlayerOptions
-     * @request GET:/resource/{id}/effective-player-options
-     */
-    getResourceEffectivePlayerOptions: (id: number, params: RequestParams = {}) =>
-      this.request<
-        BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainResourceProfilePlayerOptions,
-        any
-      >({
-        path: `/resource/${id}/effective-player-options`,
-        method: "GET",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name PlayRandomResource
-     * @request GET:/resource/play/random
-     */
-    playRandomResource: (params: RequestParams = {}) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/play/random`,
-        method: "GET",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for playRandomResource
-     * @name playRandomResourceUrl
-     */
-    playRandomResourceUrl: () => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/play/random`;
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name PickRandomPlayableItem
-     * @request GET:/resource/play/random/candidate
-     */
-    pickRandomPlayableItem: (params: RequestParams = {}) =>
-      this.request<
-        BootstrapModelsResponseModelsSingletonResponse1BakabaseAbstractionsModelsDomainPlayableItemPick,
-        any
-      >({
-        path: `/resource/play/random/candidate`,
-        method: "GET",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for pickRandomPlayableItem
-     * @name pickRandomPlayableItemUrl
-     */
-    pickRandomPlayableItemUrl: () => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/play/random/candidate`;
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name BulkDeleteResources
-     * @request POST:/resource/bulk-delete
-     */
-    bulkDeleteResources: (
-      data: BakabaseAbstractionsModelsInputBulkDeleteResourcesInputModel,
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/bulk-delete`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for bulkDeleteResources
-     * @name bulkDeleteResourcesUrl
-     */
-    bulkDeleteResourcesUrl: () => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/bulk-delete`;
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name PinResource
-     * @request PUT:/resource/{id}/pin
-     */
-    pinResource: (
-      id: number,
-      query?: {
-        pin?: boolean;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/${id}/pin`,
-        method: "PUT",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name TransferResourceData
-     * @request PUT:/resource/transfer
-     */
-    transferResourceData: (
-      data: BakabaseAbstractionsModelsInputResourceTransferInputModel,
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/transfer`,
-        method: "PUT",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for transferResourceData
-     * @name transferResourceDataUrl
-     */
-    transferResourceDataUrl: () => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/transfer`;
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name SearchResourcePaths
-     * @request GET:/resource/paths
-     */
-    searchResourcePaths: (
-      query?: {
-        keyword?: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        BootstrapModelsResponseModelsListResponse1BakabaseServiceModelsViewResourcePathInfoViewModel,
-        any
-      >({
-        path: `/resource/paths`,
-        method: "GET",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for searchResourcePaths
-     * @name searchResourcePathsUrl
-     */
-    searchResourcePathsUrl: (query?: {
-        keyword?: string;
-      }) => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/paths`;
-      
-      // Build query string
-      if (query) {
-        // Object.entries rather than indexing by key: the query object is a typed
-        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
-        const queryString = Object.entries(query)
-          .filter(([, value]) => value !== undefined && value !== null)
-          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-          .join("&");
-
-        return baseUrl + path + (queryString ? `?${queryString}` : "");
-      }
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name SaveCover
-     * @request PUT:/resource/{id}/cover
-     */
-    saveCover: (
-      id: number,
-      data: BakabaseServiceModelsInputResourceCoverSaveInputModel,
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/${id}/cover`,
-        method: "PUT",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name MarkResourceAsNotPlayed
-     * @request DELETE:/resource/{id}/played-at
-     */
-    markResourceAsNotPlayed: (id: number, params: RequestParams = {}) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/${id}/played-at`,
-        method: "DELETE",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name MarkResourceAsPlayed
-     * @request POST:/resource/{id}/played-at
-     */
-    markResourceAsPlayed: (
-      id: number,
-      query?: {
-        item?: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/${id}/played-at`,
-        method: "POST",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name MarkResourcesAsPlayed
-     * @request POST:/resource/played-at/bulk
-     */
-    markResourcesAsPlayed: (
-      data: BakabaseAbstractionsModelsInputMarkResourcesPlayedInputModel,
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/played-at/bulk`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for markResourcesAsPlayed
-     * @name markResourcesAsPlayedUrl
-     */
-    markResourcesAsPlayedUrl: () => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/played-at/bulk`;
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name GetResourceSearchKeywordRecommendation
-     * @request GET:/resource/search/keyword-recommendation
-     */
-    getResourceSearchKeywordRecommendation: (
-      query?: {
-        keyword?: string;
-        /**
-         * @format int32
-         * @default 10
-         */
-        maxCount?: number;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsListResponse1SystemString, any>({
-        path: `/resource/search/keyword-recommendation`,
-        method: "GET",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for getResourceSearchKeywordRecommendation
-     * @name getResourceSearchKeywordRecommendationUrl
-     */
-    getResourceSearchKeywordRecommendationUrl: (query?: {
-        keyword?: string;
-        /**
-         * @format int32
-         * @default 10
-         */
-        maxCount?: number;
-      }) => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/search/keyword-recommendation`;
-      
-      // Build query string
-      if (query) {
-        // Object.entries rather than indexing by key: the query object is a typed
-        // literal, so `query[key]` is an implicit-any error under noImplicitAny.
-        const queryString = Object.entries(query)
-          .filter(([, value]) => value !== undefined && value !== null)
-          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-          .join("&");
-
-        return baseUrl + path + (queryString ? `?${queryString}` : "");
-      }
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name GetResourceMediaLibraries
-     * @request GET:/resource/{id}/media-libraries
-     */
-    getResourceMediaLibraries: (id: number, params: RequestParams = {}) =>
-      this.request<
-        BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainMediaLibraryResourceMapping,
-        any
-      >({
-        path: `/resource/${id}/media-libraries`,
-        method: "GET",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name ReplaceResourceMediaLibraryMappings
-     * @request PUT:/resource/{id}/media-libraries
-     */
-    replaceResourceMediaLibraryMappings: (
-      id: number,
-      data: BakabaseServiceModelsInputResourceMediaLibraryMappingInputModel,
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/${id}/media-libraries`,
-        method: "PUT",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name AddResourceMediaLibraryMapping
-     * @request POST:/resource/{id}/media-libraries/{mediaLibraryId}
-     */
-    addResourceMediaLibraryMapping: (
-      id: number,
-      mediaLibraryId: number,
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/${id}/media-libraries/${mediaLibraryId}`,
-        method: "POST",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name RemoveResourceMediaLibraryMapping
-     * @request DELETE:/resource/{id}/media-libraries/{mediaLibraryId}
-     */
-    removeResourceMediaLibraryMapping: (
-      id: number,
-      mediaLibraryId: number,
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/${id}/media-libraries/${mediaLibraryId}`,
-        method: "DELETE",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name BulkAddResourceMediaLibraryMappings
-     * @request POST:/resource/bulk/media-libraries
-     */
-    bulkAddResourceMediaLibraryMappings: (
-      data: BakabaseServiceControllersBulkResourceMediaLibraryMappingInputModel,
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/bulk/media-libraries`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for bulkAddResourceMediaLibraryMappings
-     * @name bulkAddResourceMediaLibraryMappingsUrl
-     */
-    bulkAddResourceMediaLibraryMappingsUrl: () => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/bulk/media-libraries`;
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name GetResourceSourceLinks
-     * @request GET:/resource/{id}/source-links
-     */
-    getResourceSourceLinks: (id: number, params: RequestParams = {}) =>
-      this.request<
-        BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainResourceSourceLink,
-        any
-      >({
-        path: `/resource/${id}/source-links`,
-        method: "GET",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name GetResourceConflicts
-     * @request GET:/resource/{id}/conflicts
-     */
-    getResourceConflicts: (
-      id: number,
-      query?: {
-        /** [0: None, 32: Properties, 64: Alias, 288: DisplayName, 512: HasChildren, 2048: MediaLibraryName, 16416: Cover, 32768: PlayableItem, 52064: All] */
-        additionalItems?: BakabaseInsideWorldModelsConstantsAdditionalItemsResourceAdditionalItem;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<
-        BootstrapModelsResponseModelsListResponse1BakabaseAbstractionsModelsDomainResource,
-        any
-      >({
-        path: `/resource/${id}/conflicts`,
-        method: "GET",
-        query: query,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Resource
-     * @name MergeResources
-     * @request POST:/resource/merge
-     */
-    mergeResources: (
-      data: BakabaseAbstractionsModelsInputResourceMergeInputModel,
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/merge`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for mergeResources
-     * @name mergeResourcesUrl
-     */
-    mergeResourcesUrl: () => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/merge`;
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags ResourceDiscovery
-     * @name StreamResourceDiscovery
-     * @request GET:/resource/discovery/stream
-     */
-    streamResourceDiscovery: (params: RequestParams = {}) =>
-      this.request<void, any>({
-        path: `/resource/discovery/stream`,
-        method: "GET",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for streamResourceDiscovery
-     * @name streamResourceDiscoveryUrl
-     */
-    streamResourceDiscoveryUrl: () => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/discovery/stream`;
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags ResourceDiscovery
-     * @name SubscribeResourceDiscovery
-     * @request POST:/resource/discovery/subscribe
-     */
-    subscribeResourceDiscovery: (
-      data: BakabaseServiceControllersDiscoverySubscribeRequest,
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/discovery/subscribe`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for subscribeResourceDiscovery
-     * @name subscribeResourceDiscoveryUrl
-     */
-    subscribeResourceDiscoveryUrl: () => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/discovery/subscribe`;
-      
-      return baseUrl + path;
-    },
-
-    /**
-     * No description
-     *
-     * @tags ResourceDiscovery
-     * @name SubscribeResourceDiscoveryBatch
-     * @request POST:/resource/discovery/subscribe/batch
-     */
-    subscribeResourceDiscoveryBatch: (
-      data: BakabaseServiceControllersDiscoverySubscribeRequest[],
-      params: RequestParams = {},
-    ) =>
-      this.request<BootstrapModelsResponseModelsBaseResponse, any>({
-        path: `/resource/discovery/subscribe/batch`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Build URL for subscribeResourceDiscoveryBatch
-     * @name subscribeResourceDiscoveryBatchUrl
-     */
-    subscribeResourceDiscoveryBatchUrl: () => {
-      const baseUrl = this.baseUrl || "";
-      let path = `/resource/discovery/subscribe/batch`;
       
       return baseUrl + path;
     },
@@ -20738,7 +22456,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      */
     startSyncBySource: (
       query?: {
-        /** [1: PathMark, 2: Steam, 3: DLsite, 4: ExHentai, 5: Aigc] */
+        /** [1: PathMark, 2: Steam, 3: DLsite, 4: ExHentai, 5: Aigc, 6: Bangumi, 7: Pixiv, 8: Vndb] */
         source?: BakabaseAbstractionsModelsDomainConstantsResourceSource;
       },
       params: RequestParams = {},
@@ -20756,7 +22474,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @name startSyncBySourceUrl
      */
     startSyncBySourceUrl: (query?: {
-        /** [1: PathMark, 2: Steam, 3: DLsite, 4: ExHentai, 5: Aigc] */
+        /** [1: PathMark, 2: Steam, 3: DLsite, 4: ExHentai, 5: Aigc, 6: Bangumi, 7: Pixiv, 8: Vndb] */
         source?: BakabaseAbstractionsModelsDomainConstantsResourceSource;
       }) => {
       const baseUrl = this.baseUrl || "";
